@@ -1,4 +1,4 @@
-* $Id: BP206.ASM,v 1.45 2001-10-11 12:39:46 peter Exp $
+* $Id: BP206.ASM,v 1.46 2001-10-17 15:50:48 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -28,8 +28,6 @@ WARNINGLDP	.set	1
 ****************************************
 Emulator 	.set 0
 
-* проверка запрета прерываний
-CheckCRCINTM	.set 0
 ***********************
 * в сериальном порту включается блок отладки, в котором
 * порт после принятия символа A начинает выдавать 58h
@@ -406,73 +404,19 @@ LengthSignat .set $-SIGNT
 
 	.text
 	.copy   Bpinit.asm
-        .copy   history.asm
 ****************************************************************************************************
 *	Main
 ****************************************************************************************************
 *
-Main_idle
-
-	NOP
-	IDLE
-	NOP
-***отладка
- .if CheckCRCINTM=1
-	CLRC	INTM
-	NOP
-	NOP
-
-	NOP
-	SETC	INTM
-	NOP
-	NOP
-	LDP  	#0
-	SST  	#0,066h
-	BIT  	066h,6   ;проверка INTM
-			 ;INTM=0 - all interrupt enabled
-			 ;INTM=1 - all disabled
-	BCND 	INTDISABLED,TC  ;запрещены? INTM=1?
-
-	LDP	#4
-BeginBeepeng
-	SPLK	#500,TMP
-Beeping4khz_2
-	mDelay250mks
-	mBeepXOR
-
-	LACC	TMP
-	SUB	#1
-	SACL	TMP
-	BCND 	Beeping4khz_2,NEQ
-	SPLK	#250,TMP
-Beeping2khz_2
-	mDelay250mks
-	mDelay250mks
-	mBeepXOR
-
-	LACC	TMP
-	SUB	#1
-	SACL	TMP
-	BCND 	Beeping2khz_2,NEQ
-	B BeginBeepeng
-INTDISABLED
-	NOP
-*конец отладки проверка запрета прерываний
-
-	CLRC	INTM
-	NOP
-	NOP
-	NOP
-
- .elseif CheckCRCINTM=0
- .else
-  .emsg _ERROR __ MISSING PARAMETER_
- .endif
-
-
+	.globl	_go_power_down
+Main_idle:
+	call	_go_power_down,*,AR1
 	B	Main_idle
 
-Main
+
+        .copy   history.asm
+
+Main:
 	.copy   Bpmode.asm
 
 *       	Модули используемые в bpmode.asm

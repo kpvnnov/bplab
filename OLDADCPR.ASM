@@ -217,10 +217,10 @@ NotDAC
 	SUB  	#12,4
 	BCND 	CONTA1,LT
 	SPLK 	#rERROR_ADC,ErrMeas	;Ошибка в АЦП
-	LACC 	DPA0,0
+	LACC 	_DPA0,0
 	AND  	#0FFE3h
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 ;//!!!        SPLK #8,MODEPR
 *
 CONTA1  RPT  	#30             ;задержка для A/D conversion
@@ -246,10 +246,10 @@ CONTA1  RPT  	#30             ;задержка для A/D conversion
 	OUT  	TMP,SSPCR
 	RETC 	GT              ;возврат если ACC>0 ?????
 	SPLK 	#rERROR_ADC,ErrMeas	;Ошибка в АЦП
-	LACC 	DPA0,0
+	LACC 	_DPA0,0
 	AND  	#0FFE3h
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 ;//!!!        SPLK #8,MODEPR
 	RET
 

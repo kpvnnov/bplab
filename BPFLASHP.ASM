@@ -1,4 +1,4 @@
-* $Id: BPFLASHP.ASM,v 1.7 2001-10-11 12:39:49 peter Exp $
+* $Id: BPFLASHP.ASM,v 1.8 2001-10-17 15:50:50 peter Exp $
 * Распределение Flash памяти данных давления.
 
 * Максимальное количество измерений  - 256.
@@ -67,11 +67,11 @@ FLCLR   LAR     AR2,#0D555h  ; 05555h,02AAAh,05555h,05555h,02AAAh,05555h
         LAR     AR3,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  010h Erase
         MAR     *,AR2
 
-        LACC    DPA0,0     ;чтение регистра данных порта
+        LACC    _DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
                         ;разрешение работы с флеш
-        SACL    DPA0       ;запоминаем данные в памяти
-        OUT     DPA0,PA0   ;и выводим в порт
+        SACL    _DPA0       ;запоминаем данные в памяти
+        OUT     _DPA0,PA0   ;и выводим в порт
         SPLK    #0AAh,*,AR3   ;программируем флеш на стирание
         SPLK    #055h,*,AR2
         SPLK    #080h,*,AR2
@@ -94,18 +94,18 @@ CLRCON  LACC    *+,0,AR0           ;чтение данных с флеш
         XOR     #0FFh              ;приводим к нулю
         BCND    ERRCLR,NEQ         ;если не равно нулю, то неудалось стереть
         BANZ    CLRCON,*-,AR2      ;Branch on Auxiliary Register Not Zero
-        LACC    DPA0
+        LACC    _DPA0
         ADD     #1,6       ;прибавляем 1 к "номеру странички"
-        SACL    DPA0
-        OUT     DPA0,PA0   ;выводим содержимое регистра в порт
-        BIT     DPA0,3     ;вышел номер страницы за бит D11 ?
+        SACL    _DPA0
+        OUT     _DPA0,PA0   ;выводим содержимое регистра в порт
+        BIT     _DPA0,3     ;вышел номер страницы за бит D11 ?
         BCND    CLRCHK,NTC ;продолжим проверку следующей "странички"
 	SPLK    #0,TMP        ; Очистка завеpшилась успешно
 *
-ERRCLR  LACC    DPA0,0     ;читаем содержимое регистра данных порта
+ERRCLR  LACC    _DPA0,0     ;читаем содержимое регистра данных порта
         OR      #0020H      ;выключаем выборку флеш #CEF =1 (#CE)
-        SACL    DPA0       ;запоминаем состояние порта в памяти
-        OUT     DPA0,PA0   ;выводим это в порт
+        SACL    _DPA0       ;запоминаем состояние порта в памяти
+        OUT     _DPA0,PA0   ;выводим это в порт
         RET
 ****************
 * очистка страницы флеш
@@ -116,14 +116,14 @@ FlashPageClear
         LAR     AR3,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  030h Sector Erase
         MAR     *,AR2
 
-        LACC    DPA0,0     ;чтение регистра данных порта
+        LACC    _DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
                         ;разрешение работы с флеш
 	ADD     TMP,7 ; сдвиг для подхода к D7 сложенного номера страницы
-        SACL    DPA0       ;запоминаем данные в памяти
-        OUT     DPA0,PA0   ;и выводим в порт
+        SACL    _DPA0       ;запоминаем данные в памяти
+        OUT     _DPA0,PA0   ;и выводим в порт
         OR      #0020H      ;выключаем выборку флеш #CEF =1 (#CE)
-        SACL    DPA0       ;запоминаем состояние порта в памяти
+        SACL    _DPA0       ;запоминаем состояние порта в памяти
         SPLK    #0AAh,*,AR3   ;программируем флеш на стирание
         SPLK    #055h,*,AR2
         SPLK    #080h,*,AR2
@@ -140,7 +140,7 @@ FLCLR2  SUB     #1
         BCND    FLCLR2,BIO
 *
 ERRCLR1
-        OUT     DPA0,PA0   ;выводим это в порт
+        OUT     _DPA0,PA0   ;выводим это в порт
         RET
 ****************
 * проверка чистоты страницы флеш
@@ -148,14 +148,14 @@ ERRCLR1
 ****************
 FlashPageCheck
         MAR     *,AR2
-        LACC    DPA0,0     ;чтение регистра данных порта
+        LACC    _DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
                         ;разрешение работы с флеш
 	ADD     TMP,7 ; сдвиг для подхода к D7 сложенного номера страницы
-        SACL    DPA0       ;запоминаем данные в памяти
-        OUT     DPA0,PA0   ;и выводим в порт
+        SACL    _DPA0       ;запоминаем данные в памяти
+        OUT     _DPA0,PA0   ;и выводим в порт
 	OR      #0020H      ;выключаем выборку флеш #CEF =1 (#CE)
-        SACL    DPA0       ;запоминаем состояние порта в памяти
+        SACL    _DPA0       ;запоминаем состояние порта в памяти
 ;CLRCHK1
         LAR     AR0,#7FFFh
         LAR     AR2,#8000h
@@ -167,7 +167,7 @@ CLRCON1 LACC *+,0,AR0           ;чтение данных с флеш
         ;ошибок не было
 ERRCheck
         ; произошла ошибка
-        OUT     DPA0,PA0   ;выводим это в порт
+        OUT     _DPA0,PA0   ;выводим это в порт
         RET
 *************************
 *       программирование флеш
@@ -178,14 +178,14 @@ ERRCheck
 *       Если пpи выходе из подпpогpаммы ACC=0 все Ok.
 * использует AR2,AR3,AR4
 *************************
-FLPROG  LACC 	DPA0         ; 05555h,02AAAh,05555h, PA
+FLPROG  LACC 	_DPA0         ; 05555h,02AAAh,05555h, PA
 	AND  	#001Fh       ;   0AAh,  055h,  0A0h, PD  Program
 *	ADD  	AFLMSB,6
 	ADD  	_FLADR+1,6
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	OR   	#20h
-	SACL 	DPA0
+	SACL 	_DPA0
 *	LACC 	AFLLSB
 	LACC 	_FLADR
 	OR   	#8000h
@@ -220,7 +220,7 @@ FLPRG1  SUB  	#1
 	SPLK 	#055h,*,AR2
 	SPLK 	#0F0h,*,AR4
 	BLDD 	*,#TMP+1,AR2   ; PD из FLASH в
-	OUT  	DPA0,PA0
+	OUT  	_DPA0,PA0
 ;        SPLK 	#0,TMP+3
 	LACC 	TMP
 	XOR  	TMP+1
@@ -229,7 +229,7 @@ FLPRG1  SUB  	#1
 *
 ERRPRG  OR 	#0FFh
 ;       SPLK 	#1,TMP+3
-	OUT  	DPA0,PA0
+	OUT  	_DPA0,PA0
 	RET
 *
 
@@ -251,13 +251,13 @@ ERRPRG  OR 	#0FFh
 ***********
 Read2K
 
-	LACC 	DPA0
+	LACC 	_DPA0
 	AND  	#01Fh
 	ADD  	FLADR+1,6
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	OR   	#20h
-	SACL 	DPA0
+	SACL 	_DPA0
 
 	LACC    FLADR
 	OR	#08000H
@@ -269,7 +269,7 @@ Read2K_1
 	LACC	*+,0,AR2
 	SACL	*+,0,AR0
 	BANZ    Read2K_1,*-,AR7
-	OUT  	DPA0,PA0
+	OUT  	_DPA0,PA0
 	RET
 
 *************************
@@ -284,13 +284,13 @@ FLREAD
 	POPD	*+
 	SAR     AR7,*+
 
-	LACC 	DPA0
+	LACC 	_DPA0
 	AND  	#01Fh
 	ADD  	FLADR+1,6
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	OR   	#20h
-	SACL 	DPA0
+	SACL 	_DPA0
 
 	LACC    FLADR
 	OR	#08000H
@@ -316,7 +316,7 @@ FLR_NoOver
 	LACC	*
 	AND	#0FFH
 
-	OUT  	DPA0,PA0
+	OUT  	_DPA0,PA0
 
 	MAR	*,AR1
 	MAR	*-,AR1

@@ -1,15 +1,15 @@
-// $Id: bp_main.c,v 1.3 2001-10-11 12:39:51 peter Exp $
+// $Id: bp_main.c,v 1.4 2001-10-17 15:50:52 peter Exp $
 
 #include "global.h"
 
 #include <ioports.h>
 
 extern s16 ResultADC[];
-extern u8 * WATCH;
+extern u8 WATCH[];
 extern u8 MDSPL;
 extern u8 iSYMBL[];
 extern s16 OUTF;
-
+extern unsigned short DPA0;
 unsigned short flags;
 
 extern unsigned short rDIOSR;
@@ -204,13 +204,19 @@ unsigned short x;
 //#define	SDTR	0xFFF0
 #define	portSDTR	portFFF0
 #define	portSSPCR	portFFF1
+#define portIMR		(*(volatile unsigned short *)0x0004)
+#define portIFR		(*(volatile unsigned short *)0x0006)
+#define portPA0		port0000
 
 //SSPS - FREE,SOFT,TCOMP,RFNE,FT1,FT0,FR1,FR0,OVM,IN0,XRST,RRST,TXM,MCM,FSM,DLB
 #define	SSPS    0xCC38   	//SSP start
 #define SSPR	0xCC08   	//reset SSP
 
 volatile ioport unsigned portSDTR;
+volatile ioport unsigned portPA0;
 volatile ioport unsigned portSSPCR;
+//volatile ioport unsigned portIMR;
+//volatile ioport unsigned portIFR;
 
 void send_command_avr(unsigned short* to_avr,unsigned short* from_avr,unsigned char count)
 {
@@ -277,6 +283,23 @@ unsigned short load_avr_state(unsigned short* read_from_avr)
   if (check_child==0x0A5 ||check_child==0x05A) break;
  } while ((--counter)!=0);
  return counter;
+}
+unsigned short send_avr_power_down()
+{
+ portSSPCR=SSPS;		//SSP start
+ portSDTR;          		//команда лишнего чтения(!??)
+				//для стабильности(надежности) работы с SSP
+ portSDTR=0x11FE;
+ three_imp_ssp();
+ on_avr_spi();
+ out_diosr();		//передаем выборку в порт
+
+ clk_xf_avr();
+ portSDTR;
+ off_periph();
+ out_diosr();		//передаем выборку в порт
+
+ return 1;
 }
 
 unsigned short load_avr_time(unsigned short* read_from_avr)
@@ -354,7 +377,6 @@ void adc_power_down()
 //* время по указателю AR7
 //* формат единицы минут, десятки минут, единицы часов, десятки часов
 //* ACC=0 все OK
-//extern unsigned short* WATCH;
 
 unsigned short check_time() 
 {
@@ -385,8 +407,8 @@ unsigned short check_time()
 
 }
 
-extern unsigned short * DayTimeInter;
-extern unsigned short * FLADR;
+extern unsigned short DayTimeInter[];
+extern unsigned short FLADR[];
 extern unsigned short ShedulerReady;
 extern unsigned short DispErrMeas;
 extern unsigned short Jobs;
@@ -428,6 +450,8 @@ extern unsigned short Jobs;
 //;пищать ?
 #define BeepLittle_Flag 1	//первый бит
 
+//обмен по ком-порту
+#define WorkingUart	2
 //;записываем в ЦАП?
 #define SendToDAC_Flag	3	//третий бит
 
@@ -481,6 +505,20 @@ static inline void off_scheduler()
 	Jobs&=~(1<<OnInterval_Flag);
 }
 
+void beep(unsigned short freq)
+{
+unsigned short delay_beep;
+unsigned short delay_beep1;
+ for (delay_beep=0;delay_beep<100;delay_beep++)
+ {
+  for (delay_beep1=0;delay_beep1<freq;delay_beep1++)
+  {
+   asm("	NOP");
+  } 
+  DPA0^=1;
+  portPA0=DPA0;
+ }
+}
 
 // установка текущего времени в ноль :(
 static inline void reset_time()
@@ -489,6 +527,69 @@ unsigned short x;
  for (x=0;x<7;x++)
  {
 	WATCH[x]=0;
+ }
+}
+// Interrupt mask register
+#define TXRXINT	0x0020
+#define XINT	0x0010
+#define RINT	0x0008
+#define TINT	0x0004
+#define INT2	0x0002
+#define INT1	0x0001
+static inline void set_int_reg(unsigned short flag)
+{
+portIMR=flag;
+}
+static inline unsigned short get_int_reg()
+{
+return portIMR;
+}
+static inline unsigned short get_int_flag()
+{
+return portIFR;
+}
+
+unsigned short IntMaskReg;
+extern	unsigned short iCNTASP[];
+void go_power_down()
+{
+char counter;
+// пока powerdown не написан
+
+  asm("	IDLE");
+  asm("	NOP");
+return;
+
+ if( (Jobs&(1<<CallMeasur_Flag))||
+     (DispErrMeas)||
+     (MDSPL)
+   )
+ {
+  asm("	IDLE");
+  asm("	NOP");
+ }
+ else if(  (iCNTASP[1])||
+           (Jobs&(1<<WorkingUart))
+        )
+ {
+  asm("	NOP");
+ }
+ else{
+  asm("	SETC	INTM");	//запрещаем прерывания
+  asm("	NOP");
+  IntMaskReg=get_int_reg();
+  set_int_reg(INT2);
+  if (send_avr_power_down()){
+   for (counter=0;counter<3;counter++){
+    asm("	IDLE");
+    asm("	NOP");
+//    beep(150);
+    if (get_int_flag()&INT2) break;
+   }
+  }
+  set_int_reg(IntMaskReg);
+//  beep(100);
+  asm("	CLRC	INTM");	//разрешаем прерывания
  }
 }
 

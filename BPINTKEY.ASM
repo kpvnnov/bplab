@@ -1,6 +1,6 @@
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.18 2001-10-11 12:39:49 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.19 2001-10-17 15:50:50 peter Exp $
 *****************************************************************************
 *
 
@@ -169,10 +169,10 @@ KEY11
  .endif
 	RET
 KEY12   SPLK 	#3h,_MDSPL
-	LACC 	DPA0,0     ;Выключение PUMP,VALV1 и VALV2
+	LACC 	_DPA0,0     ;Выключение PUMP,VALV1 и VALV2
 	AND  	#0FFE3h,0
-	SACL 	DPA0
-	OUT  	DPA0,PA0   ;вывод состояние ячейки в порт
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0   ;вывод состояние ячейки в порт
 	EndADC
 	PowerAnalogOff
 	SPLK 	#rCancelByUser,ErrMeas

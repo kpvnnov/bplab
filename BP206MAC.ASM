@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.21 2001-10-11 12:39:48 peter Exp $
+* $Id: BP206MAC.ASM,v 1.22 2001-10-17 15:50:49 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -277,28 +277,28 @@ mMax_number_plus1 .macro
 
 mValve_on	.macro
 
-	LACC DPA0,0     ;Включение клапана (VALV1 и VALV2)
+	LACC _DPA0,0     ;Включение клапана (VALV1 и VALV2)
 	OR   #0018h,0
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
 
  .endm
 
 mValve_hold	.macro
 
-	LACC DPA0,0     ;перевод клапана на удержание
+	LACC _DPA0,0     ;перевод клапана на удержание
 	AND  #0FFEFh,0  ;сбрасываем бит VALV2
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
 
  .endm
 
 mValve_off	.macro
 
-	LACC DPA0,0     ;Выключение VALV (открытие клапана)
+	LACC _DPA0,0     ;Выключение VALV (открытие клапана)
 	AND  #0FFE7h,0
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
 
  .endm
 ******************************
@@ -306,10 +306,10 @@ mValve_off	.macro
 ******************************
 mMotor_on	.macro
 
-	LACC DPA0,0     ;Включение мотора
+	LACC _DPA0,0     ;Включение мотора
 	OR   #0004h,0   ;устанавливаем бит PUMP
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
 
 	LACC _Jobs
 ;	OR   #MotorIsOnn
@@ -326,10 +326,10 @@ mMotor_on	.macro
 *******************************
 mMotor_off	.macro
 
-	LACC DPA0,0     ;Выключение PUMP
+	LACC _DPA0,0     ;Выключение PUMP
 	AND  #0FFFBh,0
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
 	LACC _Jobs
 ;	AND   #MotorIsOnnmask
 	AND   #~(1<<MotorIsOnn_Flag)
@@ -344,17 +344,17 @@ mMotor_off	.macro
 * mMotor_onn и mMotor_off
 ********************************
 mMotor_on_f	.macro
-	LACC DPA0,0     ;Включение мотора
+	LACC _DPA0,0     ;Включение мотора
 	OR   #0004h,0   ;устанавливаем бит PUMP
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
  .endm
 
 mMotor_off_f	.macro
-	LACC DPA0,0     ;Выключение PUMP
+	LACC _DPA0,0     ;Выключение PUMP
 	AND  #0FFFBh,0
-	SACL DPA0
-	OUT  DPA0,PA0
+	SACL _DPA0
+	OUT  _DPA0,PA0
  .endm
 
 ****************************
@@ -522,10 +522,10 @@ mImp_ssp	.macro
  .endm
 
 mBeeper_xor	.macro
-	LACC 	DPA0,0     	;инвертируем значение бипера
+	LACC 	_DPA0,0     	;инвертируем значение бипера
 	XOR  	#01h
-	SACL 	DPA0
-	OUT  	DPA0,PA0   	;вывод состояние ячейки в порт
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0   	;вывод состояние ячейки в порт
  .endm
 
 **************************
@@ -982,13 +982,13 @@ mRead_512b	.macro
 	SAR     AR2,*+
 	SAR     AR0,*+
 
-	LACC 	DPA0
+	LACC 	_DPA0
 	AND  	#01Fh
 	ADD  	_FLADR+1,6
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	OR   	#20h
-	SACL 	DPA0
+	SACL 	_DPA0
 
 	LACC    _FLADR
 	OR	#08000H
@@ -1008,7 +1008,7 @@ $1
 	OR	*,AR7
 	SACL	*+,0,AR0	;записываем в буффер
 	BANZ    $1,*-,AR2	;считаем 256 слов
-	OUT  	DPA0,PA0
+	OUT  	_DPA0,PA0
 
 	MAR	*,AR1
 	MAR	*-,AR1
@@ -1227,10 +1227,10 @@ $1
  .endm
 mBeepXOR	.macro
 
-	LACC 	DPA0,0     ;инвертируем значение бипера
+	LACC 	_DPA0,0     ;инвертируем значение бипера
 	XOR  	#01h
-	SACL 	DPA0
-	OUT  	DPA0,PA0   ;вывод состояние ячейки в порт
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0   ;вывод состояние ячейки в порт
  .endm
 WriteParams .macro code
 

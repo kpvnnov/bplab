@@ -1,6 +1,6 @@
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.19 2001-09-26 12:29:12 peter Exp $
+* $Id: BPDISPL.ASM,v 1.20 2001-10-17 15:50:49 peter Exp $
 *****************************************************************************
 	.globl	_compute
 
@@ -596,11 +596,11 @@ DISPLAY
 	SPLK 	#SSPR,TMP
 	OUT  	TMP,SSPCR
 
-	LACC 	DPA0,0
+	LACC 	_DPA0,0
 	OR   	#02h
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	AND  	#0FFFDh
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	RET

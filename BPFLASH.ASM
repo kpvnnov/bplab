@@ -1,4 +1,4 @@
-* $Id: BPFLASH.ASM,v 1.18 2001-10-11 13:13:34 zykov Exp $
+* $Id: BPFLASH.ASM,v 1.19 2001-10-17 15:50:49 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -1348,13 +1348,13 @@ DISPL_REFRESH:
 	SPLK 	#SSPR,*
 	OUT  	*,SSPCR
 
-	LACC 	DPA0,0
+	LACC 	_DPA0,0
 	OR   	#02h
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	AND  	#0FFFDh
-	SACL 	DPA0
-	OUT  	DPA0,PA0
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0
 	RET
 
 ******************************************************

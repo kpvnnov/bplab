@@ -1,4 +1,4 @@
-* $Id: BPIDLE.ASM,v 1.7 2001-10-11 12:39:49 peter Exp $
+* $Id: BPIDLE.ASM,v 1.8 2001-10-17 15:50:50 peter Exp $
         CLRC INTM               ;RS,NMI,INT1,INT2,TINT,TXRXINT.
 
 IDLEST  NOP
@@ -62,10 +62,10 @@ DELAY1
 
 	DisInt
 
-	LACC 	DPA0,0     ;инвертируем значение бипера
+	LACC 	_DPA0,0     ;инвертируем значение бипера
 	XOR  	#01h
-	SACL 	DPA0
-	OUT  	DPA0,PA0   ;вывод состояние ячейки в порт
+	SACL 	_DPA0
+	OUT  	_DPA0,PA0   ;вывод состояние ячейки в порт
 
 	CLRC 	INTM
 

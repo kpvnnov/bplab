@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.28 2001-10-11 12:39:50 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.29 2001-10-17 15:50:51 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -48,7 +48,7 @@ AutoBaund
 	LACC 	_Jobs,0
 	OR  	#04h
 	SACL 	_Jobs     	;порт заработал - взводим флаг
-	LAR  	AR2,#iCNTASP
+	LAR  	AR2,#_iCNTASP
 
 *	SPLK 	#CNSTASP,CNTASP	;и взводим счетчик
 	SPLK 	#CNSTASP,*	;и взводим счетчик
@@ -193,7 +193,7 @@ RETASPINT
 * обработка прерывания передачи
 *****************************************************************************
 ; смотрим в буфер передачи и потихоньку выталкиваем оттуда данные
-ASPTRANSMIT
+ASPTRANSMIT:
 
  .if DisableDisplay=1
  .elseif DisableDisplay=0
@@ -394,11 +394,10 @@ INTASP
 	IN   	TMP,ASPCR
 	BIT  	TMP,10	;а стоит ли бит автоподстройки?
 	BCND 	ASPAutoBaundFalse,TC	;бит автоподстройки стоит
-	LAR	AR2,#iCNTASP
-*	SPLK 	#CNSTASP,CNTASP	;взводим счетчик заново,
+	LAR	AR2,#_iCNTASP
+	SPLK 	#CNSTASP,*+	;взводим счетчик заново,
 				;так как прерывание произошло
-	SPLK 	#CNSTASP,*	;взводим счетчик заново,
-				;так как прерывание произошло
+        SPLK	#20,*		;20 Секунд не уходим в powerDown
 	BIT  	TMP,7	;разрешены прерывания передачи ?
 	BCND 	ASPTRANSMIT,TC 	;Слово передано
 
@@ -997,20 +996,20 @@ CommAndBlood
 *        SACH AFLMSB,1
 *        OR   #8000h
 *        SACL AFLLSB
-*        LACC DPA0
+*        LACC _DPA0
 *        AND  #01Fh
 *        ADD  AFLMSB,6
-*        SACL DPA0
-*        OUT  DPA0,PA0
+*        SACL _DPA0
+*        OUT  _DPA0,PA0
 *	OR   #20h
-*        SACL DPA0
+*        SACL _DPA0
 
 *        LAR  AR2,AFLLSB
 *	SPLK #07ffh,TMP
 *	RPT  TMP
 *        BLDD *+,#DATART+4
 
-*        OUT  DPA0,PA0
+*        OUT  _DPA0,PA0
 
 	CLRC SXM
  .if Mem=20	;одна микросхема на 2 Mbyte
