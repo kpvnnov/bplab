@@ -1,4 +1,4 @@
-* $Id: ST_SHIFT.ASM,v 1.4 2000-12-13 13:43:28 peter Exp $
+* $Id: ST_SHIFT.ASM,v 1.5 2001-07-04 08:13:24 peter Exp $
 Start_shift
 	LACC    SubroutMode,1
 	ADD     #Start_shift_branch
@@ -18,7 +18,11 @@ Start_shift1
 
 	mNext_sub_mode
 	SPLK 	#3h,MDSPL 	;переходим на уровень давления
+ .if WriteDebug=0
+	mWait 1			;лишние 3 секунды нам ни к чему
+ .else
 	mWait3sek		;3 секунды высвечиваем уровень давления
+ .endif
 	RET
 
 Start_shift1_1
@@ -70,7 +74,7 @@ Start_shift_without
 	;в течении трех минут смещение действительно
 	SPLK	#3*60,*		;в секундах время
 *
-	Beep
+;	Beep
 *
 
 	SPLK 	#PRESSURE_AUGMENT_40,Mode

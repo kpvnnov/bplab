@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.18 2001-04-26 16:11:00 peter Exp $
+* $Id: BP206MAC.ASM,v 1.19 2001-07-04 08:13:22 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -410,11 +410,22 @@ mEnd_meas .macro
 	BCND	$3,EQ
 	SPLK 	#0,MDSPL
 $3
+        BIT	Jobs,15-Manual_Meas
+        BCND	$5,TC
+        ;это автоматическое измерение
+        SPLK	#6,ProtectShow
+$5
+	LACC 	ProtectShow
+	SUB	#5
+        BCND	$4,LT
 	BIT 	Jobs,15-MayShowRes_Flag     	;показывать результаты
 	BCND 	$2,NTC
-
+$4
 	LACC	ErrMeas
 	BCND	$1,NEQ
+        LACC	ProtectShow
+        ADD	#1
+        SACL	ProtectShow
 	LACC    MDSPL
 	SUB	#5
 	BCND	$1,EQ
@@ -423,6 +434,11 @@ $3
 	mNum_Display_Meas
 	B	$2
 $1
+	LACC 	ProtectShow
+	SUB	#5
+        BCND	$6,GT
+	SPLK	#1,Standartmeas
+$6
 	LACC	ErrMeas
 	SACL	DispErrMeas
 $2

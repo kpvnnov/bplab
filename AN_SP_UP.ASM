@@ -1,4 +1,4 @@
-* $Id: AN_SP_UP.ASM,v 1.14 2001-05-28 10:06:25 peter Exp $
+* $Id: AN_SP_UP.ASM,v 1.15 2001-07-04 08:13:22 peter Exp $
 Level_zero
 	LACC    SubroutMode,1
 	ADD     #LevelZero_branch
@@ -40,9 +40,14 @@ LevelZero0
 	BCND	Off_Izmer,EQ
 
 	SPLK 	#6h,MDSPL 	;переходим на номер измерения
+ .if WriteDebug=0
+	mWait 1			;лишние три секунды нам ни к чему
+ .else
 	mWait3sek		;3 секунды высвечиваем номер измерения
+ .endif
 	mNext_sub_mode
 * включаем питание
+	CALL 	SuperBeep
 	PowerAnalogOn
 	Clear_measurement
 	LAR	AR6,#TimeOfBeginMeas
@@ -58,7 +63,11 @@ LevelZero1			;высвечиваем номер измерения
 	RETC 	GT
 	mNext_sub_mode
 *	mWait3sek		;3 секунды высвечиваем уровень давления
+ .if WriteDebug=0
+	mWait 1			;лишние 0.64 секунды нам ни к чему
+ .else
 	SPLK 	#64,ModeCnt	;
+ .endif
 	Clear_measurement
 	BeginADC       ;начинаем измерять ADC
 *	SPLK 	#3h,MDSPL 	;переходим на уровень давления
@@ -181,7 +190,8 @@ Write_branch2
 	SACL	Preset1
 
 *
-	Beep
+;	Beep
+
 	Clear_measurement
 
 	mValve_on

@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.19 2001-05-29 11:50:09 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.20 2001-07-04 08:13:23 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -1271,6 +1271,7 @@ InitScheduler:
 
 	CALL	GetFlashCount
 	BCND	Init_NetIzmereni,EQ
+        SPLK	#6,ProtectShow
 	SUB	#1
 	CALL	GetRecordFlash
 	CALL	SetWatchRecordTime
@@ -1418,4 +1419,15 @@ CheckBabyLevel:
 	BCND	ItIsBigMan,EQ
 	SPLK    #PRESS_130-08000h,PrevPressureLevel
 ItIsBigMan:
+	RET
+
+SuperBeep:
+        BIT	Jobs,15-MayBeeping_Flag
+	BCND 	NotSuperBeep,NTC
+	MAR	*,AR1
+	LAR	AR1,#AVRProg
+	SPLK	#1,*+
+	SPLK	#0BB18h,*		;SetBuzzer
+	CALL	SendCommandAVR
+NotSuperBeep:
 	RET

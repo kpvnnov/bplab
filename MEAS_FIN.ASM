@@ -1,4 +1,4 @@
-* $Id: MEAS_FIN.ASM,v 1.8 2001-04-11 10:03:40 peter Exp $
+* $Id: MEAS_FIN.ASM,v 1.9 2001-07-04 08:13:24 peter Exp $
 Measurment_finish
 	MAR  	*,AR1
  .if OnProtectInterval30s=1
@@ -18,6 +18,9 @@ Measurment_finish1
 	BCND	Measurment_finish2,NEQ	;здесь будет сидеть sheduler!!!
 	; а сейчас (как бы) ошибок не было, 
 	; надо посмотреть систолу и вычислить следующее давление
+;	Beep
+	CALL 	SuperBeep
+
 *	mResetInterval
 	SETC	SXM
 	LACC	SistolPressure
