@@ -1,7 +1,7 @@
 ;&D
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.30 2001-11-23 15:37:38 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.31 2002-03-12 16:24:37 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -1366,6 +1366,7 @@ InitScheduler:
 	;параметров в память
 	mLoadAllParametrs
 
+        SPLK	#0,ProtectShow
 	CALL	GetFlashCount
 	BCND	Init_NetIzmereni,EQ
         SPLK	#6,ProtectShow
