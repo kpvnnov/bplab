@@ -1,6 +1,6 @@
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.14 2001-04-26 15:44:23 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.15 2001-06-07 07:10:45 peter Exp $
 *****************************************************************************
 *
 
@@ -91,6 +91,12 @@ KEY112   SPLK 	#0h,MDSPL
 	RET
 
 KEY10:
+	LAR  	AR1,#ProtectInterval	;защитный интервал?
+	LACC	*
+	BCND	MayPressed,EQ
+        Beep
+        RET
+MayPressed:
 	mManual_MeasOn
 	BIT 	Flags,0
 	BCND    MognoIzmerat,NTC
