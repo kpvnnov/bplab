@@ -2,7 +2,7 @@
 ;/********************************************************************
 ;  Pressure_augment( PressureTop ) -
 ;  Увеличение давления до систолическое+30 мм.рт.ст.
-; $Id: PRESSAUG.ASM,v 1.10 2001-11-14 17:20:53 peter Exp $
+; $Id: PRESSAUG.ASM,v 1.11 2001-11-14 17:33:35 peter Exp $
 ;***********************************************************************/
 ;int	AvrOfTwoDiff2Max
 ;int	TMPMaxNumber
@@ -42,7 +42,7 @@ Pressure_augment
 ;      mEnd_error_meas( rSMALL_SPEED_AUG_PR );
 
 	mEnd_error_meas rSMALL_SPEED_AUG_PR
-	B	Pulse_aug_analysis_end	
+	B	Pulse_aug_analysis_end
 
 ;    }
 ;  }
@@ -77,7 +77,7 @@ Pulse_aug_check_error_2:
 ;      mEnd_error_meas( rBIG_SPEED_AUG_PR );
 
 	mEnd_error_meas rBIG_SPEED_AUG_PR
-	B	Pulse_aug_analysis_end		
+	B	Pulse_aug_analysis_end
 
 ;    }
 ;  }
@@ -500,8 +500,10 @@ Pulse_aug_End:
 ;  }
 
 Pulse_aug_analysis_end:
+;  Pressure_for_display();
 ;  Analysis_of_end();
 
+	CALL	Pressure_for_display
 	CALL	Analysis_of_end
 	LACC    _SampleNumber,0
 	ADD	#1

@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: pr_dim1.asm,v 1.6 2001-11-14 17:20:54 peter Exp $
+; $Id: pr_dim1.asm,v 1.7 2001-11-14 17:33:36 peter Exp $
 ;*       Pressure_diminution_1() - Процесс подготовки данных после
 ;*	 понижения давления на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
@@ -98,6 +98,13 @@ Dim1_prediction_2:
 
 	RPT	#PREDICTION_INTERVAL
 	SACH    *+,2,AR2
+
+;       /* 	Давление для дисплея*/
+
+	LACL    CurrPressure
+	ADD	#B0_5mm*2,0
+	SACL	PressureForDisplay+0,0
+	CALL	Pressure_for_display
 
 ;       /*      Подготовка к следующему режиму  */
 ;       Mode = PRESSURE_MEASUREMENT;

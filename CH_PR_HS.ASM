@@ -1,7 +1,7 @@
 ;&D
 ;*********************************************************************
-;    Check_higher_sistol_pressure()   - Проверка превышения
-*                                       систолического давления
+;    Check_higher_sistol_pressure()   - Проверка превышени
+*                                       систолического давлени
 ;***********************************************************************
 ;
 ;void Check_higher_sistol_pressure()
@@ -125,8 +125,10 @@ Check_hsp_next_mode_isnt:
 Check_hsp_impulse_small:
 ;  }
 Check_hsp_max_isnt:
+;  Pressure_for_display();
 ;  End_step_analysis();
 
+	CALL	Pressure_for_display
 	CALL	End_step_analysis
 	RET
 

@@ -1,7 +1,7 @@
 ;&D
 ***********************************************************************
 *       Average
-* $Id: PROCEDUR.ASM,v 1.7 2001-11-14 17:20:53 peter Exp $
+* $Id: PROCEDUR.ASM,v 1.8 2001-11-14 17:33:35 peter Exp $
 ***********************************************************************
 Average
 
@@ -501,3 +501,43 @@ Step_number_error_isnt:
 	LAR	AR0,*-,AR1
 	PSHD    *,AR2
 	RET
+
+
+;***********************************************************************
+;	Pressure_for_display()
+;***********************************************************************
+;Pressure_for_display()
+Pressure_for_display:
+
+;{
+;   PressureForDisplay[0] = PressureForDisplay[0] +
+;	   ( CurrPressure - PressureForDisplay[0])/32;
+;   if(( SampleNumber%16 ) == 0 )
+;   {
+;      PressureForDisplay[1] = PressureForDisplay[0];
+;   }
+;}
+	MAR	*,AR1
+	POPD    *+,AR1
+	SAR	AR0,*+,AR2
+
+	LACL	CurrPressure
+	SUBS    PressureForDisplay+0
+	RPT	#3
+	SFR
+	ADDS    PressureForDisplay+0
+	SACL    PressureForDisplay+0
+
+	LACL	SampleNumber
+	AND	#0Fh
+	BCND	Pressure_f_d_not_new_press,NEQ
+	LACL	PressureForDisplay+0
+	SACL	PressureForDisplay+1
+Pressure_f_d_not_new_press:
+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR	AR0,*-,AR1
+	PSHD    *,AR2
+	RET
+;

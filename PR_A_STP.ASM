@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: PR_A_STP.ASM,v 1.8 2001-11-14 17:20:53 peter Exp $
+; $Id: PR_A_STP.ASM,v 1.9 2001-11-14 17:33:35 peter Exp $
 ;* 	Pressure_augment_stop() - Процесс остановки нагнетания давлени
 ;*	При переключении в этот режим необходимо задать:
 ;*  	1. Время до выключения клапана (ModeCnt = WHITE_VALVE_OFF)!
@@ -76,6 +76,11 @@ Pr_a_stp_case1
 	BCND	Press_aug_st_is_end,TC
 
 ;   {
+;       /* 	Давление для дисплея*/
+
+	LACL    CurrPressure
+	SACL	PressureForDisplay+0,0
+
 ;     /*  Подготовка к следующему режиму */
 ;     Mode = CHECK_HIGHER_SISTOL_PRESSURE;
 
@@ -136,9 +141,11 @@ Press_aug_st_is_end:
 	mEnd_error_meas rTIME_PR_AUG_STOP_MORE_2_SEC
 
 Press_aug_st_check_anal_end:
+; Pressure_for_display();
 ; Analysis_of_end();
 ; SampleNumber++;
 
+	CALL	Pressure_for_display
 	CALL	Analysis_of_end
 	LACC    _SampleNumber,0
 	ADD	#1

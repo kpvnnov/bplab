@@ -1,5 +1,5 @@
 ;&D
-* $Id: PUL_F_E.ASM,v 1.11 2001-11-14 17:20:53 peter Exp $
+* $Id: PUL_F_E.ASM,v 1.12 2001-11-14 17:33:35 peter Exp $
 ;/***********************************************************
 ;*   Measurement_initialization
 ;***********************************************************/
@@ -213,8 +213,8 @@ Pulse_2_comparison_end:
 Pulse_3_comparison_end:
 
 ;       if (abs(( Diff2MaxAdress[MaxNumber]-2*Diff2MaxAdress[MaxNumber-1]+
-;                 Diff2MaxAdress[MaxNumber-2]))<
-;               ( Diff2MaxAdress[MaxNumber]-Diff2MaxAdress[MaxNumber-2])*0.33/2)
+;             Diff2MaxAdress[MaxNumber-2]))<
+;           ( Diff2MaxAdress[MaxNumber]-Diff2MaxAdress[MaxNumber-2])*0.33/2)
 ;       {
 ;         FlagsWord = FlagsWord |(1<<INTERVALE_COMPARISON);
 ;       }
@@ -1359,9 +1359,11 @@ Pulse_f_e_40_sn_less_10:
 ;  }
 Pulse_f_e_40_next_mode_is:
 
+;  Pressure_for_display();
 ;  Analysis_of_end();
 ;  SampleNumber++;
 
+	CALL	Pressure_for_display
 	CALL	Analysis_of_end
 	LACC    _SampleNumber,0
 	ADD	#1
@@ -1458,9 +1460,11 @@ Pulse_f_e_80_sn_less_10:
 ;  }
 Pulse_f_e_80_next_mode_is:
 
+;  Pressure_for_display();
 ;  Analysis_of_end();
 ;  SampleNumber++;
 
+	CALL	Pressure_for_display
 	CALL	Analysis_of_end
 	LACC    _SampleNumber,0
 	ADD	#1

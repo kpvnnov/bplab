@@ -1,7 +1,7 @@
 ;&D
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.12 2001-11-14 17:20:53 peter Exp $
+* $Id: PRESS_M.ASM,v 1.13 2001-11-14 17:33:35 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
 Pressure_measurement:
@@ -103,15 +103,21 @@ Press_m_big_impulse:
 Press_m_small_impulse:
 Press_m_end:
 Press_m_max_isnt:
+;  Pressure_for_display();
 ;  End_step_analysis();
 ;}
-
+	CALL	Pressure_for_display
 	CALL	End_step_analysis
 	RET
 
  .if (Sertificarion==1)
 * стоим на ступеньке две секунды
 Pressure_measurement_Manual:
+
+;  Pressure_for_display();
+
+	CALL	Pressure_for_display
+
 	LACC	_SampleNumber
 	ADD	_SampleNumberShift
 	ADD	TimeNakachka

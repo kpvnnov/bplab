@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206SEC.ASM,v 1.15 2001-11-14 17:20:51 peter Exp $
+* $Id: BP206SEC.ASM,v 1.16 2001-11-14 17:33:33 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -167,7 +167,7 @@ MIN_THRESHOLD_SISTOL    	.equ    B0_1mm*3
 MAX_THRESHOLD_SISTOL    	.equ    B10mm*3
 
 ZERO_ZERO_FIVE_MM_PER_SAMPLE 	.equ 	B0_1mm*20    ;0,01мм.pт.ст/отсчет
-ONE_MM_PER_SAMPLE               .equ    B0_5mm*30*2  ;1,00мм.pт.ст/отсчет
+ONE_MM_PER_SAMPLE               .equ    B0_5mm*30*3  ;1,00мм.pт.ст/отсчет
 
 RESERVE_MILL_OF_MERC    	.equ    B8mm
 EIGHT_MILL_OF_MERC		.equ    B8mm

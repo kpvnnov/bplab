@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.22 2001-11-14 17:20:51 peter Exp $
+* $Id: BPDISPL.ASM,v 1.23 2001-11-14 17:33:33 peter Exp $
 *****************************************************************************
 	.globl	_compute
 
@@ -249,17 +249,18 @@ MDSPL11  SETC	SXM
 
 
 MDSPL12
-	SETC	SXM
-	MAR	*,AR6
-	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	;SETC	SXM
+	;MAR	*,AR6
+	;LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 
-	LACC    *
-	ADD  	#4000h,1
-	AND	#0ffffh
-	SUB  	Preset0
-	BCND 	No_minus12,GEQ
-	LACC 	#0h
-No_minus12
+	;LACC    *
+	;ADD  	#4000h,1
+	;AND	#0ffffh
+	;SUB  	Preset0
+	;BCND 	No_minus12,GEQ
+	;LACC 	#0h
+;No_minus12
+        LACL	PressureForDisplay+1		;давление в канале 0 фильтрованное
 	SACL    TMP
 	CALL	OutputPressure
 	SPLK 	#10,*

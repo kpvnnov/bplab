@@ -1,5 +1,5 @@
 ;&D
-* $Id: PR_A_T40.ASM,v 1.16 2001-11-14 17:20:53 peter Exp $
+* $Id: PR_A_T40.ASM,v 1.17 2001-11-14 17:33:35 peter Exp $
 Pressure_augment_40:
 
 	MAR	*,AR1
@@ -126,6 +126,7 @@ Pr_aug_40_case5:
 	B       Pr_aug_40_quit
 
 Pr_aug_40_quit:
+	CALL	Pressure_for_display
 	LACC    TimeNakachka,0
 	ADD	#1
 	SACL    TimeNakachka,0
@@ -262,6 +263,9 @@ Pr_aug_80_case5:
 	B       Pr_aug_80_quit
 
 Pr_aug_80_quit:
+;  Pressure_for_display();
+
+	CALL	Pressure_for_display
 	LACC    _SampleNumber,0
 	ADD	#1
 	SACL    _SampleNumber,0
