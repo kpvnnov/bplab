@@ -1,4 +1,4 @@
-* $Id: BPFLASH.ASM,v 1.17 2001-10-11 12:39:48 peter Exp $
+* $Id: BPFLASH.ASM,v 1.18 2001-10-11 13:13:34 zykov Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -485,7 +485,7 @@ NotNormalWrite1
         BCND NormailWrite2,NTC
         LACC _Jobs
         AND  #0FFEFH
-        SACL Jobs      ;сбрасываем бит записи в канал значения ЦАП
+        SACL _Jobs      ;сбрасываем бит записи в канал значения ЦАП
 NormailWrite2:
  .if WriteDebug!=0
 
