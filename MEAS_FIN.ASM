@@ -1,5 +1,5 @@
 ;&D
-* $Id: MEAS_FIN.ASM,v 1.13 2002-08-13 11:30:34 peter Exp $
+* $Id: MEAS_FIN.ASM,v 1.14 2002-08-13 11:43:14 zykov Exp $
 Measurment_finish
 	MAR  	*,AR2
  .if OnProtectInterval30s=1
@@ -68,11 +68,11 @@ BigPeople:
 	SPLK	#LPRESS_280,PrevPressureLevel
 	RET
 Meas_not_in_range:
-// .if (WriteDebug!=0) & (Sertificarion=1)
-//        SPLK    #LPRESS_260,PrevPressureLevel
-// .else
+; .if (WriteDebug!=0) & (Sertificarion=1)
+;        SPLK    #LPRESS_260,PrevPressureLevel
+; .else
 	SPLK    #LPRESS_160,PrevPressureLevel
-// .endif
+; .endif
 Meas_in_range:
 	RET
 CheckForcedMeas

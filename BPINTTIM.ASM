@@ -1,7 +1,7 @@
 ;&D
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.32 2002-08-13 11:30:33 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.33 2002-08-13 11:43:13 zykov Exp $
 ****************************************************************************
 
 INTTIM
@@ -1508,11 +1508,11 @@ NoEnableResult:
 
 CheckBabyLevel:
 	;по умолчанию детский режим
-// .if (WriteDebug!=0) & (Sertificarion=1)
-//        SPLK    #PRESS_260-08000h,PrevPressureLevel
-// .else
+; .if (WriteDebug!=0) & (Sertificarion=1)
+;        SPLK    #PRESS_260-08000h,PrevPressureLevel
+; .else
         SPLK    #PRESS_160-08000h,PrevPressureLevel
-// .endif
+; .endif
 
 	MAR  	*,AR2
 	LAR	AR2,#MayModify+1
