@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.3 2001-10-11 12:39:51 peter Exp $
+# $Id: Makefile,v 1.4 2001-11-08 21:21:06 peter Exp $
 
 AC=asmtms\dspa.exe
 CC=asmtms\dspcl.exe
 
 ASMOPT=-l -v2xx -s -w
-CCOPT=-v2xx -ss -o2 -iinclude 
-#-g
+CCOPT=-v2xx -o2 -iinclude 
+#-g -ss 
 BPNOEKG  =-dVersionFerrum=2 -dNewFerrum=1 -dMem=20 -dTwoChanel=0
 BPNOEKGD =-dVersionFerrum=2 -dNewFerrum=1 -dMem=20 -dTwoChanel=0
 BPNOEKGS =-dVersionFerrum=2 -dNewFerrum=1 -dMem=20 -dTwoChanel=0

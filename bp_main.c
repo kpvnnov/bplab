@@ -1,4 +1,4 @@
-// $Id: bp_main.c,v 1.4 2001-10-17 15:50:52 peter Exp $
+// $Id: bp_main.c,v 1.5 2001-11-08 21:21:06 peter Exp $
 
 #include "global.h"
 
@@ -13,6 +13,7 @@ extern unsigned short DPA0;
 unsigned short flags;
 
 extern unsigned short rDIOSR;
+extern short ModeCnt;
 
 #define portIOSR	portFFF6
 volatile ioport unsigned portIOSR;
@@ -743,3 +744,10 @@ unsigned short child_age;
  return result;
 
 }
+
+// .if WriteDebug=0
+// .elseif WriteDebug<3
+long Preset0,Preset1;
+
+
+
