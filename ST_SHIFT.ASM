@@ -1,4 +1,5 @@
-* $Id: ST_SHIFT.ASM,v 1.7 2001-10-08 08:29:14 peter Exp $
+;&D
+* $Id: ST_SHIFT.ASM,v 1.8 2001-10-22 13:38:18 peter Exp $
 Start_shift
 	LACC    SubroutMode,1
 	ADD     #Start_shift_branch
@@ -81,8 +82,6 @@ Start_shift3:
 *
 
 	SPLK 	#PRESSURE_AUGMENT_40,Mode
-	SPLK	#PRESS_40,PressPulseFrEv
-	SPLK	#0,SubroutMode		;для первоначального case
-	Clear_measurement
+        mClear_subrout_mode_err_meas
 	SPLK 	#iCURRENT_PRESSURE,_MDSPL 	;переходим на уровень давления
         RET

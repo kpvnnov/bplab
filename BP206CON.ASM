@@ -1,4 +1,5 @@
-* $Id: BP206CON.ASM,v 1.12 2001-08-22 14:17:37 peter Exp $
+;&D
+* $Id: BP206CON.ASM,v 1.13 2001-10-22 13:38:11 peter Exp $
 ;CLKIN 3.6864 Œ£æ
 ;DIV1==DIV2=0 Internal divide-by-two
 ;CLOCKOUT1 = 1.8432 Œ£æ

@@ -1,6 +1,16 @@
+;&D
 
 PRD     .equ    025h
 TCR     .equ    026h
+
+TwoChanel       .set	0
+WriteDebug	.set	0
+NotCheck280mm   .set    0
+Emulator  	.set    0
+DisableDisplay  .set    0
+PsevdoEKG 	.set    0
+VersionFerrum   .set    1
+Sertificarion   .set    0
 
         .copy   bp206sec.asm
         .copy   bp206def.asm
@@ -10,8 +20,9 @@ TCR     .equ    026h
         .text
 
         .copy BP_init.asm
-
-        CALL    InitPulse
+	CALL	Pul_f_e_init_2
+	SPLK	#0D45h,TmpAddress
+        IN      DimStopAddress,1
 
         LDP     #0
         SPLK    #0FFFFh,PRD
@@ -23,11 +34,47 @@ Next_Sample
         SPLK    #0C20h,TCR
         LDP     #4
 
+	LACC	SampleNumber
+	ADD	SampleNumberShift
+	SUB	TmpAddress
+	BCND	Not_tmp_address,NEQ
+	NOP
+Not_tmp_address:
+
         MAR     *,AR2
+        LAR     AR2,#SR30+14
+	RPT	#14
+	DMOV	*-,AR2
         LAR     AR2,#Signal
         LAR     AR0,SampleNumber
         MAR     *0+,AR2
-        IN      *,0
+        IN      *,0,AR2
+	LACC	*,0,AR2
+        LAR     AR2,#SR30
+	SACL	*
+	ADD	#4000h,1
+	SACL	CurrPressure
+
+;	if (((MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) != 0 );
+;         // { Pressure_diminition_2(); }
+;	  { if (( SampleNumber + SampleNumberShift ) == DimStopAddress)}
+;	      { MeasurementFlags = MeasurementFlags &(~(1<<DIM_PRESSURE_FLAG));
+;
+;	      }
+;	  }
+	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BCND 	Nodim,NTC
+;;	;;CALL	Pressure_diminition_2
+	LACC	SampleNumberShift
+	ADD	SampleNumber
+	SUB     #8
+	SUB	DimStopAddress
+	BCND 	Nodim,NEQ
+	LACC	MeasurementFlags
+	AND	#(~(1<<DIM_PRESSURE_FLAG))
+	SACL    MeasurementFlags
+        IN      DimStopAddress,1
+Nodim:
 
         CALL    ADC_value_processing
 
@@ -37,7 +84,13 @@ Next_Sample
 
 Mode_branch
 
-        CALL    Pulse_frequency_evaluation
+        CALL    Pulse_frequency_evaluation_40
+        B       End_mode
+
+        CALL    Pressure_augment_80
+        B       End_mode
+
+        CALL    Pulse_frequency_evaluation_80
         B       End_mode
 
         CALL    Pressure_augment
@@ -56,15 +109,20 @@ Mode_branch
         B       End_mode
 
 End_mode
-	CALL	Analysis_of_end
-        LACC    SampleNumber
-        ADD     #1
-        SACL    SampleNumber
 
         B       Next_Sample
 
 ******************************************
         .copy   bp206mac.asm
+
+Pul_f_e_init_2:
+	mMeasurement_init
+	SPLK	#0+2*B10mm+B4mm,PressureTop
+	;SPLK	#0-B10mm,PressureTop
+	MAR	*,AR2
+	LAR	AR2,#MayModify+1
+	SPLK	#0A5h,*
+	ret
 
         .copy   ADC_v_p5.asm
 
@@ -73,6 +131,8 @@ End_mode
         .copy   Pressaug.asm
 
         .copy   Ch_pr_hs.asm
+
+        .copy   Pr_a_t40.asm
 
         .copy   Pr_a_stp.asm
 
@@ -89,8 +149,9 @@ End_mode
 
         .copy   Division.asm
 
-        .copy   Pr_dimin.asm
+        .copy   Pr_dim1.asm
 
-        .copy   Anal_end.asm
+        .copy   Pr_dim2.asm
 
+        .copy   bptable.asm
         .end

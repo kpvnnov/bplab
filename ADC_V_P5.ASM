@@ -1,5 +1,6 @@
-****************************************************************
-* $Id: ADC_V_P5.ASM,v 1.5 2001-08-22 14:17:35 peter Exp $
+;&D
+*************************************************************
+* $Id: ADC_V_P5.ASM,v 1.6 2001-10-22 13:38:10 peter Exp $
 *  Процесс обработки значений ADC -
 *
 *  void ADC_value_processing(){
@@ -15,7 +16,6 @@
 *     AveragePeriodEvaluation
 *     TempPeriod
 *     TempPeriodDiff
-*     Temp2PeriodDiff
 *     TempAmplitudeDiff
 *     Temporary1_L
 *     Temporary1_H
@@ -25,6 +25,7 @@
 *  В pежиме косвенной адpесации
 *
 *     Signal[]
+*     DiffSignal[MAX_ANALYSIS_INTERVAL]
 *     Diff2Max[MAX_NUMBER]
 *     Diff2MaxAdress[MAX_NUMBER]
 *     MaxAvrPress[3]
@@ -35,21 +36,27 @@
 *  Номеp веpсии   Дата изменения   Пpичина
 *
 *     1.0.0.        26.01.2000.
-*     1.0.1.        21.04.2000.    Изменение алгоpитма обнаpужения
+*     1.0.1.        21.04.2000.    Изменение алгоpитма обнаpужени
 *                                  и оценки амплитуды импульсов.
+*     1.0.2.        25.04.2001.    Изменение алгоpитма обнаpужени
 *
 ****************************************************************
-
+;
+;#define	MAX_ANALYSIS_INTERVAL 200;
+;
 ;void ADC_value_processing()
 ;{
+;static int DiffSignal[MAX_ANALYSIS_INTERVAL];
 ;long int Win_blackman[8]={417,4233,16655,30465,30465,16655,4233,417};
-;int DiffSignalMax,DiffSignal;
+;int DiffSignalMax,Diff2Signal;
 ;int i,k;
 ;long int Temp0;
 
+;MAX_ANALYSIS_INTERVAL 	.set	200
+
 ;  Использование ячеек памяти TMP в модуле ADC_value_processing
 
-DiffSignal              .equ   TMP
+Diff2Signal             .equ   TMP
 DiffSignalMax           .equ   TMP+1
 SignalSampleNumber      .equ   TMP+2	; & SignalSampleNumber
 NumberOfMaxSample       .equ   TMP+3
@@ -57,8 +64,8 @@ DiffMaxNumber           .equ   TMP+4
 MaxSampleNumber         .equ   TMP+5
 
 MIN_INTERVAL_TO_VERGE			.equ	25
-FIRST_THRESHOLD_OF_INTERVAL        	.equ    65
-SECOND_THRESHOLD_OF_INTERVAL        	.equ    80
+FIRST_THRESHOLD_OF_INTERVAL        	.equ    65*4
+SECOND_THRESHOLD_OF_INTERVAL        	.equ    80*4
 
         .text
 
@@ -80,64 +87,14 @@ ADC_value_processing:
 	AND	#~(1<<DIFF_MAX_FLAG)
 	SACL	MeasurementFlags
 
-;  if ( SampleNumber > AnalysisStart )
+;  if ( SampleNumber > DIFF_BASIS*2 )
 
         LACC    SampleNumber,0
-        SUB     AnalysisStart,0
+        SUB     #DIFF_BASIS*2
         BCND    ADC_v_end_p,LEQ
 
 ;  { /* Поиск максимума на интервале ANALYSIS_INTERVAL */ // DIFF_BASIS=12 при Fs=100Гц
-;    DiffSignalMax = MIN_NUMBER;
-
-	SPLK	#MIN_NUMBER,DiffSignalMax
-
-;    Определение номера максимального отсчета ( где искать Max )
-;    if (( Mode == PRESSURE_MEASUREMENT )||( Mode == CHECK_HIGHER_SISTOL_PRESSURE))
-;    {
-;      if ((MeasurementFlags & (1<<FIRST_IMPULSE_FLAG)) == 0)
-;      {
-;        if (AveragePeriodEvaluation => 65)
-;        {
-;          if (AveragePeriodEvaluation <= 80)
-;          {
-;            MaxSampleNumber = 25
-;          }
-;          else
-;          {
-;            MaxSampleNumber = AnalysisInterval * 0.3
-;          }
-;        }
-;        else
-;        {
-;          MaxSampleNumber = AnalysisInterval/2
-;        }
-;      }
-;      else
-;      {
-;        if (AveragePeriodEvaluation => 65)
-;        {
-;          if (AveragePeriodEvaluation <= 80)
-;          {
-;            MaxSampleNumber = AnalysisInterval - 25
-;          }
-;          else
-;          {
-;            MaxSampleNumber = AnalysisInterval * 0.7
-;          }
-;        }
-;        else
-;        {
-;          MaxSampleNumber = AnalysisInterval/2
-;        }
-;      }
-;    }
-;    else
-;    {
-;      MaxSampleNumber = AnalysisInterval/2
-;    }
-
-
-;    Определение номера максимального отсчета ( где искать Max )
+;    // Определение номера максимального отсчета ( где искать Max )
 ;    if (( Mode == PRESSURE_MEASUREMENT )||( Mode == CHECK_HIGHER_SISTOL_PRESSURE))
 ;    {
 
@@ -195,7 +152,6 @@ ADC_v_impl_30_to_end:
 ;          MaxSampleNumber = AnalysisInterval/2
 ;        }
 ;      }
-;      }
 
 ADC_v_first_impulse:
 
@@ -242,6 +198,7 @@ ADC_v_first_impl_30_to_end:
 ;        {
 ;          MaxSampleNumber = AnalysisInterval/2
 ;        }
+;      }
 ;    }
 
 ADC_v_impulse_in_center:
@@ -257,128 +214,128 @@ ADC_v_impulse_in_center:
 ;    }
 ADC_v_impulse_plase_finish:
 
-;    for ( i=SampleNumber ; i > (SampleNumber - AnalysisInterval) ; i-- )
-
-        LACC    SampleNumber,0
-        ADD     #Signal,0
-        SACL    SignalSampleNumber      ; & SignalSampleNumber
-        LAR     AR2,SignalSampleNumber  ; AR2 = & Signal[SampleNumber]
-        SUB     #DIFF_BASIS
-        SACL    SignalSampleNumber
-        LAR     AR3,SignalSampleNumber  ; AR3 = & Signal[SampleNumber-DIFF_BASIS]
-	LAR	AR0,AnalysisInterval
-	MAR	*,AR4
-
-	 .if SIM != 0
-	SPLK	#1,TMP+7
-	.endif
-
+;    // Вычисление нового отсчета согласованного фильтра
+;    for ( i=MAX_ANALYSIS_INTERVAL; i > 0; i-- )
 ;    {
-;      Temp0 = 0;
-;      for ( k=0; k<8; k++ )
-
-ADC_v_for_i1
-	SAR	AR2,SignalSampleNumber
-        LAR     AR4,SignalSampleNumber  ; & Signal[i-k]
-	SAR	AR3,SignalSampleNumber
-        LAR     AR5,SignalSampleNumber 	; & Signal[i-k-DIFF_BASIS]
-
-;      {
-;      Temp0 = Temp0 + ((long int)(Signal[i-k]))*Win_blackman[k] -
-;      		((long int)(Signal[i-k-DIFF_BASIS]))*Win_blackman[k];
-;      }
-;      DiffSignal = (int)(Temp0>>14);
-
-        MAC  	WIN_BL,*-,AR4
-	LACC 	#0
-	RPT  	#2
-	MAC 	WIN_BL+1,*-,AR4
-	MAR	*,AR5
-	RPT  	#3
-	MAC 	WIN_BL_MINUS,*-,AR5
-	MAR	*,AR4
-	RPT  	#3
-	MAC 	WIN_BL+4,*-,AR4
-	MAR	*,AR5
-	RPT  	#3
-	MAC 	WIN_BL_MINUS+4,*-,AR5
-	APAC
-	SACH 	DiffSignal,2
-
-	 .if SIM != 0
-	BIT 	TMP+7,15
-	BCND	SimDiffSignal,NTC
-	SPLK	#0,TMP+7
-        OUT     DiffSignal,0
-SimDiffSignal:
-	.endif
-
-
-;      if ( DiffSignalMax < DiffSignal)
-
-	LACC	DiffSignal,0
-	SUB	DiffSignalMax,0
-	BCND	ADC_v_for_i2,LEQ
-
-;      {
-;      	DiffSignalMax = DiffSignal;
-;      	DiffMaxNumber = i;
-
-	LACC	DiffSignal,0
-	SACL    DiffSignalMax,0
-	SAR	AR2,NumberOfMaxSample
-
-;      }
-
-ADC_v_for_i2
+;      DiffSignal[i] = DiffSignal[i-1];
+;    }
 
 	MAR	*,AR2
-	MAR	*-,AR3
-	MAR	*-,AR0
-	BANZ	ADC_v_for_i1,*-,AR4
+	LAR	AR2,#DiffSignal+MAX_ANALYSIS_INTERVAL-2
+	RPT	#MAX_ANALYSIS_INTERVAL-2
+	DMOV    *-,AR2
 
+;    Temp0 = 0;
+;    for ( k=0; k<8; k++ )
+;    {
+;      Temp0 = Temp0 +
+;        ((long int)(Signal[SampleNumber-k]))*Win_blackman[k] -
+;        ((long int)(Signal[SampleNumber-k-DIFF_BASIS]))*Win_blackman[k];
 ;    }
-;    DiffMaxNumber = SampleNumber - DiffMaxNumber;
+;    DiffSignal[0] = (int)(Temp0>>14);
 
-	LACC    #Signal
-	ADD	SampleNumber,0
-	SUB 	NumberOfMaxSample,0
-	SACL	DiffMaxNumber,0
+        LAR     AR0,SampleNumber
+        LAR     AR2,#Signal
+	MAR	*0+,AR3                 ; AR2 = & Signal[SampleNumber]
+        LAR     AR3,#Signal-DIFF_BASIS
+        MAR     *0+,AR2  		; AR3 = & Signal[SampleNumber-DIFF_BASIS]
 
-;    /*  DiffMaxNumber = i ( сеpедина фpонта + HALF_OF_WIN) */
-;    if ( DiffMaxNumber == MaxSampleNumber )
+        MAC  	WIN_BL,*-,AR2
+	LACC 	#0
+	RPT  	#2
+	MAC 	WIN_BL+1,*-,AR2
+	MAR	*,AR3
+	RPT  	#3
+	MAC 	WIN_BL_MINUS,*-,AR3
+	MAR	*,AR2
+	RPT  	#3
+	MAC 	WIN_BL+4,*-,AR2
+	MAR	*,AR3
+	RPT  	#3
+	MAC 	WIN_BL_MINUS+4,*-,AR3
+	MAR	*,AR2
+	LAR	AR2,#DiffSignal
+	APAC
+	SACH 	*,2,AR2
+
+	 .if SIM != 0
+        OUT     *,0
+	.endif
+
+;    if ( SampleNumber > AnalysisStart )
+;    {
+
+        LACC    SampleNumber,0
+        SUB     AnalysisStart,0
+        BCND    ADC_v_SN_less_AS,LEQ
+
+;      // Поиск максимума в DiffSignal на интервале AnalysisInterval
+;      DiffSignalMax = MIN_NUMBER;
+;      for ( i=AnalysisInterval; i > 0; i-- )
+;      {
+;        if ( DiffSignalMax < DiffSignal[i])
+;        {
+;      	   DiffSignalMax = DiffSignal[i];
+;      	   DiffMaxNumber = i;
+;        }
+;      }
+
+	SPLK	#MIN_NUMBER,DiffSignalMax
+	LAR	AR0,AnalysisInterval
+ADC_v_for_i1:
+	LACC	*,0,AR2
+	SUB	DiffSignalMax,0
+	BCND	ADC_v_for_i2,LEQ
+	LACC	*,0,AR2
+	SACL    DiffSignalMax,0
+	SAR	AR0,DiffMaxNumber       ; Номер отсчета от
+ADC_v_for_i2                           	; начала интервала
+	MAR	*+,AR0
+	BANZ	ADC_v_for_i1,*-,AR2
+
+;      /*  DiffMaxNumber = i ( сеpедина фpонта + HALF_OF_WIN) */
+
+	LACC 	AnalysisInterval,0
+	SUB     DiffMaxNumber,0         ; Номер отсчета от
+	SACL    DiffMaxNumber,0         ; конца интервала
+
+;      if ( DiffMaxNumber == MaxSampleNumber )
 
 	LACC    MaxSampleNumber,0
 	SUB	DiffMaxNumber,0
         BCND    ADC_MaxNotCenter,NEQ
 
-;    {
-;      DiffMaxFlag = True;
+;      { // Максимум есть. Начинаем анализ
+;        DiffMaxFlag = True;
 
 	LACC	MeasurementFlags
 	OR	#(1<<DIFF_MAX_FLAG)
 	SACL	MeasurementFlags
 
-;      DiffSignalMax = MIN_NUMBER;
+;        DiffSignalMax = MIN_NUMBER;
 
 	SPLK	#MIN_NUMBER,DiffSignalMax
 
-;      for ( i=SampleNumber - DiffMaxNumber;
-;            i >= ( SampleNumber - DiffMaxNumber - DIFF_BASIS - 2 ); i-- )
+;        for ( i=SampleNumber - DiffMaxNumber;
+;              i >= ( SampleNumber - DiffMaxNumber - DIFF_BASIS - 2 ); i-- )
 
+	LACC    #Signal
+	ADD	SampleNumber
+	SUB     DiffMaxNumber
+	SACL	SignalSampleNumber
 	LAR	AR0,#DIFF_BASIS+1
-        LAR     AR2,NumberOfMaxSample	; AR2 = & Signal[i]
-	MAR	*,AR3
-        LAR     AR3,NumberOfMaxSample
-	SBRK	#DIFF_BASIS		; AR3 = & Signal[i-DIFF_BASIS]
-	MAR	*,AR4
-        LAR     AR4,NumberOfMaxSample
-	SBRK	#DIFF_BASIS*4/3         ; AR4 = & Signal[i-DIFF_BASIS*4/3]
+        LAR     AR2,SignalSampleNumber	; AR2 = & Signal[i]
+	SUB	#DIFF_BASIS
+	SACL	SignalSampleNumber
+        LAR     AR3,SignalSampleNumber  ; AR3 = & Signal[i-DIFF_BASIS]
+	SUB	#DIFF_BASIS*1/3
+	SACL	SignalSampleNumber
+        LAR     AR4,SignalSampleNumber  ; AR4 = & Signal[i-DIFF_BASIS*4/3]
 	MAR	*,AR5
 
-;      {
-;	DiffSignal = 0;
-;	for ( k=0; k<8; k++ )
+;        {
+;          Diff2Signal = 0;
+;          for ( k=0; k<8; k++ )
 
 ADC_v_for_i3
 
@@ -389,11 +346,11 @@ ADC_v_for_i3
 	SAR	AR4,SignalSampleNumber
         LAR     AR7,SignalSampleNumber 	; & Signal[i-k-DIFF_BASIS*4/3]
 
-;	{
-;	  DiffSignal = DiffSignal + Signal[i-k]))*Win_blackman[k] -
-;	  		4*Signal[i-k-DIFF_BASIS]))*Win_blackman[k] +
-;	  		3*Signal[i-k-DIFF_BASIS*4/3]))*Win_blackman[k];
-;	}
+;          {
+;            Diff2Signal = Diff2Signal + Signal[i-k]))*Win_blackman[k] -
+;                          4*Signal[i-k-DIFF_BASIS]))*Win_blackman[k] +
+;                          3*Signal[i-k-DIFF_BASIS*4/3]))*Win_blackman[k];
+;          }
 
         MAC  	WIN_BL_025,*-,AR5
 	LACC 	#0
@@ -409,23 +366,23 @@ ADC_v_for_i3
 	RPT  	#3
 	MAC 	WIN_BL_MINUS+4,*-,AR6
 	APAC
-	SACH 	DiffSignal,2
+	SACH 	Diff2Signal,2
 
-;	if ( DiffSignalMax < DiffSignal )
+;          if ( DiffSignalMax < Diff2Signal )
 
-	LACC	DiffSignal,0
+	LACC	Diff2Signal,0
 	SUB	DiffSignalMax,0
 	BCND	ADC_v_for_i4,LEQ
 
-;	{
-;	  DiffSignalMax = DiffSignal;
-;	  Diff2MaxAdress[MaxNumber] = i;
+;          {
+;            DiffSignalMax = Diff2Signal;
+;            Diff2MaxAdress[MaxNumber] = i;
 
-	LACC	DiffSignal,0
+	LACC	Diff2Signal,0
 	SACL    DiffSignalMax,0
 	SAR	AR2,NumberOfMaxSample
 
-;	}
+;          }
 
 ADC_v_for_i4
 	MAR	*,AR2
@@ -434,37 +391,34 @@ ADC_v_for_i4
 	MAR	*-,AR0
 	BANZ	ADC_v_for_i3,*-,AR5
 
-;      }
-;	  Diff2MaxAdress[MaxNumber] = i (NumberOfMaxSample);
+;        }
+;        Diff2MaxAdress[MaxNumber] = i (NumberOfMaxSample);
 
 	LAR	AR0,MaxNumber
 	LAR	AR5,#Diff2MaxAdress
 	MAR	*0+,AR5			; в AR5 & Diff2MaxAdress[MaxNumber]
-	LACC	NumberOfMaxSample,0     ; сохpанение значения
+	LACC	NumberOfMaxSample,0     ; сохpанение значени
 	SUB	#Signal
 	SACL    *                       ; Diff2MaxAdress[MaxNumber]
 
-;      Diff2Max[MaxNumber] = DiffSignalMax;
+;        Diff2Max[MaxNumber] = DiffSignalMax;
 
 	LAR	AR5,#Diff2Max
 	MAR	*0+,AR5                 ; в AR5 & Diff2Max[MaxNumber]
-	LACC	DiffSignalMax,0         ; сохpанение значения
+	LACC	DiffSignalMax,0         ; сохpанение значени
 	SACL    *                       ; Diff2Max[MaxNumber]
 
 	 .if SIM != 0
-        OUT     DiffSignalMax,0
-	NOP
-	NOP
-	NOP
-        OUT     DiffSignalMax,1
+        OUT     DiffSignalMax,1         ; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	.endif
 
-;      DiffSignalMax = MIN_NUMBER;
+;        //Поиск точки для тренда.
+;        DiffSignalMax = MIN_NUMBER;
 
 	SPLK	#MIN_NUMBER,DiffSignalMax
 
-;      for ( i=Diff2MaxAdress[MaxNumber] - DIFF_BASIS + 4;
-;            i >= ( Diff2MaxAdress[MaxNumber] - DIFF_BASIS - 4); i-- )
+;        for ( i=Diff2MaxAdress[MaxNumber] - DIFF_BASIS + 4;
+;              i >= ( Diff2MaxAdress[MaxNumber] - DIFF_BASIS - 4); i-- )
 
 	LAR	AR0,#7
 	LAR	AR5,NumberOfMaxSample
@@ -477,44 +431,47 @@ ADC_v_for_i4
 	SBRK	#DIFF_BASIS*2 - 4
 	MAR	*,AR5
 
-;      {
-;      	DiffSignal = Signal[i] - 2*Signal[i-DIFF_BASIS/2] + Signal[i-DIFF_BASIS];
+;        {
+;          Diff2Signal = Signal[i] - 2*Signal[i-DIFF_BASIS/2] + Signal[i-DIFF_BASIS];
 
 ADC_v_for_i5
 					; & Signal[i]
 	LACC	*-,0,AR6     		; & Signal[i-DIFF_BASIS/2]
 	SUB	*-,1,AR7                ; & Signal[i-DIFF_BASIS]
 	ADD	*-,0,AR0                ; в AR0 счетчик цикла
-	SACL	DiffSignal,0
+	SACL	Diff2Signal,0
 
-;	if ( DiffSignalMax < DiffSignal )
+;          if ( DiffSignalMax < Diff2Signal )
 
 	SUB	DiffSignalMax,0
 	BCND	ADC_v_for_i6,LEQ
 
-;	{
-;	  DiffSignalMax = DiffSignal;
-;	  SignalSampleNumber = i;
+;          {
+;            DiffSignalMax = Diff2Signal;
+;            SignalSampleNumber = i;
 
-	LACC	DiffSignal,0
+	LACC	Diff2Signal,0
 	SACL    DiffSignalMax,0
 	SAR	AR5,SignalSampleNumber
 
-;	}
+;          }
 
 ADC_v_for_i6
 
 	BANZ	ADC_v_for_i5,*-,AR5
 
-;      }
-;	  Max2DiffAdress[0] = SignalSampleNumber - DIFF_BASIS/2 - 2;
+;        }
+
+;        // Calculate StartTrendPointer
+;        Max2DiffAdress[0] = SignalSampleNumber - DIFF_BASIS/2 - 2;
 
 	LAR	AR5,#Max2DiffAdress
 	LACC	SignalSampleNumber
 	SUB	#Signal+DIFF_BASIS/2 + 2 ; в AR5 & Max2DiffAdress[0]
 	SACL	*,0,AR2
 
-;	i = Diff2MaxAdress[MaxNumber];
+;        // Calculate average pressure this MAX.
+;        i = Diff2MaxAdress[MaxNumber];
 
 	LAR	AR2,NumberOfMaxSample	; Diff2MaxAdress[MaxNumber]
 	LAR	AR3,#MaxAvrPress
@@ -527,7 +484,7 @@ ADC_v_for_i6
 	ADD	*+,14,AR3       ; в AR3 & MaxAvrPress
 	SACH    *,0,AR5
 
-;	i = Max2DiffAdress[0] + 2;
+;        i = Max2DiffAdress[0] + 2;
 
 	LACC	*               ; в AR5 & Max2DiffAdress[0]
 	ADD	#Signal+2
@@ -543,13 +500,14 @@ ADC_v_for_i6
 	ADD	*+,14,AR3     	; & MinAvrPress
 	SACH    *,0,AR5
 
-;       if ( MaxNumber > 0)
-;       {
+;        // Temporary calculation
+;        if ( MaxNumber > 0)
+;        {
 
         LACC    MaxNumber,0
         BCND    ADC_v_MaxNum_zero,EQ
 
-;        TempPeriod = Diff2MaxAdress[MaxNumber] - Diff2MaxAdress[MaxNumber-1];
+;          TempPeriod = Diff2MaxAdress[MaxNumber] - Diff2MaxAdress[MaxNumber-1];
 
 	LAR	AR0,MaxNumber
 	LAR	AR5,#Diff2MaxAdress
@@ -558,17 +516,12 @@ ADC_v_for_i6
         SUB     *,16,AR2
         SACH    TempPeriod,0
 
-;        TempPeriodDiff = TempPeriod - AveragePeriodEvaluation;
+;          TempPeriodDiff = TempPeriod - AveragePeriodEvaluation/4;
 
         SUB     AveragePeriodEvaluation,14
         SACH    TempPeriodDiff,0
 
-;        Temp2PeriodDiff = TempPeriod - 2*AveragePeriodEvaluation;
-
-        SUB     AveragePeriodEvaluation,14
-        SACH    Temp2PeriodDiff,0
-
-;        TempAmplitudeDiff = abs( Diff2Max[MaxNumber] - Diff2Max[MaxNumber-1]);
+;          TempAmplitudeDiff = abs( Diff2Max[MaxNumber] - Diff2Max[MaxNumber-1]);
 
         LAR     AR2,#Diff2Max
         MAR     *0+,AR2
@@ -577,22 +530,22 @@ ADC_v_for_i6
         ABS
         SACL    TempAmplitudeDiff
 
-;      }
+;        }
 
 ADC_v_MaxNum_zero
 
-;      if ( MaxNumber == 0)
+;        if ( MaxNumber == 0)
 
         LACC    MaxNumber
         BCND    ADC_v_MaxNum_not_zero,NEQ
 
-;      {
-;	if ( MaxNumberShift > 0)
+;        {
+;          if ( MaxNumberShift > 0)
 
         LACC    MaxNumberShift
         BCND    ADC_v_MaxNumShift_zero,EQ
 
-;	{
+;          {
 
         MAR     *,AR2
         LAR     AR0,MaxNumberShift
@@ -602,28 +555,39 @@ ADC_v_MaxNum_zero
         LAR     AR3,#Diff2MaxAdress
         MAR     *0+,AR3
 
-;	  TempPeriod = Diff2MaxAdress[MaxNumber] + SampleNumberShift -
-;	  	       Diff2MaxAdressFinish[MaxNumberShift-1];
+;            TempPeriod = Diff2MaxAdress[MaxNumber] + SampleNumberShift -
+;                         Diff2MaxAdressFinish[MaxNumberShift-1];
 
         LACC    *,0,AR2
         ADD     SampleNumberShift
         SUB     *
         SACL    TempPeriod
 
-;	}
+;            TempAmplitudeDiff = abs( Diff2Max[MaxNumber] - LastDiff2Max );
+
+        LAR     AR2,#Diff2Max
+        MAR     *0+,AR2
+	LACC	*,0,AR2
+	SUB	LastDiff2Max,0
+	ABS
+	SACL	TempAmplitudeDiff
+
+;          }
 
 ADC_v_MaxNum_not_zero
 
-;      }
+;        }
 
 ADC_v_MaxNumShift_zero
 
-;    }
+;      }
 
 ADC_MaxNotCenter
 
-;  } // условие if ( SampleNumber > AnalysisStart )
+;    } // условие if ( SampleNumber > AnalysisStart )
+ADC_v_SN_less_AS:
 
+;  } // условие if ( SampleNumber > DIFF_BASIS*2 )
 ADC_v_end_p
 
 ;}

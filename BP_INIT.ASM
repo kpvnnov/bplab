@@ -1,9 +1,10 @@
+;&D
 
 
 INIT    SETC INTM               ;запрет прерываний
         LDP  #4                 ;load data memory page pointer
 
-        SPLK #02E04h,TMP        ;02E06H->[TMP] (store parallel long immediate)
+        SPLK #04E04h,TMP        ;02E06H->[TMP] (store parallel long immediate)
                                 ;ARP(15-13),OV,OVM,1,INTM,DP(8-0)
         LST  #0,TMP             ;       001, 0,  1,1,   1,000000110h
 
@@ -14,6 +15,7 @@ INIT    SETC INTM               ;запрет прерываний
 
 *
 *
+	mar	*,ar2
         LACC    #0              ;ZERO TO ALL DATE
         LAR     AR2,#060h
         RPT     #01Fh
@@ -27,17 +29,13 @@ INIT    SETC INTM               ;запрет прерываний
         RPT     TMP
         SACL    *+,AR2          ;0800h-17FFh
 
-        SPLK    #0,SampleNumber
-;        SPLK    #100,AnalysisStart
-;        SPLK    #80,AnalysisInterval
-	SPLK    #32,AnalysisInterval
-	LACC 	AnalysisInterval
-        ADD  	#DIFF_BASIS*2
-        SACL 	AnalysisStart
-
 ;      FirstMeasFlag = TRUE;
 
-	SPLK	#B0_5mm,SistolPressureAmplitude
+	SPLK	#B0_5mm*2,SistolPressureAmplitude
 	LACC	MeasurementFlags,0
 	OR	#(1<<FIRST_MEAS_FLAG)
 	SACL  	MeasurementFlags,0
+
+	SPLK	#PULSE_FREQ_EVALUATION_40,Mode
+
+	LAR	AR1,#0800h

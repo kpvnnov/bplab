@@ -1,4 +1,5 @@
-* $Id: EKGTABLE.ASM,v 1.2 2000-12-13 13:43:27 peter Exp $
+;&D
+* $Id: EKGTABLE.ASM,v 1.3 2001-10-22 13:38:14 peter Exp $
 StartEKGTable1
  .word 100
  .word 10000

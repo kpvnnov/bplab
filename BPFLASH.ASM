@@ -1,4 +1,5 @@
-* $Id: BPFLASH.ASM,v 1.19 2001-10-17 15:50:49 peter Exp $
+;&D
+* $Id: BPFLASH.ASM,v 1.20 2001-10-22 13:38:12 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -714,7 +715,7 @@ AgainSaveMassiv1
 	mIncAddressToFlash
 ******
 	LAR	AR0,TMP+2
-	LAR	AR5,#FinishMeasAdress
+	LAR	AR5,#FinishMeasAddress
 	MAR     *,AR5
 	MAR     *0+			;AR5 = & StartMeasAdress[i]
 

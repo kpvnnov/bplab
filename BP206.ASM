@@ -1,4 +1,5 @@
-* $Id: BP206.ASM,v 1.46 2001-10-17 15:50:48 peter Exp $
+;&D
+* $Id: BP206.ASM,v 1.47 2001-10-22 13:38:10 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -413,9 +414,7 @@ Main_idle:
 	call	_go_power_down,*,AR1
 	B	Main_idle
 
-
         .copy   history.asm
-
 Main:
 	.copy   Bpmode.asm
 
@@ -432,7 +431,7 @@ Main:
 		.copy	Pr_dim1.asm		; Процедура завершения понижение уровня давления на 8 мм.рт.ст.
 		.copy	Pr_dim2.asm		; Процедура понижение уровня давления на 8 мм.рт.ст.
 		.copy	Meas_fin.asm            ; Вывод результатов измерения на индикатор.
-		.copy	Anal_end.asm		; Анализ некотоpых ситуаций пpекpащающих измеpение.
+;;;;;;;		.copy	Anal_end.asm		; Анализ некотоpых ситуаций пpекpащающих измеpение.
 
 *       	Модули  вспомогательных программ
 		.copy   Max_anal.asm		; Анализ импульса максимума
@@ -544,12 +543,6 @@ CheckError
 	SUB	#200*4
 	BCND	ErrorStop,GEQ
 
-	SPLK	#9,TMP+1
-	LACC	SynchCount
-	BCND	ErrorStop,LT
-	SUB	#3
-	BCND	ErrorStop,GEQ
-
 	SPLK	#10,TMP+1
 
 	SPLK	#11,TMP+1
@@ -567,7 +560,7 @@ CheckError
 	SPLK	#13,TMP+1
 	LACC	StepNumber
 	BCND	ErrorStop,LT
-	SUB	#32
+	SUB	#MAX_STEP_NUMBER
 	BCND	ErrorStop,GEQ
 
 	SPLK	#14,TMP+1

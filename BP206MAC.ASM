@@ -1,4 +1,5 @@
-* $Id: BP206MAC.ASM,v 1.22 2001-10-17 15:50:49 peter Exp $
+;&D
+* $Id: BP206MAC.ASM,v 1.23 2001-10-22 13:38:11 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -30,7 +31,7 @@ mIncAddressToFlash .macro
  .endm
 
 *******************************
-*включение аналогового питания
+*включение аналогового питани
 *******************************
 PowerAnalogOn .macro
 	mC5VAOnn		;записываем нолик в регистр выборки
@@ -38,7 +39,7 @@ PowerAnalogOn .macro
 
  .endm
 *******************************
-*выключение аналогового питания
+*выключение аналогового питани
 *******************************
 PowerAnalogOff .macro
 	mC5VAOff		;записываем единичку в регистр выборки
@@ -67,7 +68,7 @@ EndADC .macro
 *******************************
 mManual_MeasOn .macro
 	LACC _Jobs
-	OR   #(1<<Manual_Meas)  
+	OR   #(1<<Manual_Meas)
 	SACL _Jobs
  .endm
 *******************************
@@ -75,7 +76,7 @@ mManual_MeasOn .macro
 *******************************
 mManual_MeasOff .macro
 	LACC _Jobs
-	AND   #~(1<<Manual_Meas) 
+	AND   #~(1<<Manual_Meas)
 	SACL _Jobs
  .endm
 
@@ -90,7 +91,7 @@ Begin_measurement .macro
 	SACL _Jobs
  .endm
 *******************************
-*заканчиваем процесс измерения
+*заканчиваем процесс измерени
 *******************************
 End_measurement .macro
 	LACC _Jobs
@@ -175,34 +176,6 @@ ClearReadDAC .macro
 	AND  #~(1<<ReadDACVal_Flag)
 	SACL _Jobs
  .endm
-
-Clear_measurement	.macro
-
-	LACC	#0
-	SACL    StepNumber
-	SACL    SampleNumber
-	SACL    SampleNumberShift
-
-	SACL	MaxNumber
-	SACL	MaxNumberShift
-
-	SACL	SynchCount
-	SACL	ErrMeas
-	SACL	MaxAverageAmplitude
-	SACL	SistolPressure
-	SACL	DiastolPressure
-	SPLK	#32,AveragePeriod
-	SPLK    #32,AnalysisInterval
-	LACC    AnalysisInterval
-	ADD     #DIFF_BASIS*2
-	SACL    AnalysisStart
-	.if Emulator=1
-	SPLK    #0,massiv
-	.endif
-
- .endm
-
-
 
 *******************************
 * один короткий звонок
@@ -338,7 +311,7 @@ mMotor_off	.macro
  .endm
 
 ********************************
-* эти функции включения мотора и выключения
+* эти функции включения мотора и выключени
 * используются программным ШИМ управления мотором
 * в других случаях "лучше" использовать
 * mMotor_onn и mMotor_off
@@ -607,13 +580,13 @@ mResetInterval .macro
 	MAR  	*,AR7
 	SACL	*+
 	;сейчас в
-	;TMP+0 - единицы часов начала дня
-	;TMP+1 - десятки часов начала дня
+	;TMP+0 - единицы часов начала дн
+	;TMP+1 - десятки часов начала дн
 	;TMP+2 - единицы часов окончания дня (до)
 	;TMP+3 - десятки часов окончания дня (до)
 	;спец интервал
-	;TMP+4 - единицы часов начала дня
-	;TMP+5 - десятки часов начала дня
+	;TMP+4 - единицы часов начала дн
+	;TMP+5 - десятки часов начала дн
 	;TMP+6 - единицы часов окончания дня (до)
 	;TMP+7 - десятки часов окончания дня (до)
 
@@ -621,22 +594,22 @@ mResetInterval .macro
 	LACC	TMP+1,3		;*8
 	ADD	TMP+1,1		;+*2
 	ADD	TMP+0
-	SACL	TMP+0		;начало дня
+	SACL	TMP+0		;начало дн
 
 	LACC	TMP+3,3		;*8
 	ADD	TMP+3,1		;+*2
 	ADD	TMP+2
-	SACL	TMP+2		;окончание дня
+	SACL	TMP+2		;окончание дн
 
 	LACC	TMP+5,3		;*8
 	ADD	TMP+5,1		;+*2
 	ADD	TMP+4
-	SACL	TMP+4		;начало дня
+	SACL	TMP+4		;начало дн
 
 	LACC	TMP+7,3		;*8
 	ADD	TMP+7,1		;+*2
 	ADD	TMP+6
-	SACL	TMP+6		;окончание дня
+	SACL	TMP+6		;окончание дн
 
 	LAR	AR6,#_WATCH+5
 	MAR	*,AR6
@@ -644,13 +617,13 @@ mResetInterval .macro
 	LACC	*,3		;*8
 	ADD	*-,1
 	ADD	*
-	SACL	TMP+7		;текущее время
+	SACL	TMP+7		;текущее врем
 
 	;сейчас в
-	;TMP+0 - часов начала дня
+	;TMP+0 - часов начала дн
 	;TMP+2 - часов окончания дня (до)
 	;спец интервал
-	;TMP+4 - часов начала дня
+	;TMP+4 - часов начала дн
 	;TMP+6 - часов окончания дня (до)
 	;TMP+7 - часов текущего времени
 
@@ -683,10 +656,10 @@ SpecNaoborot
 NotSpecial
 
 	;сейчас в
-	;TMP+0 - часов начала дня
+	;TMP+0 - часов начала дн
 	;TMP+2 - часов окончания дня (до)
 	;спец интервал
-	;TMP+4 - часов начала дня
+	;TMP+4 - часов начала дн
 	;TMP+6 - часов окончания дня (до)
 	;TMP+7 - часов текущего времени
 
@@ -811,7 +784,7 @@ mADCPowerDown	.macro
 	SETC 	XF
 	SPLK 	#SSPS,TMP    ;SSP start
 	OUT  	TMP,SSPCR    ;Synchronous Serial Port Control Register
-	IN   	TMP,SDTR     ;команда лишнего чтения
+	IN   	TMP,SDTR     ;команда лишнего чтени
 				;для стабильности(надежности) работы с SSP
 
 	SPLK 	#0EC00h,TMP  ;software power down
@@ -829,8 +802,8 @@ mADCPowerDown	.macro
 	mOffPeriph
 	mOutDIOSR
 
-	IN   	TMP,SDTR     ;команда лишнего чтения
-	IN   	TMP,SDTR     ;команда лишнего чтения
+	IN   	TMP,SDTR     ;команда лишнего чтени
+	IN   	TMP,SDTR     ;команда лишнего чтени
 
 	SPLK 	#SSPR,TMP    ;RESET SSP
 	OUT  	TMP,SSPCR
@@ -1044,7 +1017,7 @@ $4	SUB  	#1
 
 	SPLK 	#SSPS,*    ;SSP start
 	OUT  	*,SSPCR    ;Synchronous Serial Port Control Register
-	IN   	*,SDTR     ;команда лишнего чтения
+	IN   	*,SDTR     ;команда лишнего чтени
 				;для стабильности(надежности) работы с SSP
 	SPLK	#0,*
 	OUT  	*,SDTR     	;0.нулевое :) слово для передачи
@@ -1265,7 +1238,7 @@ WriteParams .macro code
 	LACC 	TMP
 	ADD  	#7FH
 	BCND 	$2,GEQ
-	SPLK 	#0FF80H,TMP   ;записываем максимальную величину приращения
+	SPLK 	#0FF80H,TMP   ;записываем максимальную величину приращени
 	B 	$2
 ;Abovech2
 $1
@@ -1273,7 +1246,7 @@ $1
 	LACC 	TMP
 	SUB 	#07Fh
 	BCND 	$2,LT
-	SPLK 	#07EH,TMP   ;записываем максимальную величину приращения
+	SPLK 	#07EH,TMP   ;записываем максимальную величину приращени
 ;LessOverCh2
 $2
 	LACC 	BeginLevel
@@ -1306,14 +1279,14 @@ $3
 	LACC 	TMP
 	ADD  	#7FH
 	BCND 	$2,GEQ
-	SPLK 	#0FF80H,TMP   ;записываем максимальную величину приращения
+	SPLK 	#0FF80H,TMP   ;записываем максимальную величину приращени
 	B 	$2
 $1
 	SACH 	TMP
 	LACC 	TMP
 	SUB 	#07Fh
 	BCND 	$2,LT
-	SPLK 	#07EH,TMP   ;записываем максимальную величину приращения
+	SPLK 	#07EH,TMP   ;записываем максимальную величину приращени
 $2
 	LACC 	BeginLevel+1
 	ADD  	TMP
@@ -1665,12 +1638,14 @@ WriteEKG    .macro code
 ; следующих переменных:
 **************************************************************************
 ; перед измерением.
+; Mode = PRESSURE_DIMINUTION;
 ; DimMode = 0;
 ; DimModeSampleCounter = 0;
 ; MeasurementFlags = (MeasurementFlags )|( 1<<DIM_PRESSURE_FLAG  );
 
 mDim_pressure_init	.macro
 
+	SPLK	#PRESSURE_DIMINUTION,Mode
 	LACC	#0
 	SACL	DimMode
 	SACL    DimModeSampleCounter
@@ -1683,14 +1658,155 @@ mDim_pressure_init	.macro
 	.endm
 
 ; после включения питания.
-; Tclosing = 8;
-; Tedge = 4;
 ; Perror = 0;
+; Preturn = B4mm+B0_5mm*4;
 
 mDim_pressure_supply_up_init	.macro
 
-	;SPLK	#8,Tclosing
-	;SPLK	#4,Tedge
 	SPLK	#0,Perror
+	SPLK	#B4mm+B0_5mm*4,Preturn
+
 	.endm
 **************************************************************************
+;/***********************************************************
+;*   mMeasurement_initialization
+;***********************************************************/
+;
+; /* При инициализации процесса измерения */
+; StartMeasAdress[StepNumber] = 0;
+; SubroutMode = 0;
+; MaxNumber = 0;                           // Номер максимума.
+; StartMaxNumber = 0;
+; MaxNumberShift = 0;
+; StepNumber = 0;
+; SampleNumber = 0;
+; SampleNumberShift = 0;
+; ErrMeas = 0;
+; MaxAverageAmplitude = 0;
+; SistolPressure = 0;
+; DiastolPressure = 0;
+; AnalysisInterval = 32*1.25;  // минимальный AnalysisInterval
+; AnalysisStart = AnalysisInterval + 2*DIFF_BASIS;
+; MeasurementFlags = MeasurementFlags &
+;                 (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)));
+*
+*       Макрос mMeasurement_ находится в файле BP206mac.asm
+*
+mMeasurement_init	.macro
+
+	MAR	*,AR2
+	LAR	AR2,#StartMeasAdress
+	LACL	#0
+	SACL	*,0,AR2
+	SACL	SubroutMode
+	SACL    StartMaxNumber
+	SACL    MaxNumber
+	SACL    MaxNumberShift
+	SACL    TimeNakachka
+	SACL    StepNumber
+	SACL    SampleNumber
+	SACL    SampleNumberShift
+	SACL	ErrMeas
+	SACL	MaxAverageAmplitude
+	SACL	SistolPressure
+	SACL	DiastolPressure
+	SPLK    #40,AnalysisInterval
+	LACC    AnalysisInterval
+	ADD     #DIFF_BASIS*2
+	SACL    AnalysisStart
+	LACC    MeasurementFlags
+	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
+	SACL	MeasurementFlags
+
+	.if Emulator=1
+	SPLK    #0,massiv
+	.endif
+
+	.endm
+**************************************************************************
+mClear_subrout_mode_err_meas	.macro
+	LACL	#0
+	SACL	SubroutMode
+	SACL	ErrMeas
+	.endm
+**************************************************************************
+mClear_sample_number	.macro
+	LACL	#0
+	SACL    StartMaxNumber
+	SACL    MaxNumber
+	SACL    MaxNumberShift
+	SACL    StepNumber
+	SACL    SampleNumber
+	SACL    SampleNumberShift
+	SACL	ErrMeas
+	SACL	MaxAverageAmplitude
+	SACL	SistolPressure
+	SACL	DiastolPressure
+	SPLK    #40,AnalysisInterval
+	LACC    AnalysisInterval
+	ADD     #DIFF_BASIS*2
+	SACL    AnalysisStart
+	.if Emulator=1
+	SPLK    #0,massiv
+	.endif
+	.endm
+
+;***********************************************************************
+;*      mArrays_are_shifted();
+;***********************************************************************
+;void   mArrays_are_shifted();
+;(
+;   Max2DiffAdress[2] = Max2DiffAdress[1];
+;   Max2DiffAdress[1] = Max2DiffAdress[0];
+;   MaxAvrPress[2] = MaxAvrPress[1];
+;   MaxAvrPress[1] = MaxAvrPress[0];
+;   MinAvrPress[2] = MinAvrPress[1];
+;   MinAvrPress[1] = MinAvrPress[0];
+; }
+mArrays_are_shifted	.macro
+	MAR     *,AR2
+	LAR     AR2,#Max2DiffAdress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
+	LAR     AR2,#MaxAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
+	LAR     AR2,#MinAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
+		   	.endm
+
+
+;***********************************************************************
+;	mIncrement_max_number();
+;***********************************************************************
+mIncrement_max_number     .macro
+
+;  MaxNumber++;
+;  MeasurementFlags = MeasurementFlags & (1<<FIRST_IMPULSE_FLAG)
+
+	LACC    MaxNumber
+	ADD 	#1
+	SACL    MaxNumber
+	LACC	MeasurementFlags
+	AND	#~(1<<FIRST_IMPULSE_FLAG)
+	SACL    MeasurementFlags
+
+	.endm
+
+;***********************************************************************
+;	mZeroToAverageAmplitude();
+;***********************************************************************
+mZeroToAverageAmplitude     .macro
+
+	MAR	*,AR2
+	LAR	AR0,StepNumber
+	LAR	AR2,#AverageAmplitude
+	MAR	*0+,AR2
+	LACL	#0
+	SACL	*,0,AR2
+	LAR	AR2,#AvrPress
+	MAR	*0+,AR2
+	SACL	*,0,AR2
+
+	.endm

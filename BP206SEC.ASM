@@ -1,4 +1,5 @@
-* $Id: BP206SEC.ASM,v 1.13 2001-06-07 15:08:24 peter Exp $
+;&D
+* $Id: BP206SEC.ASM,v 1.14 2001-10-22 13:38:11 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -12,46 +13,36 @@ AveragePeriod           .usect "bss1",1
 AveragePeriodEvaluation .usect "bss1",1
 TempPeriod              .usect "bss1",1
 TempPeriodDiff          .usect "bss1",1
-Temp2PeriodDiff         .usect "bss1",1
 TempAmplitudeDiff       .usect "bss1",1
-SynchCount              .usect "bss1",1
-PulseCounter            .equ   SynchCount
+PulseCounter            .usect "bss1",1
 
-NextModeFlag            .usect "bss1",1
 MeasurementFlags        .usect "bss1",1
 DIFF_MAX_FLAG           .equ	0
 FIRST_IMPULSE_FLAG      .equ	1
 SYNCHRO_FLAG		.equ	2
-FIRST_MEAS_FLAG         .equ	3
-THREE_IMPULSE_FLAG      .equ	4
-PRESS_MORE_SYSTOL_FLAG  .equ	5
-DIM_PRESSURE_FLAG       .equ	6
-;DiffMaxFlag             .usect "bss1",1
-;FirstImpulseFlag
-;SynchroFlag             .usect "bss1",1
-;FirstMeasFlag           .usect "bss1",1
-;ThreeImpulseFlag        .usect "bss1",1
-;PressureMoreSystolFlag  .usect "bss1",1
-
+SYNCHRO_FLAG_WAS	.equ	3
+NEXT_MODE_FLAG		.equ	4
+FIRST_MEAS_FLAG         .equ	5
+THREE_IMPULSE_FLAG      .equ	6
+PRESS_MORE_SYSTOL_FLAG  .equ	7
+DIM_PRESSURE_FLAG       .equ	8
+BAD_SYNCHRO_FLAG .equ	9
 
 StartMaxNumber          .usect "bss1",1
 StepNumber              .usect "bss1",1
 HigherCount             .usect "bss1",1
 PressureTop             .usect "bss1",1
 MaxDiffSignal           .usect "bss1",1
-MaxAmplStepNumber       .usect "bss1",1
 MaxAverageAmplitude     .usect "bss1",1
 LastDiff2Max            .usect "bss1",1
 
-
-PressPulseFrEv          .usect "bss1",1
 NewPressure		.usect "bss1",1
 SistolPressure		.usect "bss1",1
 AveragePressure         .usect "bss1",1
 DiastolPressure		.usect "bss1",1
 SistolPressureAmplitude .usect "bss1",1
 AugmentPressureNumber   .usect "bss1",1
-ArtefactCount           .equ   PressPulseFrEv
+ArtefactCount           .usect "bss1",1
 
 Mode                    .usect "bss1",1
 ModeCnt			.usect "bss1",1
@@ -66,27 +57,34 @@ MinAvrPress             .usect "bss1",3
 
 DimModeSampleCounter  	.usect "bss1",1
 DimMode               	.usect "bss1",1
-Pline0                	.usect "bss1",1
-Pline1                	.usect "bss1",1
+;Pline0                	.usect "bss1",1
+;Pline1                	.usect "bss1",1
 Perror                	.usect "bss1",1
 ;Tclosing              	.usect "bss1",1
 ;Tedge                 	.usect "bss1",1
 Tdimstart             	.usect "bss1",1
 Preturn             	.usect "bss1",1
 Pclose             	.usect "bss1",1
+CodeError               .usect "bss1",1
 
-
+	.if ( SIM == 1 )
+TmpAddress              .usect "bss1",1
+DimStopAddress          .usect "bss1",1
+	.endif
 Diff2Max                .usect "MNArray0",32
 Diff2MaxAdress          .usect "MNArray0",32
-Diff2MaxAdressFinish    .usect "MNArray",256
+Diff2MaxAdressFinish    .usect "MNArray",325
 
-Signal                  .usect "SigArray",1152        ; 1k+128 слов
+MAX_ANALYSIS_INTERVAL 	.set	200
 
-StartMeasAdress         .usect "StepNum",32
-FinishMeasAdress        .usect "StepNum",32
-AvrPress                .usect "StepNum",32
-AverageAmplitude        .usect "StepNum",32
+Signal                  .usect "SigArray",1024        ; 1k
+DiffSignal              .usect "SigArray",MAX_ANALYSIS_INTERVAL
 
+MAX_STEP_NUMBER		.equ	48
+StartMeasAdress         .usect "StepNum",MAX_STEP_NUMBER ;((280-30)/7)+2=40
+FinishMeasAddress        .usect "StepNum",MAX_STEP_NUMBER
+AvrPress                .usect "StepNum",MAX_STEP_NUMBER
+AverageAmplitude        .usect "StepNum",MAX_STEP_NUMBER
 
 DIFF_BASIS_OF_PR_AUG_1		.set   200
 DIFF_BASIS_OF_PR_AUG_2		.set	30
@@ -158,8 +156,8 @@ TWO_MINUTES		.set	11000
 TIME_OUT               	.set    10
 WHITE_VALVE_OFF		.set    15
 
-MIN_STEP_NUMBER		.set	5
-MIN_NUMBER		.set	0FFFFh
+MIN_STEP_NUMBER		.set	7
+MIN_NUMBER		.set	0F000h
 
 TRUE                    .set	1
 FALSE                   .set	0
@@ -172,37 +170,44 @@ SUPPLY_UP                       .set    0
 START_SHIFT                     .set    1
 PRESSURE_AUGMENT_40             .set    2
 DAC_WORKING_CHECK               .set    3
-PULSE_FREQUENCY_EVALUATION      .set    4
-PRESSURE_AUGMENT                .set    5
-PRESSURE_AUGMENT_STOP           .set    6
-CHECK_HIGHER_SISTOL_PRESSURE    .set    7
-PRESSURE_MEASUREMENT            .set    8
-PRESSURE_DIMINUTION             .set    9
-MEASUREMENT_FINISH              .set	10
+PULSE_FREQ_EVALUATION_40        .set    4
+PRESSURE_AUGMENT_80             .set    5
+PULSE_FREQ_EVALUATION_80        .set    6
+PRESSURE_AUGMENT                .set    7
+PRESSURE_AUGMENT_STOP           .set    8
+CHECK_HIGHER_SISTOL_PRESSURE    .set    9
+PRESSURE_MEASUREMENT            .set   10
+PRESSURE_DIMINUTION             .set   11
+MEASUREMENT_FINISH              .set   12
  .if WriteDebug=0
   .if Sertificarion=1
-PRESSURE_MEASUREMENT_MANUAL	.set	11
+PRESSURE_MEASUREMENT_MANUAL	.set	13
   .endif
 
  .elseif WriteDebug<3
   .if Sertificarion=1
-PRESSURE_MEASUREMENT_MANUAL	.set	11
-START_DEBUG_WRITE		.set	12
+PRESSURE_MEASUREMENT_MANUAL	.set	13
+START_DEBUG_WRITE		.set	14
   .else
-START_DEBUG_WRITE		.set	11
+START_DEBUG_WRITE		.set	13
   .endif
  .endif
 	.else
-PULSE_FREQUENCY_EVALUATION      .set    0
-PRESSURE_AUGMENT                .set    1
-PRESSURE_AUGMENT_STOP           .set    2
-CHECK_HIGHER_SISTOL_PRESSURE    .set    3
-PRESSURE_MEASUREMENT            .set    4
-PRESSURE_DIMINUTION             .set    5
-MEASUREMENT_FINISH              .set    6
+DAC_WORKING_CHECK               .set    0
+PULSE_FREQ_EVALUATION_40        .set    0
+PRESSURE_AUGMENT_80             .set    1
+PULSE_FREQ_EVALUATION_80        .set    2
+PRESSURE_AUGMENT                .set    3
+PRESSURE_AUGMENT_STOP           .set    4
+CHECK_HIGHER_SISTOL_PRESSURE    .set    5
+PRESSURE_MEASUREMENT            .set    6
+PRESSURE_DIMINUTION             .set    7
+MEASUREMENT_FINISH              .set    8
 
 	.endif
 
+PUL_F_E_CODE_ERROR              .set    0
+SW_FLAGS_WORD2_ERROR            .set    1
 
 
 

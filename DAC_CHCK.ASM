@@ -1,7 +1,7 @@
-* $Id: DAC_CHCK.ASM,v 1.3 2000-12-13 13:43:27 peter Exp $
+;&D
+* $Id: DAC_CHCK.ASM,v 1.4 2001-10-22 13:38:14 peter Exp $
 DAC_working_check:
-	SPLK 	#PULSE_FREQUENCY_EVALUATION,Mode
-	SPLK	#0,SubroutMode		;для первоначального case
-	Clear_measurement
+	SPLK 	#PULSE_FREQ_EVALUATION_40,Mode
+	mMeasurement_init
 	mBegin_write_flash
 	RET

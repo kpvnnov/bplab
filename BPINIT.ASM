@@ -1,4 +1,5 @@
-* $Id: BPINIT.ASM,v 1.22 2001-10-17 15:50:50 peter Exp $
+;&D
+* $Id: BPINIT.ASM,v 1.23 2001-10-22 13:38:13 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -176,15 +177,15 @@ INIT
 	LACC 	#0
 	LAR  	AR2,#060h
 	RPT  	#01Fh
-	SACL 	*+,AR2         	;0060h-007Fh
+	SACL 	*+,0,AR2         	;0060h-007Fh
 	LAR  	AR2,#200h
 	SPLK 	#01FFh,TMP
 	RPT  	TMP
-	SACL 	*+,AR2         	;0200h-03FFh
+	SACL 	*+,0,AR2         	;0200h-03FFh
 	LAR  	AR2,#800h
 	SPLK 	#0FFFh,TMP
 	RPT  	TMP
-	SACL	*+,AR2         	;0800h-17FFh
+	SACL	*+,0,AR2         	;0800h-17FFh
 
 ********************************
 *	первоначальная установка переменных
@@ -216,7 +217,7 @@ INIT
 *
 ;      FirstMeasFlag = TRUE;
 
-	SPLK	#B0_5mm,SistolPressureAmplitude
+	SPLK	#B0_5mm*2,SistolPressureAmplitude
 	LACC	MeasurementFlags,0
 	OR	#(1<<FIRST_MEAS_FLAG)
 	SACL  	MeasurementFlags,0

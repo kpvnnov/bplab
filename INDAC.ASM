@@ -1,3 +1,4 @@
+;&D
 INDAT
 	.word	0a275h
 	.word	0a285h

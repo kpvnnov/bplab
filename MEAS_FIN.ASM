@@ -1,4 +1,5 @@
-* $Id: MEAS_FIN.ASM,v 1.11 2001-09-11 11:58:47 peter Exp $
+;&D
+* $Id: MEAS_FIN.ASM,v 1.12 2001-10-22 13:38:16 peter Exp $
 Measurment_finish
 	MAR  	*,AR2
  .if OnProtectInterval30s=1

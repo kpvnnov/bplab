@@ -1,4 +1,5 @@
-* $Id: BP206DEF.ASM,v 1.18 2001-08-23 14:27:31 peter Exp $
+;&D
+* $Id: BP206DEF.ASM,v 1.19 2001-10-22 13:38:11 peter Exp $
 MAX_PRESS 	.set 08000h
 
 PRESS_280 	.set 0E000h
@@ -32,7 +33,7 @@ STEP_PRESS 	.set 0733h
 LPRESS_310 	.set 07800h
 LPRESS_300 	.set 07000h
 LPRESS_280 	.set 06000h
-PRESS_275_MILL_OF_MER	.set	05800h
+PRESS_275_MILL_OF_MER	.set	05C00h
 LPRESS_260 	.set 05000h
 LPRESS_250 	.set 04800h
 LPRESS_240 	.set 04000h
@@ -63,13 +64,11 @@ PRESS_PRESET 	.set PRESS_10
 
 PRESS_OVER   	.set 0
 
-;PRESS_20
-
 * время нахождения на ступеньке 40 мм. рт. ст.
 
 TimeOn40mm 	.set 2000 ;20 секунд
 
-* время нахождения на ступеньке при измерении давления
+* время нахождения на ступеньке при измерении давлени
 
 TimeOnStep 	.set 400 ; четыре секунды
 
@@ -100,7 +99,7 @@ DisplayCorrect	.set 0
 OutputSectoring	.set 1
 
 ************
-* "магическое число" для разрешения программирования
+* "магическое число" для разрешения программировани
 ************
 MagicPass	.set 03162h
 

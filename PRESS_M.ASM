@@ -1,217 +1,148 @@
+;&D
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.9 2001-09-24 11:24:47 peter Exp $
+* $Id: PRESS_M.ASM,v 1.10 2001-10-22 13:38:16 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
-
-Pressure_measurement
-
+Pressure_measurement:
 ;{
-; if ( SampleNumber > AnalysisStart )
+;  if (( MeasurementFlags&(1<<DIFF_MAX_FLAG)) != 0 )
+;  {
 
-        LACC    SampleNumber
-        SUB     AnalysisStart
-        BCND    Press_m_End,LEQ
-
-; {
-;  if ( DiffMaxFlag == TRUE )
-
+	MAR	*,AR2
 	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
-        BCND    Press_m_MaxNotCentre,NTC
+	BCND	Press_m_max_isnt,NTC
 
-;  {   /* Если Max находится в 0.5 от конца интервала */
-
-        MAR     *,AR2
-        LAR     AR0,MaxNumber
-        LAR     AR2,#Diff2Max
-        MAR     *0+,AR2
-
-;   if ( Diff2Max[MaxNumber] > 0.25*LastDiff2Max)
-
-        LACC    *,16,AR2
-        SUB     LastDiff2Max,14
-        BCND    Press_m_SmallMax,LEQ
-
-;   {
-;    if ( Diff2Max[MaxNumber] < 4*LastDiff2Max)
-
-        LACC    *,0,AR2
-        SUB     LastDiff2Max,2
-        BCND    Press_m_BigMax,GEQ
-
+;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_SISTOL)
 ;    {
-;     Maximum_analysis();
+	LAR	AR0,MaxNumber
+	LAR	AR2,#Diff2Max
+	MAR	*0+,AR2
+	LACC	*,0,AR2
+	SUB	#MIN_THRESHOLD_SISTOL
+	BCND	Press_m_small_impulse,LEQ
 
-        CALL    Maximum_analysis
-
-;     if ( NextModeFlag < 2 )
-
-        LACC    NextModeFlag
-        SUB     #2
-        BCND    Press_m_NotEndStep,GEQ
-
-;     {
-
-        LAR     AR0,StepNumber
-        LAR     AR2,#AverageAmplitude
-        MAR     *0+,AR2
-
-;      if ( MaxAverageAmplitude <= AverageAmplitude[StepNumber])
-
-        LACC    MaxAverageAmplitude
-        SUB     *,0,AR2
-        BCND    Press_m_NotAmplMax,GT
-
+;      if ( Diff2Max[MaxNumber] < MAX_THRESHOLD_SISTOL)
 ;      {
-;        MaxAverageAmplitude = AverageAmplitude[StepNumber];
 
-        LACC    *,0,AR2
-        SACL    MaxAverageAmplitude
+	SUB     #MAX_THRESHOLD_SISTOL-MIN_THRESHOLD_SISTOL
+	BCND	Press_m_big_impulse,GEQ
 
-;        MaxAmplStepNumber = StepNumber;
+;        Maximum_analysis();
 
-        LACC    StepNumber
-        SACL    MaxAmplStepNumber
+	CALL	Maximum_analysis
 
-;      }
+;        if ( MeasurementFlags &(1<<NEXT_MODE_FLAG) != 0 )
+;        {
 
-Press_m_NotAmplMax
+	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BCND	Press_m_end,NTC
 
-;       if (( 0.6*MaxAverageAmplitude > AverageAmplitude[StepNumber])&
-;	   ( StepNumber > MIN_STEP_NUMBER ))
-
-        LACC    *,12,AR2
-        LT      MaxAverageAmplitude
-        MPY     #CONST_0_6
-        SPAC
-        BCND    Press_m_next_mode,GEQ
-	LACC	StepNumber,0
-	SUB	#MIN_STEP_NUMBER,0		; MIN_STEP_NUMBER = 5
-        BCND    Press_m_next_mode,LEQ
-
-;      {   /*  Определение систолического, среднего и диастолического */
-;          Determination_s_a_d();
-
-        CALL    Determination_s_a_d
-
-;      }
-
-        B       Press_m_NotEndStep
-
-Press_m_next_mode
-;      else
-;      {
-;       /*      Подготовка к следующему режиму */
-;       Mode = PRESSURE_DIMINUTION;
-;          NewPressure = NewPressure - EIGHT_MILL_OF_MERC;
-
-        SPLK    #PRESSURE_DIMINUTION,Mode
-	;LACC	NewPressure
-        ;SUB     #EIGHT_MILL_OF_MERC
-	;SACL	NewPressure
-	mDim_pressure_init
-
-;	   SubroutMode = 0;
-
-	SPLK	#0,SubroutMode
-
-;       MaxNumber = 0;
-;       StartMaxNumber = 0;
-
-        LACC    #0
-        SACL    MaxNumber
-        SACL    StartMaxNumber
-
-;  SampleNumberShift = SampleNumberShift + SampleNumber + 1;
-
-        LACC    SampleNumberShift
-        ADD     SampleNumber
-        ADD     #1
-        SACL    SampleNumberShift
-
-;  SampleNumber = -1;
-
-        SPLK    #0FFFFh,SampleNumber
-
-;	FinishMeasAdress[StepNumber] = SampleNumberShift;
+;          if ( MaxAverageAmplitude <= AverageAmplitude[StepNumber])
+;          {
 
 	LAR	AR0,StepNumber
-	LAR	AR2,#FinishMeasAdress
+	LAR	AR2,#AverageAmplitude
 	MAR	*0+,AR2
-	LACC	SampleNumberShift
-	SUB	#1
-	SACL	*,0,AR2
+	LACC	MaxAverageAmplitude
+	SUB	*,0,AR2
+	BCND	Press_m_check_meas_end,GT
 
-;      StepNumber++;
+;            MaxAverageAmplitude = AverageAmplitude[StepNumber];
+;          }
 
-        LACC    StepNumber
-        ADD     #1
-        SACL    StepNumber
+	LACC    *,0,AR2
+	SACL	MaxAverageAmplitude
+
+Press_m_check_meas_end:
+;          if (( 0.6*MaxAverageAmplitude > AverageAmplitude[StepNumber])&&
+;              ( StepNumber > MIN_STEP_NUMBER ))
+
+	LACC	StepNumber
+	SUB	#MIN_STEP_NUMBER
+	BCND   	Press_m_next_mode,LEQ
+	LACC	*,12,AR2
+	LT	MaxAverageAmplitude
+	MPY	#CONST_0_6
+	SPAC
+	BCND   	Press_m_next_mode,GEQ
+
+;          { /* Определение систолического, среднего и диастолического */
+;            Determination_s_a_d();
+;          }
+
+	CALL	Determination_s_a_d
+	B	Press_m_end
+
+Press_m_next_mode:
+;          else
+;          { /* Подготовка к следующему режиму */
+;            Start_diminution_pressure();
+
+	CALL	Start_diminution_pressure
+
+;          }
+;        }
+;      }
+	B	Press_m_end
+
+Press_m_big_impulse:
+;      else
+;      {
+;        Synchro_flag_is_reseted();
+;        StartMaxNumber = MaxNumber;
+
+	CALL	Synchro_flag_is_reseted
+	LACC	MaxNumber,0
+	SACL	StartMaxNumber,0
 
 ;      }
-;     }
-
-Press_m_NotEndStep
-
 ;    }
-
-Press_m_BigMax:
-
-	RET
-;   }
-
-Press_m_SmallMax
-
 ;  }
-;   else
-;   {
-;     if ((( SampleNumber - AnalysisStart ) > 6*AnalysisInterval )&&
-;          ( MaxNumber < 2 ))
 
-	LACC	SampleNumber,0
-        SUB	AnalysisStart,0
-	SUB	AnalysisInterval,2
-	SUB	AnalysisInterval,1
-	RETC	LEQ
-	LACC	MaxNumber,0
-	SUB	#2
-	RETC	GEQ
-
-;     {
-;
-;       Press_m_next_mode();
-
-	B	Press_m_next_mode
-
-;     }
-;   }
-
-Press_m_MaxNotCentre
-
-; }
-
-Press_m_End
-
+Press_m_small_impulse:
+Press_m_end:
+Press_m_max_isnt:
+;  End_step_analysis();
 ;}
-        RET
+
+	CALL	End_step_analysis
+	RET
 
  .if (Sertificarion==1)
-  .if (WriteDebug!=0)
-* стоим на ступеньке десять секунд
-Pressure_measurement_Manual:
-	LACC	SampleNumber
-	SUB     #TEN_SECOND
-	RETC	LT
-	B	Press_m_next_mode
-  .else
 * стоим на ступеньке две секунды
 Pressure_measurement_Manual:
 	LACC	SampleNumber
+	ADD	SampleNumberShift
+	ADD	TimeNakachka
+	SUB     #TWO_MINUTES
+	BCND	End_Sertification_mode_ret,LT
+	mEnd_error_meas rTIME_MORE_2_MINUTES
+
+End_Sertification_mode_ret:
+
+  .if (WriteDebug!=0)
+* стоим на ступеньке десять секунд
+	LACC	SampleNumber
+	SUB     #TEN_SECOND
+	RETC	LT
+	CALL	Start_diminution_pressure
+	RET
+  .else
+* стоим на ступеньке две секунды
+	LACC	SampleNumber
 	SUB     #TWO_SECOND
 	RETC	LT
-	B	Press_m_next_mode
+	CALL	Start_diminution_pressure
+	RET
   .endif
+
+
  .endif
+
+
+
+
 
 ;***********************************************************************
 ;*       Determinution_s_a_d() - Опpеделение систолического, сpеднего
@@ -222,12 +153,25 @@ Pressure_measurement_Manual:
 WIN_BL_5		.word   01A1h, 03248h, 07FFFh, 03248h, 01A1h
 ;WIN_BL_5		.word   01A1h, 03248h, 07FFFh, 03248h, 01A1h
 
-TempAverageAmplitude 	.equ  	Signal + 32
-NewAverageAmplitude   	.equ  	Signal
+;int	i,j
+;int	TempStepNumber
+;int	StepAveragePressure
+;int	NewMaxAverageAmplitude
+;int	Flag
+;int    TempStartMeasAdress[MAX_STEP_NUMBER]
+;int    TempFinishMeasAddress[MAX_STEP_NUMBER]
+;int    TempAvrPress[MAX_STEP_NUMBER]
+;int    TempAverageAmplitude[MAX_STEP_NUMBER]
+
+TempAvrPress            .equ  	Signal
+TempAverageAmplitude 	.equ  	TempAvrPress + MAX_STEP_NUMBER + 4
+NewAverageAmplitude   	.equ  	TempAverageAmplitude + MAX_STEP_NUMBER
+
+CounterI		.equ	TMP+3
+TempStepNumber		.equ	TMP+4
 Flag			.equ	TMP+5
 NewMaxAverageAmplitude	.equ  	TMP+5
 StepAveragePressure     .equ  	TMP+6
-;Temp			.equ	TMP+6
 
 ;Determinution_s_a_d()
 
@@ -235,16 +179,136 @@ Determination_s_a_d
 
 ;{
 
+;  Completion_of_mode();
+
+	CALL	Completion_of_mode
+
+;  FinishMeasAddress[StepNumber] = SampleNumberShift + SampleNumber;
+
         MAR     *,AR2
-
-;	FinishMeasAdress[StepNumber] = SampleNumberShift;
-
 	LAR	AR0,StepNumber
-	LAR	AR2,#FinishMeasAdress
+	LAR	AR2,#FinishMeasAddress
 	MAR	*0+,AR2
 	LACC	SampleNumberShift
-	ADD	SampleNumber
-	SACL	*,0,AR0
+	SUB	#1
+	SACL	*,0,AR2
+
+;  // Перемещаем значения амплитуд и соответ. давлений во врем.массив
+;  TempStepNumber = StepNumber - 1;
+
+	LACC	StepNumber
+	SUB	#1
+	SACL	TempStepNumber
+
+;  for ( j=TempStepNumber; j>0, j--)
+;  {
+;    TempAvrPress[j-1] = AvrPress[j];
+;    TempAverageAmplitude[j-1] = AverageAmplitude[j];
+;  }
+
+	LAR	AR2,#AvrPress+1
+	RPT	TempStepNumber
+	BLDD	*+,#TempAvrPress,AR2
+	LAR	AR2,#AverageAmplitude+1
+	RPT	TempStepNumber
+	BLDD	*+,#TempAverageAmplitude,AR2
+
+;
+
+Deter_check_zero_in_start:
+;  // Удаляем точки с нулевой амплитудой в начале массива
+;  while ( TempAverageAmplitude[0] == 0)
+
+	LAR	AR2,#TempAverageAmplitude
+	LACC	*+,0,AR2
+	BCND	Deter_zero_isnt_in_start,NEQ
+
+;  {
+;    for ( j=1; j=TempStepNumber, j++)
+;    {
+;      TempAvrPress[j-1] = TempAvrPress[j];
+;      TempAverageAmplitude[j-1] = TempAverageAmplitude[j];
+;    }
+;  TempStepNumber = TempStepNumber - 1;
+;  }
+
+	LAR	AR2,#TempAvrPress+1
+	RPT	TempStepNumber
+	BLDD	*+,#TempAvrPress,AR2
+	LAR	AR2,#TempAverageAmplitude+1
+	RPT	TempStepNumber
+	BLDD	*+,#TempAverageAmplitude,AR2
+	LACC	TempStepNumber
+	SUB	#1
+	SACL	TempStepNumber
+	B	Deter_check_zero_in_start
+
+;
+
+Deter_zero_isnt_in_start:
+;  // Удаляем точки с нулевой амплитудой ( оставшиеся - результат
+;  // артефакта или аритмии )
+;  // TempAverageAmplitude[0] != 0 ,т.к. есть предыдущий сдвиг.
+;  // TempAverageAmplitude[TempStepNumber] != 0 ,т.к. мы здесь
+;  i=1;
+
+	SPLK	#1,CounterI
+
+;  while ( i < TempStepNumber )
+;  {
+
+Deter_check_end_of_array:
+	LACC	TempStepNumber
+	SUB	CounterI
+	BCND	Deter_while_flag_1,LEQ
+
+;    while (( TempAverageAmplitude[i] == 0)&&( i < TempStepNumber ))
+
+Deter_check_zero_in_array:
+	LACC	TempStepNumber
+	SUB	CounterI
+	BCND	Deter_inc_counterI,LEQ
+	;SUB	#1
+	SACL	TMP
+	LAR	AR4,TMP
+	LAR	AR0,CounterI
+	LAR	AR2,#TempAverageAmplitude
+	MAR	*0+,AR3
+	LAR	AR3,#TempAvrPress+1
+	MAR	*0+,AR2
+	LACC	*+,0,AR2
+	BCND	Deter_inc_counterI,NEQ
+
+;    {
+;      for ( j=i; j<TempStepNumber, j++)
+;      {
+;        TempAvrPress[j] = TempAvrPress[j+1];
+;        TempAverageAmplitude[j] = TempAverageAmplitude[j+1];
+;      }
+;      TempStepNumber = TempStepNumber - 1;
+
+Deter_for_clear_from_zero:
+	LACC	*-,0,AR2
+	SACL	*+,0,AR2
+	MAR	*+,AR3
+	LACC	*-,0,AR3
+	SACL	*+,0,AR3
+	MAR	*+,AR4
+	BANZ	Deter_for_clear_from_zero,*-,AR2
+	LACC	TempStepNumber
+	SUB	#1
+	SACL	TempStepNumber
+	B	Deter_check_zero_in_array
+
+Deter_inc_counterI:
+;    }
+;    i++;
+;  }
+
+	LACC    CounterI
+	ADD	#1
+	SACL    CounterI
+	B	Deter_check_end_of_array
 
 Deter_while_flag_1:
 
@@ -254,40 +318,40 @@ Deter_while_flag_1:
 
 	MAR	*,AR0
 	SPLK	#0,Flag
-	LAR	AR0,StepNumber
+	LAR	AR0,TempStepNumber
 	MAR	*-,AR2
-	LAR	AR2,#AvrPress
-	LAR	AR3,#AverageAmplitude
+	LAR	AR2,#TempAvrPress
+	LAR	AR3,#TempAverageAmplitude
 
 Deter_for_i_0:
 
-;    for ( i=0; i<StepNumber; i++)
+;    for ( i=0; i<TempStepNumber; i++)
 ;    {
-;      if ( AvrPress[k] < AvrPress[k+1])
+;      if ( TempAvrPress[i] < TempAvrPress[i+1])
 
 	LACC	*+,0,AR2
 	SUB	*,0,AR3
 	BCND 	Deter_sequence_press_ok,GEQ
 
 ;      {
-;	  Temp = AverageAmplitude[k+1];
-;         AverageAmplitude[k+1] = AverageAmplitude[k];
-;         AverageAmplitude[k] = Temp;
+;         Temp = TempAverageAmplitude[i+1];
+;         TempAverageAmplitude[i+1] = TempAverageAmplitude[i];
+;         TempAverageAmplitude[i] = Temp;
 
 	MAR	*+,AR3
 	LACC	*-,0,AR3
 	DMOV    *,AR3
 	SACL    *,0,AR2
 
-;         Temp = AvrPress[k+1];
-;         AvrPress[k+1] = AvrPress[k];
-;         AvrPress[k] = Temp;
+;         Temp = TempAvrPress[i+1];
+;         TempAvrPress[i+1] = TempAvrPress[i];
+;         TempAvrPress[i] = Temp;
 
 	LACC	*-,0,AR2
 	DMOV    *,AR2
 	SACL    *+,0,AR3
 
-;	  Flag = 1;
+;         Flag = 1;
 
 	SPLK	#1,Flag
 
@@ -305,37 +369,44 @@ Deter_sequence_press_ok:
 
 ;  }
 
-;  TempAverageAmplitude[0] = 0,25*AverageAmplitude[0];
-;  TempAverageAmplitude[1] = 0,5*AverageAmplitude[0];
-;  for ( i=0; i<=StepNumber; i++)
+;  for ( i=TempStepNumber; i>=0; i--)
 ;  {
-;     TempAverageAmplitude[i+2] = AverageAmplitude[i];
+;     TempAverageAmplitude[i+2] = TempAverageAmplitude[i];
 ;  }
-;  TempAverageAmplitude[StepNumber+3] = 0,5*AverageAmplitude[StepNumber];
-;  TempAverageAmplitude[StepNumber+4] = 0,25*AverageAmplitude[StepNumber];
+;  TempAverageAmplitude[1] = 0,5*TempAverageAmplitude[2];
+;  TempAverageAmplitude[0] = 0,25*TempAverageAmplitude[2];
+;  i=TempStepNumber+2;
+;  TempAverageAmplitude[i+2] = 0,25*TempAverageAmplitude[i];
+;  TempAverageAmplitude[i+1] = 0,5*TempAverageAmplitude[i];
 ;
 
-	LAR	AR0,StepNumber
-	LAR	AR2,#AverageAmplitude
-	LAR	AR3,#TempAverageAmplitude
-	LACC	*,14,AR3
-	SACH	*+,0,AR2
-	LACC	*,15,AR3
-	SACH	*+,0,AR3
-	RPT	StepNumber
-	BLDD	#AverageAmplitude,*+,AR3
 	MAR	*,AR2
+	LAR	AR0,TempStepNumber
+	LAR	AR2,#TempAverageAmplitude
 	MAR	*0+,AR2
-	LACC	*,15,AR3
+	RPT	TempStepNumber
+	DMOV	*-,AR2
+	LAR	AR2,#TempAverageAmplitude+1
+	MAR	*0+,AR2
+	RPT	TempStepNumber
+	DMOV	*-,AR2
+	MAR	*+,AR2
+	LACC	*,15,AR2
+	SACH	*-,0,AR2
+	SFR
+	SACH	*,0,AR2
+	LAR	AR2,#TempAverageAmplitude+2
+	MAR	*0+,AR2
+	LACC	*+,15,AR2
 	SACH	*+,0,AR2
-	LACC	*,14,AR3
+	SFR
 	SACH	*,0,AR2
 
 ;  NewMaxAverageAmplitude = 0;
 
 	SPLK	#0,NewMaxAverageAmplitude
 
-;  for ( i=StepNumber; i>=0; i--)
+;  for ( i=TempStepNumber; i>=0; i--)
 ;  {
 
 	LAR	AR2,#TempAverageAmplitude+4
@@ -380,10 +451,10 @@ Deter_not_of_max:
 	MAR	*-,AR0
 	BANZ	Deter_for_i_1,*-,AR3
 ;  }
-;  AveragePressure = AvrPress[StepAveragePressure];
+;  AveragePressure = TempAvrPress[StepAveragePressure];
 
 	LAR	AR0,StepAveragePressure
-        LAR     AR3,#AvrPress
+        LAR     AR3,#TempAvrPress
 	MAR	*0+,AR3
 	LACC	*,0,AR2
 	SACL	AveragePressure,0
@@ -422,16 +493,16 @@ Deter_sistol
 
         MAR     *,AR2
         LAR     AR2,#NewAverageAmplitude
-        LAR     AR3,#AvrPress-1
+        LAR     AR3,#TempAvrPress-1
         MAR     *0+,AR3
         MAR     *0+,AR2
 
-;     SistolPressure = AvrPress[i] + ( AvrPress[i-1] - AvrPress[i])*
+;     SistolPressure = TempAvrPress[i] + ( TempAvrPress[i-1] - TempAvrPress[i])*
 ;                 ( NewAverageAmplitude[i] -
-;		    THRESHOLD_OF_SISTOL*NewMaxAverageAmplitude )/
+;                   THRESHOLD_OF_SISTOL*NewMaxAverageAmplitude )/
 ;                 ( NewAverageAmplitude[i] - NewAverageAmplitude[i-1]);
 
-               ; ( NewAverageAmplitude[i] - NewAverageAmplitude[i-1]);
+                ; ( NewAverageAmplitude[i] - NewAverageAmplitude[i-1]);
 
         LACC    *-,0,AR2
         SUB     *+,0,AR2
@@ -452,7 +523,7 @@ Deter_sistol
         SACL    TMP
         LT      TMP
 
-                ;2^0*( AvrPress[i-1] - AvrPress[i])
+                ;2^0*( TempAvrPress[i-1] - TempAvrPress[i])
 
         LACC    *+,0,AR3
         SUB     *,0,AR3
@@ -463,7 +534,7 @@ Deter_sistol
         MPY     TMP
         PAC     ;2^9*()*()/()
 
-                ; + 2^9*AvrPress[i]
+                ; + 2^9*TempAvrPress[i]
 
         ADD     *,9,AR2
 
@@ -514,8 +585,8 @@ Deter_not_sistol
 ;  else
 ;  {
 ;     if (( NewAverageAmplitude[0] >=
-;	    THRESHOLD_OF_AVERAGE*NewMaxAverageAmplitude )||
-;	  ( StepAveragePressure < 2 ))
+;           THRESHOLD_OF_AVERAGE*NewMaxAverageAmplitude )||
+;         ( StepAveragePressure < 2 ))
 
         LAR     AR2,#NewAverageAmplitude
         LACC    *,12,AR2
@@ -531,10 +602,10 @@ Deter_not_sistol
 
 Deter_not_s_a_d:
 
-;        Error = NOT_SISTOL_AVR_DIASTOL_PRESSURE;
+;         mEnd_error_meas( rNOT_SISTOL_AVR_DIASTOL_PRESSURE );
 ;        return;
 
-	SPLK    #rNOT_SISTOL_AVR_DIASTOL_PRESSURE,ErrMeas
+	mEnd_error_meas	rNOT_SISTOL_AVR_DIASTOL_PRESSURE
 	RET
 
 ;     }
@@ -543,15 +614,15 @@ Deter_not_s_only:
 
 ;     else
 ;     {
-;	if ( ArtefactCount > 0 )
+;	if ( ArtefactCount > 0 )      ????????????????????
 
 	LACC	ArtefactCount
 	BCND	Deter_not_s_only_2,GT
 
 ;       {
-;         Error = NOT_SISTOL_PRESSURE_ARTEFACT;
+;         mEnd_error_meas( rNOT_SISTOL_PRESSURE_ARTEFACT );
 
-	SPLK    #rNOT_SISTOL_PRESSURE_ARTEFACT,ErrMeas
+	mEnd_error_meas	rNOT_SISTOL_PRESSURE_ARTEFACT
 
 ;       }
 
@@ -561,10 +632,10 @@ Deter_not_s_only_2:
 
 ;       elce
 ;       {
-;         Error = NOT_SISTOL_PRESSURE;
+;         mEnd_error_meas( rNOT_SISTOL_PRESSURE );
 ;       }
 
-	SPLK    #rNOT_SISTOL_PRESSURE,ErrMeas
+	mEnd_error_meas	rNOT_SISTOL_PRESSURE
 
 ;     }
 ;  }
@@ -572,11 +643,11 @@ Deter_not_s_only_2:
 
 Deter_diastol_1
 
-;  if ( NewAverageAmplitude[StepNumber] <=
-;	THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
+;  if ( NewAverageAmplitude[TempStepNumber] <=
+;       THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
 
         MAR     *,AR2
-        LAR     AR0,StepNumber
+        LAR     AR0,TempStepNumber
         LAR     AR2,#NewAverageAmplitude
         MAR     *0+,AR2
         LACC    *,12,AR2
@@ -590,7 +661,7 @@ Deter_diastol_1
 
 
 ;     while ( NewAverageAmplitude[i] <=
-;	      THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
+;             THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
 
 Deter_next_step_2
 
@@ -609,14 +680,14 @@ Deter_diastol_2
 
         MAR     *,AR2
         LAR     AR2,#NewAverageAmplitude
-        LAR     AR3,#AvrPress
+        LAR     AR3,#TempAvrPress
         MAR     *0+,AR3
         MAR     *0+,AR2
 
-;     DiastolPressure = AvrPress[i] - ( AvrPress[i] - AvrPress[i+1])*
-;                  ( NewAverageAmplitude[i] -
-;		     THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )/
-;                  ( NewAverageAmplitude[i] - NewAverageAmplitude[i+1]);
+;     DiastolPressure = TempAvrPress[i] - ( TempAvrPress[i] - TempAvrPress[i+1])*
+;                ( NewAverageAmplitude[i] -
+;                  THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )/
+;                ( NewAverageAmplitude[i] - NewAverageAmplitude[i+1]);
 
 
                ; ( NewAverageAmplitude[i] - NewAverageAmplitude[i+1]);
@@ -640,7 +711,7 @@ Deter_diastol_2
         SACL    TMP
         LT      TMP
 
-                ;2^0*( AvrPress[i] - AvrPress[i+1])
+                ;2^0*( TempAvrPress[i] - TempAvrPress[i+1])
 
         LACC    *+,0,AR3
         SUB     *-,0,AR3
@@ -650,7 +721,7 @@ Deter_diastol_2
 
         MPY     TMP                     ;2^9*()*()/()
 
-        LACC    *,9,AR2                 ; 2^9*AvrPress[i]
+        LACC    *,9,AR2                 ; 2^9*TempAvrPress[i]
 
         SPAC                            ; DiastolPressure/2^7
 
@@ -663,12 +734,16 @@ Deter_diastol_2
 Deter_not_diastol
 
 ;  else
-;  {
-;     Error = NOT_DIASTOL_PRESSURE;
+;  { //  once more step
+;    mDim_pressure_init();
+;    Finish_Meas_Address();
 
-	SPLK    #rNOT_DIASTOL_PRESSURE,ErrMeas
+        mDim_pressure_init
+	CALL	Finish_Meas_Address		; AR0,AR2 is used
 
 ;  }
+
+	B	Deter_quit
 
 Deter_next_mode
 
@@ -684,11 +759,8 @@ Deter_next_mode
 	RPT	#64
 	OUT	*+,3
 	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
 	.endif
+
+Deter_quit:
 
         RET

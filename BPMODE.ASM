@@ -1,6 +1,7 @@
+;&D
 *****************************************************************************
 * режимы прибора (измерение давления, вывод ошибки на экран и т.д.)
-* $Id: BPMODE.ASM,v 1.11 2001-04-11 10:03:40 peter Exp $
+* $Id: BPMODE.ASM,v 1.12 2001-10-22 13:38:14 peter Exp $
 *****************************************************************************
 
 	SETC    SXM
@@ -39,13 +40,23 @@ Mode_branch
 	B       End_mode
 
 ***************************
-* Оценка частоты пульса
+* Оценка частоты пульса на 40 мм.рт.ст.
 ***************************
-	CALL    Pulse_frequency_evaluation
+	CALL    Pulse_frequency_evaluation_40
 	B       End_mode
-
 ;HERMITICITY_CHECK
-
+***************************
+* Увеличение давления до 80  мм.рт.ст.
+***************************
+	CALL    Pressure_augment_80
+	B       End_mode
+;VALVE_WORKING_CHECK
+***************************
+* Оценка частоты пульса на 80 мм.рт.ст.
+***************************
+	CALL    Pulse_frequency_evaluation_80
+	B       End_mode
+;HERMITICITY_CHECK
 ***************************
 * Увеличение давления до систолическое + N мм.рт.ст.
 ***************************
@@ -53,19 +64,19 @@ Mode_branch
 	B       End_mode
 
 ***************************
-* Остановка увеличения давления
+* Остановка увеличения давлени
 ***************************
 	CALL    Pressure_augment_stop
 	B       End_mode
 
 ***************************
-* Проверка превышения систолического давления
+* Проверка превышения систолического давлени
 ***************************
 	CALL    Check_higher_sistol_pressure
 	B       End_mode
 
 ***************************
-* Измерение амплитуд пульсаций и уровня давления
+* Измерение амплитуд пульсаций и уровня давлени
 ***************************
 	CALL    Pressure_measurement
 	B       End_mode
@@ -96,32 +107,12 @@ Mode_branch
 * запись отладочная во флеш
 ****************************
         CALL	DebugWriting
-        B	End_Debug_mode
+        B	End_mode
  .endif
 
 
 End_mode
-	CALL	Analysis_of_end
-End_Debug_mode:
 
-; if ( MaxNumber >= 1)
-; {
-;      MeasurementFlags = MeasurementFlags & (1<<FIRST_IMPULSE_FLAG)
-
-	LACC	MaxNumber
-	BCND	End_next_sample_number,LEQ
-
-	LACC	MeasurementFlags
-	AND	#~(1<<FIRST_IMPULSE_FLAG)
-	SACL    MeasurementFlags
-
-; }
-
-End_next_sample_number:
-
-	LACC    SampleNumber
-	ADD     #1
-	SACL    SampleNumber
  .if DebugStop=1
 	SPLK	#1,TMP
 	CALL	CheckError

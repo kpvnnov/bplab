@@ -1,5 +1,6 @@
+;&D
 ;***********************************************************************
-; $Id: pr_dim2.asm,v 1.3 2001-08-22 14:17:46 peter Exp $
+; $Id: pr_dim2.asm,v 1.4 2001-10-22 13:38:19 peter Exp $
 ;*       Pressure_diminution_2() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       Для запуска процесса вызвать макрос:  mDim_pressure_init
 ;***********************************************************************/
@@ -22,116 +23,6 @@
 ; Pline = Pnew - Plow;
 
 **************************************************************************
-; Данный алгоритм стравливания требует инициализации следующих переменных:
-**************************************************************************
-; перед измерением.
-; Pnew = Pnew - 8;
-; DimMode = 0;
-; DimModeSampleCounter = 0;
-
-; после включения питания.
-; Tclosing = 8;
-; Tedge = 4;
-; Perror = 0;
-
-**************************************************************************
-;
-**************************************************************************
-;int	DimModeSampleCounter;
-;int	DimMode,Pnew;
-;
-;void PressureDiminition2()
-;{
-;static int  DP,Pline0,Perror,Tdimstart,Tclosing,Tedge;
-;int         Pclose;
-;
-; DimSignal[DimModeSampleCounter]=Pressure0;
-;
-; switch ( DimMode )
-;   case 0:
-;       if( DimModeSampleCounter = 0 )
-;       {
-;         Pline0 = DimSignal[0];
-;	}
-;       if( DimModeSampleCounter = 2 )
-;	  DimMode++;
-;    	break;
-;
-;   case 1:
-;       DP0=8*DimSignal[DimModeSampleCounter]-
-;          9*DimSignal[DimModeSampleCounter-1]+
-;          1*DimSignal[DimModeSampleCounter-3];
-;       if(( DP0 >= 0 )||( DimModeSampleCounter >= 8 ))
-;        {
-;          Pline1 = DimSignal[DimModeSampleCounter-1];
-;          if ( DimSignal[DimModeSampleCounter] < Pline1 )
-;          {
-;             Pline1 = DimSignal[DimModeSampleCounter];
-;          }
-;          Pline0 = Pline0 - Pline1;
-;          Tdimstart = DimModeSampleCounter;
-;          DimMode++;
-;        }
-;    	break;
-;
-;   case 2:
-;	if (( DimModeSampleCounter - Tdimstart) >= 4 )
-;	{
-;         if ( Preturn == 0 )
-;         {
-;           Preturn = Pline0*0,7:
-;         }
-; 	  Pclose = Pnew - Preturn;
-;	  if( Pclose > DimSignal[DimModeSampleCounter] )
-;	  {
-;	    Pclose = DimSignal[DimModeSampleCounter];
-;           Tdimstart = DimModeSampleCounter;
-;           Valve_is_closed();
-;           DimMode++;
-;         }
-;	}
-;    	break;
-;
-;   case 3:
-;       if(( DimSignal[DimModeSampleCounter]-
-;            DimSignal[DimModeSampleCounter-1]) > 0)
-;       {
-;         Tdimstart = DimModeSampleCounter;
-;	  mValve_hold();
-;         DimMode++;
-;       }
-;    	break;
-;
-;   case 4:
-;       if( 2*( DimSignal[DimModeSampleCounter]-
-;               DimSignal[DimModeSampleCounter-1]) <
-;             ( DimSignal[DimModeSampleCounter-1]-
-;               DimSignal[DimModeSampleCounter-2]))
-;       {
-;         Tdimstart = DimModeSampleCounter;
-;         DimMode++;
-;       }
-;    	break;
-;
-;   case 5:
-;       if(( DimModeSampleCounter - Tdimstart ) > DIM_PAUSE)
-;       {
-;	  for (i=0; i<8; i++)
-;         {
-;	    Pcurrent = 0;
-;           Pcurrent = Pcurrent + (DimSignal[DimModeSampleCounter - i];
-;         }
-;         Preturn = Preturn + ( Pcurrent/8 - Pclose - Preturn )/16;
-;	  MeasurementFlags = (MeasurementFlags )&(~( 1<<DIM_PRESSURE_FLAG  ));
-;       }
-;
-;    	break;
-;     }
-;       DimModeSampleCounter++;
-;	return;
-**************************************************************************
-
-
 **************************************************************************
 ; Данный алгоритм стравливания требует инициализации следующих переменных:
 **************************************************************************
@@ -145,6 +36,7 @@
 
 ; после включения питания.
 ; Perror = 0;
+; Preturn = B4mm;
 ;
 ;mDim_pressure_supply_up_init	.macro
 ;
@@ -162,27 +54,19 @@
 ;
 ;void PressureDiminition2()
 ;{
-;static int  	DP,Pline0,Pline1,Perror,Tdimstart,Tclosing,Tedge;
+;static int  	DP,Perror,Tdimstart,Tclosing,Tedge;
 ;int         	Pclose;
 ;int		DimSignal[3];
-
-;DimModeSampleCounter  	.usect "bss1",1
-;DimMode               	.usect "bss1",1
-;Pline0                	.usect "bss1",1
-;Pline1                	.usect "bss1",1
-;Perror                	.usect "bss1",1
-;Tdimstart             	.usect "bss1",1
 
 Pnew                  	.equ	NewPressure
 DimSignal		.equ	SR30	; Первая ячейка сдвигового регистра ФНЧ
 
-DIM_PAUSE		.set	24
+DIM_PAUSE		.set	28 	; it was 24 to 05.10.2001
 
 Pressure_diminition_2:
 
 	MAR	*,AR1
-	SAR	AR0,*+,AR1
-	SAR	AR2,*+,AR2
+	SAR	AR0,*+,AR2
 	SETC	SXM
 
 ; DimSignal[DimModeSampleCounter]=Pressure0;
@@ -199,124 +83,20 @@ Dim_mode_case:
 	B	Dim_case_1
 	B	Dim_case_2
 	B	Dim_case_3
-	B	Dim_case_4
-	B	Dim_case_5
-
-;   case 0:
 
 Dim_case_0:
-
-;         Pline0 = DimSignal[0];
-;	  DimMode++;
-;    	break;
-
-	LACC	*,0,AR2
-	SACL    Pline0,0
-	LACC    DimMode
-	ADD	#1
-	SACL    DimMode
-
-	;LAR	AR2,#IMR		;??????????????????????????????
-	;LACC	*
-	;AND	#001Fh
-	;SACL	*
-	;SPLK	#ASPST,TMP
-	;OUT	TMP,ASPCR
-	;NOP
-
-	;LACC	Perror,12
-	;SACH	TMP+2,0
-	;OUT	TMP+2,ADTR                               ;?????????????????????????????
-
-	B	Dim_quit
-
-;
-;   case 1:
-
-Dim_case_1:
-
-;       DP0=8*DimSignal[DimModeSampleCounter]-
-;          9*DimSignal[DimModeSampleCounter-1]+
-;          1*DimSignal[DimModeSampleCounter-3];
-;       if(( DP0 >= 0 )||( DimModeSampleCounter >= 8 ))
-
-	LACC	DimModeSampleCounter,0
-	SUB     #8
-	BCND	Dim_case_1_calculation,GEQ
-	LACC	*+,3,AR2
-	SUB	*,3,AR2
-	SUB	*+,0,AR2
-	MAR	*+,AR2
-	ADD	*-,0,AR2
-	BCND	Dim_quit,LT
-
-;        {
-
-Dim_case_1_calculation:
-
-;          Pline1 = DimSignal[DimModeSampleCounter-1];
-;          if ( DimSignal[DimModeSampleCounter] < Pline1 )
-;          {
-;             Pline1 = DimSignal[DimModeSampleCounter];
-;          }
-;          Pline0 = Pline0 - Pline1;
-;          Tdimstart = DimModeSampleCounter;
-;          DimMode++;
-
-	MAR	*-,AR2
-	LACC	*-,0
-	SACL	Pline1,0
-	SUB	*,0
-	BCND	Dim_case_1_calc_Pline0,LEQ
-	LACC	*,0
-	SACL	Pline1,0
-Dim_case_1_calc_Pline0:
-	LACC	Pline0,0
-	SUB     Pline1,0
-	SACL	Pline0,0
-	LACC	DimModeSampleCounter
-	SACL	Tdimstart
-	LACC    DimMode
-	ADD	#1
-	SACL    DimMode
-
-;        }
-;    	break;
-
-	B	Dim_quit
-
-Dim_case_2:
-;   case 2:
-;	if (( DimModeSampleCounter - Tdimstart) >= 4 )
-;	{
-
-	LACC	DimModeSampleCounter,0
-	SUB     Tdimstart,0
-	SUB	#4
-	BCND	Dim_quit,LT
-
-;         if ( Preturn == 0 )
-
-	LACC	Preturn,0
-	BCND	Dim_case_2_Pclose_calculation,NEQ
-
-;         {
-;           Preturn = Pline0*0,625:
-;         }
-
-	LACC	Pline0,15
-	ADD	Pline0,13
-	SACH	Preturn,0
-
-Dim_case_2_Pclose_calculation:
-
-; 	  Pclose = Pnew - Preturn - DimSignal[DimModeSampleCounter]/256 + B100mm/256;
+;   case 0:
+; 	  Pclose = Pnew - Preturn - DimSignal[DimModeSampleCounter]/256
+;	         - 4000h/128 + B100mm/256 - Perror*3/4;
 ;	  if( Pclose > DimSignal[DimModeSampleCounter] )
 
 	LACC	Pnew,16
 	SUB     Preturn,16
 	SUB	*,8,AR2
+	SUB	#4000h,9       ; Приведение DimSignal к виду Unsigned
 	ADD	#B10mm*10,8
+	SUB	Perror,14
+	SUB	Perror,15
 	SUB	*,16,AR2
 	BCND	Dim_quit,LEQ
 
@@ -343,9 +123,9 @@ Dim_case_2_Pclose_calculation:
 	B	Dim_quit
 
 ;
-;   case 3:
+;   case 1:
 
-Dim_case_3:
+Dim_case_1:
 
 ;       if(( DimSignal[DimModeSampleCounter]-
 ;            DimSignal[DimModeSampleCounter-1]) > 0)
@@ -373,9 +153,9 @@ Dim_case_3:
 	B	Dim_quit
 
 ;
-;   case 4:
+;   case 2:
 
-Dim_case_4:
+Dim_case_2:
 
 ;       if( 2*( DimSignal[DimModeSampleCounter]-
 ;               DimSignal[DimModeSampleCounter-1]) <
@@ -404,9 +184,9 @@ Dim_case_4:
 	B	Dim_quit
 
 ;
-;   case 5:
+;   case 3:
 
-Dim_case_5:
+Dim_case_3:
 
 ;       if(( DimModeSampleCounter - Tdimstart ) > DIM_PAUSE)
 
@@ -433,7 +213,7 @@ Dim_case_5:
 ;       }
 
 	BIT	MeasurementFlags,15-FIRST_MEAS_FLAG
-	BCND    Dim_case_5_Preturn_32,NTC
+	BCND    Dim_case_3_Preturn_32,NTC
 	LACC	*+,10,AR2
 	RPT	#6
 	ADD	*+,10,AR2
@@ -442,9 +222,9 @@ Dim_case_5:
 	SUB	Preturn,13
 	ADD	Preturn,16
 	SACH	Preturn,0
-	B	Dim_case_5_Perror_culc
+	B	Dim_case_3_Perror_culc
 
-Dim_case_5_Preturn_32:
+Dim_case_3_Preturn_32:
 	LACC	*+,8,AR2
 	RPT	#6
 	ADD	*+,8,AR2
@@ -454,18 +234,16 @@ Dim_case_5_Preturn_32:
 	ADD	Preturn,16
 	SACH	Preturn,0
 
-Dim_case_5_Perror_culc:
-	LACC	TMP+2,0
-	SUB	NewPressure,0
-	SACL	Perror,0
+Dim_case_3_Perror_culc:
+	LACC	Perror,16
+	ADD	TMP+2,14
+	SUB	NewPressure,14
+	SUB	Perror,14
+	SACH	Perror,0
 
 	LACC	TMP+2,0
         SUB     #EIGHT_MILL_OF_MERC-B0_2mm
 	SACL	NewPressure
-
-	;LACC	Preturn,12
-	;SACH	TMP+2,0
-	;OUT	TMP+2,ADTR                               ;?????????????????????????????
 
 	LACC	MeasurementFlags,0
 	AND	#~(1<<DIM_PRESSURE_FLAG)
@@ -492,8 +270,7 @@ Dim_quit:
 
 	MAR	*,AR1
 	MAR	*-,AR1
-	LAR     AR2,*-,AR1
-	LAR	AR0,*,AR1
+	LAR	AR0,*,AR2
 	RET
 
 **************************************************************************

@@ -1,6 +1,7 @@
+;&D
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.19 2001-10-17 15:50:50 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.20 2001-10-22 13:38:13 peter Exp $
 *****************************************************************************
 *
 
@@ -33,7 +34,7 @@ INTKEY
 	BIT     _Jobs,15			;процесс измерения идет?
 	BCND    int3_IzmNeIdet,NTC
 ;//записать состояние ошибочного прерывания
-	mEnd_error_meas	rNeispraven
+;	mEnd_error_meas	rNeispraven
 int3_IzmNeIdet
 	B	QuitFromINTKEY
 
@@ -155,7 +156,7 @@ KEY10_1
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 	Begin_measurement
-	Clear_measurement
+	mClear_sample_number
 
 
 	RET
@@ -207,7 +208,7 @@ KEY18
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
-	Clear_measurement
+	mClear_sample_number
 	SETC 	SXM
 *******************************************
 * если можно менять начальный уровень накачки давления

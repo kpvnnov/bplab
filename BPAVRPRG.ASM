@@ -1,4 +1,5 @@
-* $Id: BPAVRPRG.ASM,v 1.14 2001-10-11 12:39:48 peter Exp $
+;&D
+* $Id: BPAVRPRG.ASM,v 1.15 2001-10-22 13:38:11 peter Exp $
  .copy bpavrprg.mac
 
 	.globl	_clk_xf_avr

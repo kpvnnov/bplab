@@ -1,3 +1,4 @@
+;&D
 *****************************************************************************
 *       Subroutine is used for check IDLE mode.
 *       If Idle mode is interrupted, then XF pin value is changed

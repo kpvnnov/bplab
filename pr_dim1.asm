@@ -1,92 +1,105 @@
+;&D
 ;***********************************************************************
-; $Id: pr_dim1.asm,v 1.4 2001-08-22 14:17:46 peter Exp $
+; $Id: pr_dim1.asm,v 1.5 2001-10-22 13:38:19 peter Exp $
 ;*       Pressure_diminution_1() - Процесс подготовки данных после
 ;*	 понижения давления на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
 ;***********************************************************************/
-;Pressure_diminution()
-;{
-;    if ((( MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == 0 )
-;    {
-;  	DPTemp = ( Signal[SampleNumber] - Signal[SampleNumber-4])/4;
-;       PredictionInterval = SampleNumber-4;
-;       if ( PredictionInterval > PREDICTION_INTERVAL )
-;       {
-;          PredictionInterval = PREDICTION_INTERVAL;
-;       }
-;       for  ( i=0; i<PredictionInterval; i++; )
-;       {
-;	    Signal[SampleNumber-5-i] = Signal[SampleNumber-4-i] - DPTemp;
-;           DPTemp = DPTemp - DPTemp/16;
-;       }
-;       /*      Подготовка к следующему режиму  */
-;       Mode = PRESSURE_MEASUREMENT;
-;       AnalysisStart = SampleNumber - 4 - PredictionInterval + AnalysisInterval + TIME_OUT;
-;	StartMeasAdress[StepNumber] = SampleNumberShift + SampleNumber - 4;
-;       MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG);
-;***********************************************************************/
 
 
-PREDICTION_INTERVAL	.set	20
+PREDICTION_INTERVAL	.equ	DIFF_BASIS+8
 
-PredictionInterval	.equ	TMP
 DPTemp			.equ	TMP+1
 
 Pressure_diminution_1:
 
-;    if ((( MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == 0 )
+;    if (((( MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == 0 )&&
+;       ( SampleNumber > PREDICTION_INTERVAL ))
 
+	LACC	SampleNumber
+	SUB	#PREDICTION_INTERVAL
+	BCND	Press_dim_1_end,LEQ
 	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
-	RETC	TC
+	BCND	Press_dim_1_end,TC
 
 ;    {
-;  	DPTemp = ( Signal[SampleNumber] - Signal[SampleNumber-4])/4;
-;       PredictionInterval = SampleNumber-4;
+;  	DPTemp = (( Signal[SampleNumber] - Signal[SampleNumber-4]) +
+;  	         (Signal[SampleNumber-1] - Signal[SampleNumber-5]) +
+;  	         (Signal[SampleNumber-2] - Signal[SampleNumber-6]) +
+;  	         (Signal[SampleNumber-3] - Signal[SampleNumber-7]))/16;
 
         MAR     *,AR2
         LAR     AR0,SampleNumber
         LAR     AR2,#Signal
-        LAR     AR3,#Signal-4
-        MAR     *0+,AR3
         MAR     *0+,AR2
-	LACC	*,14,AR3
-	SUB	*,14,AR3
+	LACC	*-,12,AR2
+	RPT	#2
+	ADD     *-,12,AR2
+	RPT	#3
+	SUB	*-,12,AR2
 	SACH	DPTemp,0
-	LACC    SampleNumber
-	SUB	#4
-	SACL	PredictionInterval
 
-;       if ( PredictionInterval > PREDICTION_INTERVAL )
-
-	SUB	#PREDICTION_INTERVAL
-	BCND	Dim1_prediction,LEQ
-
+;       for  ( i=0; i<=PREDICTION_INTERVAL-1; i++; )
 ;       {
-;          PredictionInterval = PREDICTION_INTERVAL;
-;       }
-
-	SPLK	#PREDICTION_INTERVAL,PredictionInterval
-
-Dim1_prediction:
-
-;       for  ( i=0; i<PredictionInterval; i++; )
-;       {
-;	    Signal[SampleNumber-5-i] = Signal[SampleNumber-4-i] - DPTemp;
+;	    Signal[SampleNumber-1-i] = Signal[SampleNumber-i] - DPTemp;
 ;           DPTemp = DPTemp - DPTemp/16;
 ;       }
 
-	LAR	AR0,PredictionInterval
+        LAR     AR2,#Signal
+        MAR     *0+,AR2
+	LAR	AR0,#PREDICTION_INTERVAL-1
 Dim1_prediction_2:
-	LACC	*-,0,AR3
+	LACC	*-,0,AR2
 	SUB	DPTemp,0
 	SACL	*,0,AR0
 	LACC	DPTemp,16
 	SUB	DPTemp,12
 	SACH	DPTemp,0
-	BANZ	Dim1_prediction_2,*-,AR3
+	BANZ	Dim1_prediction_2,*-,AR2
+
+;    Temp0 = 0;
+;    for ( k=0; k<8; k++ )
+;    {
+;      Temp0 = Temp0 +
+;        ((long int)(Signal[SampleNumber-k]))*Win_blackman[k] -
+;        ((long int)(Signal[SampleNumber-k-DIFF_BASIS]))*Win_blackman[k];
+;    }
+;    DiffSignal[0] = (int)(Temp0>>14);
+
+	MAR	*,AR2
+        LAR     AR0,SampleNumber
+        LAR     AR2,#Signal
+	MAR	*0+,AR3                 ; AR2 = & Signal[SampleNumber]
+        LAR     AR3,#Signal-DIFF_BASIS
+        MAR     *0+,AR2  		; AR3 = & Signal[SampleNumber-DIFF_BASIS]
+
+        MAC  	WIN_BL,*-,AR2
+	LACC 	#0
+	RPT  	#2
+	MAC 	WIN_BL+1,*-,AR2
+	MAR	*,AR3
+	RPT  	#3
+	MAC 	WIN_BL_MINUS,*-,AR3
+	MAR	*,AR2
+	RPT  	#3
+	MAC 	WIN_BL+4,*-,AR2
+	MAR	*,AR3
+	RPT  	#3
+	MAC 	WIN_BL_MINUS+4,*-,AR3
+	MAR	*,AR2
+	LAR	AR2,#DiffSignal
+	APAC
+	SACH 	*+,2,AR2
+
+;    for ( i=1; i<=PREDICTION_INTERVAL; i++ )
+;    {
+;      DiffSignal[i] = DiffSignal[0];
+;    }
+
+	RPT	#PREDICTION_INTERVAL
+	SACH    *+,2,AR2
 
 ;       /*      Подготовка к следующему режиму  */
-
 ;       Mode = PRESSURE_MEASUREMENT;
  .if Sertificarion=1
         SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
@@ -94,23 +107,22 @@ Dim1_prediction_2:
         SPLK    #PRESSURE_MEASUREMENT,Mode
  .endif
 
-;       AnalysisStart = SampleNumber - 4 - PredictionInterval + AnalysisInterval + TIME_OUT;
+;       AnalysisStart = SampleNumber - PREDICTION_INTERVAL
+;		         + DIFF_BASIS*4/3 + AnalysisInterval;
 
 	LACC	SampleNumber,16
-	SUB	PredictionInterval,16
+	SUB	#(PREDICTION_INTERVAL-DIFF_BASIS*4/3)*2,15
         ADD     AnalysisInterval,16
-	ADD     #TIME_OUT*2-4*2,15
         SACH    AnalysisStart,0
 
-;	StartMeasAdress[StepNumber] = SampleNumberShift + SampleNumber - 4;
+;	StartMeasAdress[StepNumber] = SampleNumberShift + SampleNumber;
 
-
+	MAR	*,AR3
 	LAR	AR0,StepNumber
 	LAR	AR3,#StartMeasAdress
 	MAR	*0+,AR3
 	LACC	SampleNumberShift
 	ADD	SampleNumber,0
-	SUB	#4
 	SACL	*,0,AR2
 
 ;      MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG);
@@ -120,9 +132,32 @@ Dim1_prediction_2:
 	SACL    MeasurementFlags
 
 ;    }
-;    else      Сделано через "RETC"
+
+Press_dim_1_end:
+;    else
 ;    {
 ;    }
+;    if ( SampleNumber > 2*ONE_SECOND )
+
+	LACC	SampleNumber,0
+	SUB	#ONE_SECOND*2
+	BCND	Press_dim_1_check_anal_end,LT
+
+;    {
+;      mEnd_error_meas(rTIME_PR_DIM_MORE_2_SEC);
+;    }
+
+	mEnd_error_meas rTIME_PR_DIM_MORE_2_SEC
+
+Press_dim_1_check_anal_end:
+;    Analysis_of_end();
+;    SampleNumber++;
+
+	CALL	Analysis_of_end
+	LACC    SampleNumber,0
+	ADD	#1
+	SACL    SampleNumber,0
+
 ;}
 ;    return
 

@@ -1,4 +1,5 @@
-* $Id: BPIDLE.ASM,v 1.8 2001-10-17 15:50:50 peter Exp $
+;&D
+* $Id: BPIDLE.ASM,v 1.9 2001-10-22 13:38:13 peter Exp $
         CLRC INTM               ;RS,NMI,INT1,INT2,TINT,TXRXINT.
 
 IDLEST  NOP

@@ -1,4 +1,5 @@
-* $Id: AN_SP_UP.ASM,v 1.17 2001-10-08 08:29:13 peter Exp $
+;&D
+* $Id: AN_SP_UP.ASM,v 1.18 2001-10-22 13:38:10 peter Exp $
 Level_zero
 	LACC    SubroutMode,1
 	ADD     #LevelZero_branch
@@ -49,12 +50,12 @@ LevelZero0
 * включаем питание
 	CALL 	SuperBeep
 	PowerAnalogOn
-	Clear_measurement
+	mClear_sample_number
 	LAR	AR7,#TimeOfBeginMeas
 	CALL	SaveTimeOfBeginMeas
 	mResetInterval		;загружаем интервал следующего измерения
 	mResetFastInterval	;запоминаем три минуты
-	CALL	MakeValue		
+	CALL	MakeValue
 
 	RET
 
@@ -67,11 +68,11 @@ LevelZero1			;высвечиваем номер измерения
  .else
 	SPLK 	#64,ModeCnt	;
  .endif
-	Clear_measurement
+	mClear_sample_number
 	BeginADC       ;начинаем измерять ADC
 *	SPLK 	#3h,_MDSPL 	;переходим на уровень давления
 * отладка
-;       Beep
+       Beep
 * конец отладки
 	RET
 
@@ -85,7 +86,7 @@ LevelZero2
 	BCND	NoWriteThis,NEQ
 	SPLK 	#START_DEBUG_WRITE,Mode
 	SPLK	#0,SubroutMode		;для первоначального case
-	Clear_measurement
+	mClear_sample_number
 	RET
 NoWriteThis
  .else
@@ -103,7 +104,7 @@ NoWriteThis
 
 	SPLK 	#START_SHIFT,Mode
 	SPLK	#0,SubroutMode		;для первоначального case
-	Clear_measurement
+	mClear_sample_number
 ;проверить питание прибора - если очень низкое, то измерение остановить
 ;#####################################
 
@@ -190,8 +191,7 @@ Write_branch2
 
 *
 ;	Beep
-
-	Clear_measurement
+	mClear_sample_number
 
 	mValve_on
 	mWait_valve_hold
@@ -217,7 +217,7 @@ largeTime:
 	RET
 
 Write_branch4
-	Clear_measurement
+	mClear_sample_number
 	mDec_counter		;CNTMOD--
 	RETC 	GT
 *	mEnd_meas
