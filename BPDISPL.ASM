@@ -1,6 +1,6 @@
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.15 2001-05-28 10:06:25 peter Exp $
+* $Id: BPDISPL.ASM,v 1.16 2001-05-28 10:33:26 peter Exp $
 *****************************************************************************
 
 MDSPLV  B 	MDSPL0    ;вывод времени на дисплей
@@ -241,7 +241,7 @@ MDSPL5  		; вывод ошибки на экран
         BCND	LowBattery,EQ
 	LACC	ZERROR
 	AND	#0FFh
-	XOR	#rSertification
+	XOR	#050h
 	BCND	SertificationMode,EQ
 
 	SPLK 	#15,*+			; E
