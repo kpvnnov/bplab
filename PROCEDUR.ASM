@@ -1,7 +1,7 @@
 ;&D
 ***********************************************************************
 *       Average
-* $Id: PROCEDUR.ASM,v 1.8 2001-11-14 17:33:35 peter Exp $
+* $Id: PROCEDUR.ASM,v 1.9 2001-11-14 17:34:21 peter Exp $
 ***********************************************************************
 Average
 
@@ -528,7 +528,7 @@ Pressure_for_display:
 	ADDS    PressureForDisplay+0
 	SACL    PressureForDisplay+0
 
-	LACL	SampleNumber
+	LACL	_SampleNumber
 	AND	#0Fh
 	BCND	Pressure_f_d_not_new_press,NEQ
 	LACL	PressureForDisplay+0
