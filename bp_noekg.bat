@@ -1,5 +1,5 @@
 @echo off
-rem $Id: bp_noekg.bat,v 1.3 2001-02-15 14:10:40 peter Exp $
+rem $Id: bp_noekg.bat,v 1.4 2001-04-26 16:11:02 peter Exp $
 echo Монитор давления с последовательной флэш
 echo без экг, разводка платы сентябрь 2000 года (новая)
 
@@ -41,7 +41,7 @@ asmtms\dspa.exe flashprg\sutils4.asm -l -v2xx -s -w
 echo =========================
 echo Making Bp_noekg.asm
 echo =========================
-asmtms\dspa.exe Bp_noekg.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1
+asmtms\dspa.exe Bp_noekg.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1 -dMem=20
 IF ERRORLEVEL 0 GOTO compile
 echo =========================
 echo Errors in assemble

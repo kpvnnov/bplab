@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.17 2001-04-26 15:44:23 peter Exp $
+* $Id: BP206MAC.ASM,v 1.18 2001-04-26 16:11:00 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -50,9 +50,7 @@ PowerAnalogOff .macro
 *******************************
 BeginADC .macro
 	LACC Jobs
-;	OR   #CallADCPRO   	;надо начинать измерять(ADCPRO)
 	OR   #(1<<CallADCPRO_Flag)  	;надо начинать измерять(ADCPRO)
-
 	SACL Jobs
  .endm
 *******************************
@@ -60,7 +58,6 @@ BeginADC .macro
 *******************************
 EndADC .macro
 	LACC Jobs
-;	AND   #CallADCPROmask  	;надо заканчивать измерять
 	AND   #~(1<<CallADCPRO_Flag)  	;надо заканчивать измерять
 	SACL Jobs
  .endm
@@ -71,7 +68,6 @@ EndADC .macro
 mManual_MeasOn .macro
 	LACC Jobs
 	OR   #(1<<Manual_Meas)  
-
 	SACL Jobs
  .endm
 *******************************
@@ -99,6 +95,40 @@ Begin_measurement .macro
 End_measurement .macro
 	LACC Jobs
 	AND	#~(1<<CallMeasur_Flag)	;сбрасываем бит
+	SACL Jobs
+ .endm
+*******************************
+*один раз процедуру запись во флеш уже вызвали
+*и подсчитали количество измерений во флеш
+*******************************
+mWeCountingFlash .macro
+	LACC Jobs
+	OR	#(1<<WeCountingFlash)	;подсчитали количество измерений
+	SACL Jobs
+ .endm
+*******************************
+*вызвали процедуру записи во флеш и закончили туда писАть
+*флаг подсчета надо сбросить
+*******************************
+mWeCountingFlashEnd .macro
+	LACC Jobs
+	AND	#~(1<<WeCountingFlash)	;сбрасываем бит
+	SACL Jobs
+ .endm
+*******************************
+* устанавливаем флаг отсутствия места во флеш
+*******************************
+mNoPlaceInFlash .macro
+	LACC Jobs
+	OR	#(1<<NoPlaceInFlash)	;подсчитали количество измерений
+	SACL Jobs
+ .endm
+*******************************
+* сбрасываем флаг отсутствия места во флеш
+*******************************
+mNoPlaceInFlashClear .macro
+	LACC Jobs
+	AND	#~(1<<NoPlaceInFlash)	;сбрасываем бит
 	SACL Jobs
  .endm
 *******************************
@@ -1002,12 +1032,15 @@ $4	SUB  	#1
 	SPLK	#0,*
 	OUT  	*,SDTR     	;0.нулевое :) слово для передачи
 
-**	LACC    AFLMSB
-*	LACC    FLADR+1
-*	AND	#003Fh
-*	OR	#5200h
 	LACC    FLADR+1,1
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#003Fh,1
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#007Fh,1
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
 	OR	#5200h,1
 
 	BIT	FLADR,1
@@ -1030,9 +1063,6 @@ $3
 	mOnFlash0
 	mOutDIOSR
 
-**	LACC    AFLLSB,1
-*	LACC    FLADR,1
-*	AND     #0FC00h
 
 	LACC    FLADR,2
 	AND     #0FC00h,1

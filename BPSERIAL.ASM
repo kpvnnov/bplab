@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.20 2001-03-26 14:26:09 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.21 2001-04-26 16:11:01 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -1001,8 +1001,15 @@ CommAndBlood
 *        OUT  DPA0,PA0
 
 	CLRC SXM
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC Flags+2,5  ;читаем младший байт
 	ADD  Flags+3,13
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC Flags+2,6  ;читаем младший байт
+	ADD  Flags+3,14
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH FLADR+1,1
 	AND   #7FFFh
 	SACL FLADR
@@ -1511,8 +1518,15 @@ OutBuffer2k
 	LAR  AR6,#DATART+4
 	LAR  AR1,#DATART+2
 
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC *+,5
 	ADD  *,13
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC *+,6
+	ADD  *,14
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
 *        OR   #8000h
 	AND	#07FFFH

@@ -1,5 +1,5 @@
 @echo off
-rem $Id: bp_par.bat,v 1.1 2001-01-22 12:21:51 peter Exp $
+rem $Id: bp_par.bat,v 1.2 2001-04-26 16:11:02 peter Exp $
 echo Монитор давления с паралельной флэш
 echo без экг, разводка платы старая
 
@@ -41,7 +41,7 @@ asmtms\dspa.exe flashprg\sutils4.asm -l -v2xx -s -w
 echo =========================
 echo Making Bp_paral.asm
 echo =========================
-asmtms\dspa.exe Bp_paral.asm -l -v2xx -s -w -dVersionFerrum=1 -dNewFerrum=0
+asmtms\dspa.exe Bp_paral.asm -l -v2xx -s -w -dVersionFerrum=1 -dNewFerrum=0 -dMem=20
 IF ERRORLEVEL 0 GOTO compile
 echo =========================
 echo Errors in assemble

@@ -1,5 +1,5 @@
 @echo off
-rem $Id: bp_ekg.bat,v 1.1 2001-01-22 12:21:51 peter Exp $
+rem $Id: bp_ekg.bat,v 1.2 2001-04-26 16:11:02 peter Exp $
 echo Монитор давления с последовательной флэш
 echo c экг, разводка платы сентябрь 2000 года (новая)
 
@@ -41,7 +41,7 @@ asmtms\dspa.exe flashprg\sutils4.asm -l -v2xx -s -w
 echo =========================
 echo Making Bp_ekg.asm
 echo =========================
-asmtms\dspa.exe Bp_ekg.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1
+asmtms\dspa.exe Bp_ekg.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1 -dMem=20
 IF ERRORLEVEL 0 GOTO compile
 echo =========================
 echo Errors in assemble

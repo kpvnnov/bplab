@@ -1,67 +1,123 @@
-* $Id: BPFLASH.ASM,v 1.13 2001-04-26 15:44:23 peter Exp $
+* $Id: BPFLASH.ASM,v 1.14 2001-04-26 16:11:01 peter Exp $
 ****отладка
 WriteEnd
-*	BIT     Jobs,7			;пишем во флеш ?
-*	BCND	YesFlash,TC 		;пишем, так как было разрешение
-*	CALL	MakeValue		;надо забить таблицу
-*YesFlash
-	LACC 	MayToWrite
-	BCND 	AlreadyMaked,NEQ
+;необходимо произвести подсчет количества измерения в таблице
+;измерений (флэш)
+	BIT	Jobs,15-WeCountingFlash
+        BCND    AlreadyMaked,TC
 	CALL	MakeValue		;надо забить таблицу
-AlreadyMaked
+AlreadyMaked:
 	mEnd_write_flash
+
 	CLRC 	SXM
 	LACC 	IZNUMREC
 	SUB 	#256
 	BCND 	NeChet1,EQ ;не пишем, если не было разрешения
+
 	;надо заполнить начальный адрес
-*	LACC 	CountWrite
-*	BCND NeChet1,EQ
+	LACC 	CountWrite	;если нифика не было записано
+	BCND 	NoMaxInfo,EQ      ;то и таблица максимумов не нужна
+
  .if OutputSectoring=1
-	CALL	MakeSectoring
+	CALL	MakeSectoring	;таблица максимумов на ступеньках
  .elseif OutputSectoring=0
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 
+NoMaxInfo:
 	SPLK 	#0,FLADR+1
 	SPLK 	#0,FLADR
 	LACC 	IZNUMREC
-	BCND 	NotFirst,NEQ
-	SACL 	FLADR	;надо записать адрес начала нулевого измерения
+	BCND 	NotFirst,NEQ	;это не первое измерение
+;самое первое измерение
+;надо записать адрес начала нулевого измерения
 
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	SPLK 	#080h,TMP  ;измерения начинаются с адреса 0x001000h
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	SPLK 	#040h,TMP  ;измерения начинаются с адреса 0x001000h
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	CALL 	FLPROG     ;младший байт записали
 	SPLK 	#000h,TMP  ;измерения начинаются с адреса 0x001000h
 	CALL 	FLPROG     ;старший байт записали
 	B FirstCompiled
-NotFirst
+NotFirst:
 	LACC 	IZNUMREC,1
 	ADD	#1,1
 	SACL 	FLADR     ;надо записать адрес окончания измерения
-FirstCompiled
+FirstCompiled:
 
 	LACC 	CountWrite
 	BCND 	NoDataWrited,EQ
-
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC 	IZFLLSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC 	IZFLLSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH 	TMP
 	LACC 	TMP
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	ADD  	IZFLMSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	ADD  	IZFLMSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+	XOR  	#0FFFEh
+	BCND 	NoDataWrited,EQ 	;это конец адресного пространства
+
+ .if Mem=20	;одна микросхема на 2 Mbyte
+	LACC 	IZFLLSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC 	IZFLLSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+	SACH 	TMP
+	LACC 	TMP
+ .if Mem=20	;одна микросхема на 2 Mbyte
+	ADD  	IZFLMSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	ADD  	IZFLMSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	ADD  	#1         ;прибавляем единичку,
 			;чтобы границы не перекрывались
 	SACL 	TMP
 	B 	PresentDataWrited
-NoDataWrited
+NoDataWrited:
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC 	IZFLLSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC 	IZFLLSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
 	SACH 	TMP
 	LACC 	TMP
+
+ .if Mem=20
 	ADD  	IZFLMSB,11
+ .elseif Mem=40
+	ADD  	IZFLMSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	;единичку прибавлять не будем, потому что нет данных
 	SACL 	TMP
 PresentDataWrited
-	LACC	NoWritePlace	;есть место во флеш ?
-	BCND	Yes_It_Is,EQ	;да, место есть!
+;	LACC	NoWritePlace	;есть место во флеш ?
+;	BCND	Yes_It_Is,EQ	;да, место есть!
+	BIT	Jobs,15-NoPlaceInFlash	;;есть место во флеш ?
+        BCND	Yes_It_Is,NTC   ;да, место есть!
 	SPLK	#0FFFEh,TMP
 Yes_It_Is:
 	CALL 	FLPROG     ;младший байт записали
@@ -105,7 +161,6 @@ ItIsNotManualMeas:
 
 	LACC 	*+		;количество часов
 
-;	SACL 	TMP
 
 	CALL	ConvertBCD2BIN_
 
@@ -114,7 +169,6 @@ ItIsNotManualMeas:
 
 	SPM  	#0              ;Set P Register Output Shift Mode
 				;multiplier output is left-shifted one place
-;	LAR	AR1,#TimeOfBeginMeas+3
 	LT      *
 	MPY     #24
 	APAC			;складываем результат с содержимым аккумулятора
@@ -142,9 +196,6 @@ ItIsNotManualMeas:
 	SACL	TMP
 	CALL FLPROG
 *****************************
-*	LACC AFLLSB
-*	ADD  #1
-*	SACL AFLLSB     ;адрес увеличили на 1
 
 	SPM	#0
 	LACC	AveragePressure		;среднее давление
@@ -167,9 +218,6 @@ ItIsNotManualMeas:
 *****************************
 
 
-*	LACC AFLLSB
-*	ADD  #1
-*	SACL AFLLSB     ;адрес увеличили на 1
 
 	SPM	#0
 	LACC	DiastolPressure
@@ -185,12 +233,6 @@ ItIsNotManualMeas:
 	CALL FLPROG
 *****************************
 
-*	LACC AFLLSB
-*	ADD  #1
-*	SACL AFLLSB     ;адрес увеличили на 1
-
-
-**********************************************
 * AveragePeriod (период сердечных сокращений умноженный на 16)
 * вычисляем частоту f=60 сек * 100 (част дискр) * 16 / AveragePeriod
 	LAR	AR2,#TMP+3
@@ -209,9 +251,6 @@ ItIsNotManualMeas:
 *	SPLK #60,TMP ;частота сердечных сокращений
 	SACH	TMP,4
 	CALL FLPROG
-*	LACC AFLLSB
-*	ADD  #1
-*	SACL AFLLSB     ;адрес увеличили на 1
 
 ;        SPLK #0,TMP ;код ошибки (ее как бы нет :)
 	LACC 	ErrMeas
@@ -234,7 +273,7 @@ ItIsNotManualMeas:
 
 NeChet1
 	SPLK 	#0,CountWrite ;
-	SPLK 	#0,MayToWrite
+	mWeCountingFlashEnd	;измерение записали
 	RET
 **** отладка
 
@@ -246,26 +285,29 @@ MakeValue
 ** вычисляем номер записи во флеш и
 ** свободное место для записи результатов вычислений
 **
-	LACC MayToWrite
-	BCND YesWeWrite,NEQ
-	CLRC SXM
+;	LACC MayToWrite
+;	BCND YesWeWrite,NEQ
+	BIT	Jobs,15-WeCountingFlash
+        BCND    YesWeWrite,TC
+
+	CLRC 	SXM
 ;первоначальное обнуление
-	SPLK #0,CountWrite ;пока ничего не записали
-*	SPLK #0,BeginLevel
-*	SPLK #0,BeginLevel+1
+	SPLK 	#0,CountWrite ;пока ничего не записали
 
 	CALL	GetFlashCount
 	SACL	IZNUMREC
 	SUB  	#256      ;это последняя запись в таблице?
 	BCND 	LastPlace,NEQ
-NoPlace
+NoPlace:
 ;установить признаки нехватки места
-	SPLK #0100h,IZNUMREC
-	SPLK #1,MayToWrite  ;можно писать во флеш
+	SPLK 	#0100h,IZNUMREC	;количество записей в таблице измерений
+	mWeCountingFlash	;количество записей подсчитали
 	RET
 NoPlaceFlash:
-	SPLK	#1,NoWritePlace	;нет места во флеш
-	SPLK 	#1,MayToWrite  ;можно писать во флеш - нельзя
+;	SPLK	#1,NoWritePlace	;нет места во флеш
+	mNoPlaceInFlash         ;нет места во флеш для сфинмограмм
+;	SPLK 	#1,MayToWrite  	;можно писать во флеш - нельзя
+	mWeCountingFlash	;количество записей подсчитали
 	RET
 LastPlace
 	LACC 	TMP+2
@@ -275,13 +317,22 @@ LastPlace
 	LACC 	TMP+1
 	XOR 	#0FFFEh
 	BCND 	NoPlaceFlash,EQ ;если нет места во flash
-	SPLK	#0,NoWritePlace
+        
+;	SPLK	#0,NoWritePlace
+        mNoPlaceInFlashClear
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC 	TMP+1,5
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC 	TMP+1,6
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 ToRecBegin
 	SACL 	IZFLLSB
 	SACH 	IZFLMSB    ;адрес запомнили (абсолютный)
 			;номер текущей записи есть в IZNUMREC
-	SPLK #1,MayToWrite  ;можно писать во флеш
+;	SPLK #1,MayToWrite  ;можно писать во флеш
+        mWeCountingFlash
 	RET
 FirstRec
 	LACC #01000h
@@ -296,9 +347,10 @@ YesWeWrite
 	LACC IZNUMREC
 	SUB #256
 	BCND NeChet,EQ ;не пишем, если не было разрешения
-	LACC	NoWritePlace  ;есть ли место во флеш?
-	BCND NeChet,NEQ		;нет места :(
-
+;	LACC	NoWritePlace  ;есть ли место во флеш?
+;	BCND NeChet,NEQ		;нет места :(
+        BIT	Jobs,15-NoPlaceInFlash	;есть ли место во флеш?
+	BCND	NeChet,TC		;нет места :(
 	LACC CountWrite ;сколько байтов записали во флеш
  .if OutputSectoring=1
  .elseif OutputSectoring=0
@@ -308,26 +360,33 @@ YesWeWrite
 	ADD #0880h     ;прибавляем первоначальное смещение для параметров
 	SACL IZFLLSB
 	SACH IZFLMSB    ;адрес запомнили (абсолютный)
-	LACC CountWrite ;сколько байтов записали во флеш
 AlreadyWrite
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 
-	ADD #1
-	SACL CountWrite
+	SPLK	#1,CountWrite	;во флеш была запись
 	LACC IZFLLSB
         ADD  IZFLMSB,16
-*        SACH AFLMSB,1  ;запоминаем старшую часть адреса
-*        OR   #8000h
-*        SACL AFLLSB    ;запоминаем младшую часть адреса
 	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
 	SACL 	FLADR    ;запоминаем младшую часть адреса
 
+ .if Mem=20	;одна микросхема на 2 Mbyte
         LACC IZFLLSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+        LACC IZFLLSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH TMP
 	LACC TMP
+ .if Mem=20	;одна микросхема на 2 Mbyte
         ADD  IZFLMSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+        ADD  IZFLMSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
         XOR  #0FFFEh
         BCND NeChet,EQ ;не пишем, место кончилось
 
@@ -475,16 +534,29 @@ NoOverEKG
 MakeSectoring
 	CLRC SXM
 
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC IZFLLSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	LACC IZFLLSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH TMP
 	LACC TMP
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	ADD  IZFLMSB,11
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	ADD  IZFLMSB,10
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	XOR  #0FFFEh
 	BCND NeChetSectoring,EQ ;не пишем, место кончилось
 
-	LACC CountWrite ;сколько байтов записали во флеш
-	ADD #1
-	SACL CountWrite
+;	LACC CountWrite ;сколько байтов записали во флеш
+;	ADD #1
+;	SACL CountWrite
+	SPLK	#1,CountWrite	;во флеш была запись
 
 	;выравнивание на границу 32 байт
 	;6 байт в конце (3 слова длины массивов)
@@ -508,12 +580,25 @@ MakeSectoring
 	ADD	#6
 
 	NEG
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#01Fh
 	ADD	#020h
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#03Fh
+	ADD	#040h
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACL	TMP
 
 	LACC 	IZFLLSB
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#0FFE0h
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#0FFC0h
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	ADD  	IZFLMSB,16
 
 	ADD	TMP
@@ -522,9 +607,6 @@ MakeSectoring
 
 
 
-*	SACH AFLMSB,1  ;запоминаем старшую часть адреса
-*	OR   #8000h
-*	SACL AFLLSB    ;запоминаем младшую часть адреса
 	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
 	AND   	#07FFFh
 	SACL 	FLADR    ;запоминаем младшую часть адреса
@@ -724,7 +806,7 @@ AgainFindZapis
 ;все, больше места нет, последняя запись
 *NoPlaceZapis
 ;установить признаки нехватки места
-	SPLK 	#0100h,TMP+2
+	SPLK 	#0101h,TMP+2
 *нашли последнюю запись
 PoslednyaaZapis
 	LACC	TMP+2

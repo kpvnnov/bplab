@@ -1,4 +1,4 @@
-* $Id: BPFLASHS.ASM,v 1.5 2001-02-20 12:44:32 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.6 2001-04-26 16:11:01 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -158,7 +158,13 @@ Find_in_cache
 
 	LAR	AR6,#PageCache
 	LACC	FLADR,7
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	AND     #03FH,16
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND     #07FH,16
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH	*
 	LACC	FLADR+1,6
 	OR	*,AR6
@@ -302,7 +308,13 @@ Read_flash_to_cache
 	MAR	*,AR6
 
 	LACC	FLADR,7
+ .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#03FH,16
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#07FH,16
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	SACH	*
 	LACC	FLADR+1,6
 	OR	*
@@ -572,14 +584,6 @@ Write_p_1
 
 	IN   	*,SDTR     ;команда лишнего чтения
 				;для стабильности(надежности) работы с SSP
-*	LACC    AFLMSB
-
-*	LACC	TMPCASHE,10
-*	SACH	*
-*	LACC	*
-*	AND	#003Fh
-*	OR	#8700h
-*	SACL 	*
 	LACC	#8700h
 	SACL	*
 	OUT  	*,SDTR     	;1.первое слово для передачи
@@ -629,7 +633,13 @@ Write_page_1
 	LACC	TMPCASHE,10
 	SACH	*
 	LACC	*
-	AND	#003Fh
+ .if Mem=20	;одна микросхема на 2 Mbyte
+	AND	#003Fh		;маска для 2 мбайта
+ .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#007Fh		;маска для 4 мбайта
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
 	OR	#8600h
 	SACL 	*		;запись второго буфера
 
@@ -696,7 +706,6 @@ Read2K
 Read2k_1
 	CALL	FLREAD
 	MAR	*,AR1
-*	LACC	TMP
 	SACL	*+,0,AR0
 	BANZ    Read2k_1,*-,AR1
 

@@ -1,7 +1,7 @@
 @echo off
-rem $Id: bp_noekg_s_d.bat,v 1.2 2001-04-26 16:11:02 peter Exp $
-echo Монитор давления с последовательной флэш
-echo без экг, разводка платы сентябрь 2000 года (новая)
+rem $Id: bp_ekg_s_d_4.bat,v 1.2 2001-04-26 16:11:02 peter Exp $
+echo Монитор давления с последовательной флэш 4 мбайта (1 микросхема)
+echo c экг, разводка платы сентябрь 2000 года (новая)
 echo с отладочными режимами
 echo версия для сертификации
 
@@ -42,9 +42,9 @@ asmtms\dspa.exe flashprg\sutils4.asm -l -v2xx -s -w
 :sutils4
 
 echo =========================
-echo Making Bpnekgsd.asm
+echo Making Bp_ekg_s_d.asm
 echo =========================
-asmtms\dspa.exe Bpnekgsd.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1 -dMem=20
+asmtms\dspa.exe Bpekgsd.asm -l -v2xx -s -w -dVersionFerrum=2 -dNewFerrum=1 -dMem=40
 IF ERRORLEVEL 0 GOTO compile
 echo =========================
 echo Errors in assemble
@@ -53,9 +53,9 @@ goto end
 
 
 :compile
-if exist Bpnekgsd.obj goto compile1
+if exist Bpekgsd.obj goto compile1
 echo =========================
-echo Bpnekgsd.obj not found
+echo Bpekgsd.obj not found
 echo =========================
 goto end
 :compile1
@@ -63,7 +63,7 @@ goto end
 echo =========================
 echo Compile
 echo =========================
-asmtms\dsplnk bpnekgsd.obj bp206.cmd -o bpnekgsd.out -m bpnekgsd.map
-del bpnekgsd.obj
+asmtms\dsplnk bpekgsd.obj bp206.cmd -o bpekgsd.out -m bpekgsd.map
+del bpekgsd.obj
 
 :end
