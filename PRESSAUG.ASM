@@ -1,7 +1,7 @@
 ;//***********************************************************************
 ;//  Pressure_augment( PressureTop ) -
 ;//      Увеличение давления до систолическое+30 мм.рт.ст.
-; $Id: PRESSAUG.ASM,v 1.6 2001-02-15 14:10:40 peter Exp $
+; $Id: PRESSAUG.ASM,v 1.7 2001-08-22 14:17:43 peter Exp $
 ;//***********************************************************************
 
 AvrOfTwoDiff2Max	.equ	TMP
@@ -21,13 +21,13 @@ Pressure_augment
 ;    DiffSignal = Signal[SampleNumber] -
 ;		  Signal[SampleNumber-DIFF_BASIS_OF_PR_AUG_1];
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LAR	AR0,SampleNumber
-	LAR	AR1,#Signal
+	LAR	AR2,#Signal
+	MAR	*0+,AR3
+	LAR	AR3,#Signal - DIFF_BASIS_OF_PR_AUG_1
 	MAR	*0+,AR2
-	LAR	AR2,#Signal - DIFF_BASIS_OF_PR_AUG_1
-	MAR	*0+,AR1
-	LACC	*,0,AR2
+	LACC	*,0,AR3
 	SUB	*
 
 ;    if ( DiffSignal < ZERO_ZERO_FIVE_MM_PER_SAMPLE )
@@ -57,13 +57,13 @@ Pulse_aug_check_error_2:
 ;    DiffSignal = Signal[SampleNumber] -
 ;       	  Signal[SampleNumber-DIFF_BASIS_OF_PR_AUG_2];
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LAR	AR0,SampleNumber
-	LAR	AR1,#Signal
+	LAR	AR2,#Signal
+	MAR	*0+,AR3
+	LAR	AR3,#Signal - DIFF_BASIS_OF_PR_AUG_2
 	MAR	*0+,AR2
-	LAR	AR2,#Signal - DIFF_BASIS_OF_PR_AUG_2
-	MAR	*0+,AR1
-	LACC	*,0,AR2
+	LACC	*,0,AR3
 	SUB	*
 
 ;    if ( DiffSignal > ONE_MM_PER_SAMPLE )
@@ -97,22 +97,22 @@ Pulse_aug_AnalysisStart:
 
 ;  {
 
-        MAR     *,AR2
+        MAR     *,AR3
         LAR     AR0,MaxNumber
-        LAR     AR2,#Diff2Max
-        MAR     *0+,AR2                 ;AR2 = & Diff2Max[MaxNumber]
+        LAR     AR3,#Diff2Max
+        MAR     *0+,AR3                 ;AR3 = & Diff2Max[MaxNumber]
 
 ;  // Если Max находится в 0.5 от конца интервала
 ;   if ( Diff2Max[MaxNumber] > 0.25*LastDiff2Max)
 
-	LACC    *,16,AR2        ;AR2 = & Diff2Max[MaxNumber]
+	LACC    *,16,AR3        ;AR3 = & Diff2Max[MaxNumber]
 	SUB     LastDiff2Max,14
 	BCND    Pulse_aug_SmallMax,LT
 
 ;   {
 ;    if ( Diff2Max[MaxNumber] < 4*LastDiff2Max)
 
-        LACC    *,0,AR2                 ;AR2 = & Diff2Max[MaxNumber]
+        LACC    *,0,AR3                 ;AR3 = & Diff2Max[MaxNumber]
         SUB     LastDiff2Max,2
 ;        SUB     LastDiff2Max,0
         BCND    Pulse_aug_MoreMax,GEQ
@@ -249,16 +249,16 @@ Pulse_aug_End_3Period
 
 ;       if ( MaxDiffSignal < Diff2Max[MaxNumber-1])
 ;                               Здесь "MaxNumber-1" потому, что
-;                               уже было "MaxNumber+1", AR2 не изменялось
+;                               уже было "MaxNumber+1", AR3 не изменялось
 
-        LACC    *,0,AR2                 ;AR2 = & Diff2Max[MaxNumber]
+        LACC    *,0,AR3                 ;AR3 = & Diff2Max[MaxNumber]
         SUB     MaxDiffSignal
         BCND    Pulse_aug_CheckAmpl,LEQ
 
 ;       {
 ;        MaxDiffSignal = Diff2Max[MaxNumber-1];
 
-        LACC    *,0,AR2                 ;AR2 = & Diff2Max[MaxNumber]
+        LACC    *,0,AR3                 ;AR3 = & Diff2Max[MaxNumber]
         SACL    MaxDiffSignal
 
 ;       }
@@ -267,31 +267,31 @@ Pulse_aug_CheckAmpl
 
 ;   AvrOfTwoDiff2Max = Diff2Max[MaxNumber-1] + LastDiff2Max;
 
-        LACC    *,0,AR2
+        LACC    *,0,AR3
         ADD     LastDiff2Max
         SACL    AvrOfTwoDiff2Max
 
 ;   LastDiff2Max = Diff2Max[MaxNumber-1];
 ;   /* Здесь "MaxNumber-1" потому, что уже было "MaxNumber+1" */
 
-        LACC    *,0,AR3
+        LACC    *,0,AR4
         SACL    LastDiff2Max
 
         LAR     AR0,MaxNumber
-        LAR     AR3,#Diff2MaxAdress-1
-        MAR     *0+,AR4
+        LAR     AR4,#Diff2MaxAdress-1
+        MAR     *0+,AR5
         LAR     AR0,MaxNumberShift
-        LAR     AR4,#Diff2MaxAdressFinish
-        MAR     *0+,AR3
+        LAR     AR5,#Diff2MaxAdressFinish
+        MAR     *0+,AR4
 
 ;       Diff2MaxAdressFinish[MaxNumberShift] = Diff2MaxAdress[MaxNumber-1] +
 ;                                              SampleNumberShift;
 ;                                  Здесь "MaxNumber-1" потому, что
 ;                                  уже было "MaxNumber+1"
 
-        LACC    *,0,AR4
+        LACC    *,0,AR5
         ADD     SampleNumberShift,0
-        SACL    *,0,AR2
+        SACL    *,0,AR3
 
 ;       MaxNumberShift++;
 
@@ -307,7 +307,7 @@ Pulse_aug_CheckAmpl
 ;			          Diff2Max[MaxNumber-2])/2) &&
 ;				( PulseCounter > 5 ))
 ;                               Здесь "MaxNumber-1" потому, что
-;                               уже было "MaxNumber+1", AR2 не изменялось
+;                               уже было "MaxNumber+1", AR3 не изменялось
 
 	LACC	PulseCounter,0
 	SUB	#5
@@ -327,10 +327,10 @@ Pulse_aug_CheckAmpl
 ;          PressureTop = Signal[SampleNumber] +
 ;			 RESERVE_MILL_OF_MERC + PRESS_02_5;
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,#Signal
-        LAR     AR1,SampleNumber
-        MAR     *0+,AR1
+        LAR     AR2,SampleNumber
+        MAR     *0+,AR2
         LACC    *,0
 	ADD	#RESERVE_MILL_OF_MERC + PRESS_02_5,0
 	SACL	PressureTop
@@ -399,10 +399,10 @@ Pulse_aug_CheckPress
 ;         Signal[i] = Signal[SampleNumber - ONE_SECOND*2 + i];
 ;       }
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LAR	AR0,SampleNumber
-	LAR	AR1,#Signal - ONE_SECOND*2
-	MAR	*0+,AR1
+	LAR	AR2,#Signal - ONE_SECOND*2
+	MAR	*0+,AR2
 	RPT	#ONE_SECOND*2
 	BLDD	*+,#Signal
 
@@ -435,10 +435,10 @@ Pulse_aug_MaxNotCentre:
 
 ;   if ( Signal[SampleNumber] > PressureTop )
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,#Signal
-        LAR     AR1,SampleNumber
-        MAR     *0+,AR1
+        LAR     AR2,SampleNumber
+        MAR     *0+,AR2
         LACC    *
         SUB     PressureTop
         BCND    Pulse_aug_End,LEQ
@@ -457,10 +457,10 @@ Pulse_aug_Next_Mode
 
 ;    NewPressure = Signal[SampleNumber] - RESERVE_MILL_OF_MERC/2;
 
-	MAR	*,AR1
+	MAR	*,AR2
         LAR     AR0,SampleNumber
-	LAR	AR1,#Signal
-	MAR	*0+,AR1
+	LAR	AR2,#Signal
+	MAR	*0+,AR2
 	LACC	*
 	SUB     #RESERVE_MILL_OF_MERC/2
 	SACL	NewPressure

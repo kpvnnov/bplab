@@ -1,19 +1,19 @@
 ****************************************************************************
 *       Мало U батареи(INT1)
-* $Id: BPINTU.ASM,v 1.5 2000-12-15 16:42:29 peter Exp $
+* $Id: BPINTU.ASM,v 1.6 2001-08-22 14:17:41 peter Exp $
 ****************************************************************************
 *
 
 INTU    mPush_stack		;сохранение вычислительных
 				;регистров в стеке
 	LDP  	#4
-	LAR  	AR1,#IFR	;загружаем указатель на Interrupt Flag Register
-	MAR  	*,AR1      	;modify auxiliary register
+	LAR  	AR2,#IFR	;загружаем указатель на Interrupt Flag Register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 
 	SPLK 	#01h,*     	;pending INT1
-	LAR  	AR1,#IMR       	;load auxiliary reg #IMR -> AR1
+	LAR  	AR2,#IMR       	;load auxiliary reg #IMR -> AR2
 				;interrupt mask register
 	LACC 	*              	;load accumulator with shift
 	AND  	#0FFFEh        	;очищаем маску INT1(запрещаем эти прерывания)
@@ -26,7 +26,7 @@ INTU    mPush_stack		;сохранение вычислительных
 				; - таймера
 				; - int2 (кнопочка)
 				; - int1 alarm!
-	LAR	AR1,#iCNTKEYB+1
+	LAR	AR2,#iCNTKEYB+1
 
 	SPLK 	#CNSTPOWER,*
 

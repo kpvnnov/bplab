@@ -43,9 +43,9 @@
 *                                                           *
 * The following resources are used for temporary storage:   *
 *        AR0  - Used for comparisons.                       *
-*        AR1  - Used for erase pulse count.                 *
-*        AR2  - Used for main banz loop.                    *
-*        AR6  - Parameter passsed to DELAY.                 *
+*        AR2  - Used for erase pulse count.                 *
+*        AR3  - Used for main banz loop.                    *
+*        AR7  - Parameter passsed to DELAY.                 *
 *      BASE_0 - Parameter passed to Set_mode.               *
 *      BASE_1 - Used for flash address.                     *
 *      BASE_2 - Used for flash data.                        *
@@ -78,8 +78,8 @@ Beginfl_ers	.set $
 * the vars SEG_ST and SEG_END. The following   *
 * resources are used for temporary storage:    *
 *        AR0  - Used for comparisons.          *
-*        AR1  - Used for erase pulse count.    *
-*        AR2  - Used for main banz loop.       *
+*        AR2  - Used for erase pulse count.    *
+*        AR3  - Used for main banz loop.       *
 *      BASE_0 - Parameter passed to Set_mode.  *
 *      BASE_1 - Used for flash address.        *
 *      BASE_2 - Used for flash data.           *
@@ -90,7 +90,7 @@ GERS:
 ************************************************************
 * Code initialization section				   *
 * Initialize test loop counters:			   *
-*   AR1 is the number of ERASE pulses.                     *
+*   AR2 is the number of ERASE pulses.                     *
 ************************************************************
         SETC    INTM            ;Disable all maskable ints.
         SETC    SXM             ;Enable sign extension.                     
@@ -101,7 +101,7 @@ GERS:
         OR      #ENDADDR        ;Get array end address.
         SACL    FL_END          ;Save array end address.
         SPLK    #0,ERROR        ;Reset error flag
-        LAR     AR1,#0          ;Set erase count to 0.
+        LAR     AR2,#0          ;Set erase count to 0.
         SPLK    #STOP, BASE_0   ;Stop command.
         CALL    SET_MODE        ;Disable any flash cmds.
 
@@ -110,12 +110,12 @@ XOR_ERASE
         LACC    SEG_END
         SUB     SEG_ST
         SACL    BASE_4          ;Segment length-1.
-        LAR     AR2,BASE_4      ;load n-1 to loop n times.
+        LAR     AR3,BASE_4      ;load n-1 to loop n times.
         ADD     #1
         SACL    BASE_4          ;Segment length.
         SPLK    #VER1,BASE_0    ;VER1 command.
         CALL    SET_MODE        ;Set VER1 mode.
-        MAR     *,AR2
+        MAR     *,AR3
         BLDD    #SEG_ST,BASE_1  ;Segment start address.
         SPLK    #0,BASE_3       ;Clear checksum.
 RD1_LOOP                        ;For I = SEG_ST to SEG_END.
@@ -135,10 +135,10 @@ RD1_LOOP                        ;For I = SEG_ST to SEG_END.
                 
 ***** If not erased, apply an erase pulse.
         CALL    ERASE_A         ;Else, pulse it again.
-        MAR     *,AR1           ;ARP->AR1(Erase pulse count)
+        MAR     *,AR2           ;ARP->AR2(Erase pulse count)
         MAR     *+              ;Increment Erase count.
         LAR     AR0,#MAX_ER
-        CMPR    2               ;If AR1>MAX_ER then
+        CMPR    2               ;If AR2>MAX_ER then
         BCND    EXIT,TC         ;fail, don't continue erasing.
         B       XOR_ERASE       ;Else, check again.
 
@@ -162,21 +162,21 @@ EXIT    SPLK    #1,ERROR        ;Update error flag
 * SET_MODE: This routine sets the flash in the  *
 * mode specified by the contents of BASE_0. This*
 * can be used for VER0,VER1,INVERASE, or STOP.  *
-*        AR6  - Parameter passsed to DELAY.     *
+*        AR7  - Parameter passsed to DELAY.     *
 *************************************************
 SET_MODE
         CALL    REGS            ;ACCESS FLASH REGS    
         LACL    FL_ST           ;ACC => SEG_CTR.
         TBLW    BASE_0          ;Activate MODE.
-        LAR     AR6,#D10        ;SET DELAY                
-        CALL    DELAY,*,AR6     ;WAIT                     *
+        LAR     AR7,#D10        ;SET DELAY                
+        CALL    DELAY,*,AR7     ;WAIT                     *
         CALL    ARRAY           ;ACCESS FLASH ARRAY       *
 	RET
 
 ************************************************
 * INV_ERASE: This routine is used to check for *
 * depletion in the flash array.                *
-*        AR2  - Used for main banz loop.       *
+*        AR3  - Used for main banz loop.       *
 *      BASE_0 - Parameter passed to Set_mode.  *
 *      BASE_1 - Used for flash address.        *
 *      BASE_2 - Used for flash data.           *
@@ -185,8 +185,8 @@ INV_ERASE
         SPLK    #INV_ER,BASE_0
         CALL    SET_MODE        ;Set inverse-erase mode.
         BLDD    #FL_ST,BASE_1   ;Array start address.
-        LAR     AR2,#31         ;Loop count.
-        MAR     *,AR2
+        LAR     AR3,#31         ;Loop count.
+        MAR     *,AR3
 NEXT_IVERS
         LACL    BASE_1          ;Get address.
         TBLR    BASE_2          ;Dummy read.
@@ -232,13 +232,13 @@ ERASE_A
 	CALL	REGS		;ACCESS FLASH REGS	  **
         LACC    FL_ST           ;ACC => FLASH             **
         TBLW    BASE_5          ;ACTIVATE ERASE           **
-        LAR     AR6,#D10        ;SET DELAY                **
-	CALL	DELAY,*,AR6	;WAIT			  **
+        LAR     AR7,#D10        ;SET DELAY                **
+	CALL	DELAY,*,AR7	;WAIT			  **
 *							   *
 * THIS SECTION ACTIVATES THE EXEBIN COMMAND.              **
         TBLW    BASE_6          ;START ERASURE            **
-        LAR     AR6,#D7K        ;SET DELAY to 7ms         **
-	CALL	DELAY,*,AR6	;WAIT			  **
+        LAR     AR7,#D7K        ;SET DELAY to 7ms         **
+	CALL	DELAY,*,AR7	;WAIT			  **
         SPLK    #STOP,BASE_0    ;STOP COMMAND             **
         CALL    SET_MODE        ;STOP ERASE               **
         RET                     ;RETURN TO CALLING CODE   **

@@ -1,4 +1,4 @@
-* $Id: ST_SHIFT.ASM,v 1.5 2001-07-04 08:13:24 peter Exp $
+* $Id: ST_SHIFT.ASM,v 1.6 2001-08-22 14:17:44 peter Exp $
 Start_shift
 	LACC    SubroutMode,1
 	ADD     #Start_shift_branch
@@ -10,14 +10,14 @@ Start_shift_branch
 	B	Start_shift2
 	B	Start_shift3
 Start_shift1
-	MAR  	*,AR1
-	LAR  	AR1,#LastMeas
+	MAR  	*,AR2
+	LAR  	AR2,#LastMeas
 	;в течении трех минут смещение действительно
 	LACC	*
 	BCND	Start_shift_without,NEQ	;поэтому считать его не будем
 
 	mNext_sub_mode
-	SPLK 	#3h,MDSPL 	;переходим на уровень давления
+	SPLK 	#3h,_MDSPL 	;переходим на уровень давления
  .if WriteDebug=0
 	mWait 1			;лишние 3 секунды нам ни к чему
  .else
@@ -50,8 +50,8 @@ Start_shift2
 Start_shift3
 	CLRC 	SXM
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 
 *	LACC 	Channel_one,8  	;Вычисление среднего по 3-м каналам
 	LACC 	*,8  	;Вычисление среднего по 3-м каналам
@@ -69,8 +69,8 @@ Start_shift3
 	LACC 	Preset0+1
 	SACL	Preset0
 Start_shift_without
-	MAR  	*,AR1
-	LAR  	AR1,#LastMeas
+	MAR  	*,AR2
+	LAR  	AR2,#LastMeas
 	;в течении трех минут смещение действительно
 	SPLK	#3*60,*		;в секундах время
 *
@@ -81,5 +81,5 @@ Start_shift_without
 	SPLK	#PRESS_40,PressPulseFrEv
 	SPLK	#0,SubroutMode		;для первоначального case
 	Clear_measurement
-	SPLK 	#iCURRENT_PRESSURE,MDSPL 	;переходим на уровень давления
+	SPLK 	#iCURRENT_PRESSURE,_MDSPL 	;переходим на уровень давления
         RET

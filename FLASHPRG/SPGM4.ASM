@@ -48,11 +48,11 @@
 *                                                           *
 * The following variables are used for temp storage:        *
 *        AR0  - Used for comparisons.                       *
-*        AR1  - Used for pgm pulse count.                   *
-*        AR2  - Used for row banz loop.                     *
-*        AR3  - Used for buffer addr index.                 *
-*        AR4  - Used for flash address.                     *
-*        AR6  - Parameter passed to Delay.                  *
+*        AR2  - Used for pgm pulse count.                   *
+*        AR3  - Used for row banz loop.                     *
+*        AR4  - Used for buffer addr index.                 *
+*        AR5  - Used for flash address.                     *
+*        AR7  - Parameter passed to Delay.                  *
 *       SPAD1 - Flash program and STOP commands.            *
 *       SPAD2 - Flash program + EXE command.                *
 *     FL_ADRS - Used for flash address.                     *
@@ -91,9 +91,9 @@ Beginfl_prg	.set $
 * The following variables are used for temp    *
 * storage:                                     *
 *        AR0  - Used for comparisons.          *
-*        AR1  - Used for pgm pulse count.      *
-*        AR2  - Used for row banz loop.        *
-*        AR3  - Used for buffer addr index.    *
+*        AR2  - Used for pgm pulse count.      *
+*        AR3  - Used for row banz loop.        *
+*        AR4  - Used for buffer addr index.    *
 *     FL_ADRS - Used for flash address.        *
 *     FL_DATA - Used for flash data.           *
 *      BASE_0 - Used for row-done flag.        *
@@ -114,12 +114,12 @@ GPGMJ:  SPLK    #0,IMR                  ;MASK ALL INTERRUPTS
         SACL    BASE_4                  ;Save destination end addr.
         LACL    PRG_paddr               ;Get destination start addr.
 
-        LAR     AR3,PRG_bufaddr         ;Get buffer start address.
+        LAR     AR4,PRG_bufaddr         ;Get buffer start address.
 ********Begin a new row.*
 NEWROW
         SACL    BASE_1                  ;Save row start address.
-        SAR     AR3,BASE_3              ;Save buffer/row start address.
-        LAR     AR1,#0                  ;Init pulse count to zero.
+        SAR     AR4,BASE_3              ;Save buffer/row start address.
+        LAR     AR2,#0                  ;Init pulse count to zero.
         SPLK    #31,BASE_2              ;Init row length-1 to 31.
         AND     #001Fh                  ;Is start addr on row boundary?
         CC      ADJ_ROW,NEQ             ;If not then adjust row length.
@@ -133,12 +133,12 @@ SAMEROW
         SPLK    #1,BASE_0               ;Set row done flag = 1(True).
         LACL    BASE_1                  ;Get row start address.
         SACL    FL_ADRS                 ;Save as current address.
-        LAR     AR3,BASE_3              ;Get buffer/row start addr. 
-        LAR     AR2,BASE_2              ;Init row index.
+        LAR     AR4,BASE_3              ;Get buffer/row start addr. 
+        LAR     AR3,BASE_2              ;Init row index.
 
 ********Repeat the following code 32 times or until end of row.*
 LOBYTE          ;********First do low-byte.*
-        CALL    SET_MODULE,AR4          ;Determine which flash module.
+        CALL    SET_MODULE,*,AR5        ;Determine which flash module.
         SPLK    #0FFh,BASE_5            ;Set lo-byte mask.
         CALL    PRG_BYTE                ;Check/Program lo-byte.
         SPLK    #0FF00h,BASE_5          ;Set hi-byte mask.
@@ -148,17 +148,17 @@ NEXTWORD        ;********Next word in row.
         LACL    FL_ADRS                 ;Load address for next word.
         ADD     #1                      ;Increment address.
         SACL    FL_ADRS                 ;Save as current address.
-        MAR     *, AR3                  ;ARP -> buffer addr index.
-        MAR     *+,AR2                  ;Inc, and ARP -> row index.
-        BANZ    LOBYTE                  ;Do next word,and dec AR2.
+        MAR     *, AR4                  ;ARP -> buffer addr index.
+        MAR     *+,AR3                  ;Inc, and ARP -> row index.
+        BANZ    LOBYTE                  ;Do next word,and dec AR3.
 
 ********Reached end of row. Check if row done. *
         BIT     BASE_0,15               ;Get row_done flag.
         BCND    ROW_DONE,TC             ;If 1 then row is done.
-        MAR     *,AR1                   ;Else, row is not done, so
+        MAR     *,AR2                   ;Else, row is not done, so
         MAR     *+                      ;inc row pulse count.
         LAR     AR0,#MAX_PGM            ;Check if passed allowable max.
-        CMPR    2                       ;If AR1>MAX_PGM then
+        CMPR    2                       ;If AR2>MAX_PGM then
         BCND    EXIT,TC                 ;fail, don't continue.
         B       SAMEROW                 ;else, go to beginning
                                         ;of same row.
@@ -207,13 +207,13 @@ ADJ_ROW
 * register address.                            *
 * The following resources are used temporarily:*
 *        AR0  - Used for comparisons.          *
-*        AR4  - Used for flash address.        *
+*        AR5  - Used for flash address.        *
 ************************************************
 SET_MODULE
-        LAR     AR4,FL_ADRS     ;AR4 = current address.
+        LAR     AR5,FL_ADRS     ;AR5 = current address.
         SPLK    #0,FL_ST        ;FL_ST  = FLASH0 CTRL REGS
         LAR     AR0,#4000H      ;AR0 = compare value.
-        CMPR    1               ;If AR4 < AR0 then
+        CMPR    1               ;If AR5 < AR0 then
                                 ;FL_ADRS < 4000H; SET TC
         BCND    FL0,TC          ;Address is in FL0.
 *                               ;Else address is in FL1.
@@ -227,7 +227,7 @@ FL0     RET
 * THE FLASH ADDRESS DEFINED BY FL_ADRS.                    *
 *							   *
 * The following resources are used for temporary storage:  *
-*        AR6  - Parameter passed to Delay.                 *
+*        AR7  - Parameter passed to Delay.                 *
 *       SPAD1 - Flash program and STOP commands.           *
 *       SPAD2 - Flash program + EXE command.               *
 ************************************************************
@@ -248,18 +248,18 @@ EXE_PGM 			;			   *
 *							   *
 * ACTIVATE WRITE BIT					  **
         TBLW    SPAD1           ;EXECUTE COMMAND          **
-        LAR     AR6,#D10        ;SET DELAY                **
-	CALL	DELAY,*,AR6	;WAIT			  **
+        LAR     AR7,#D10        ;SET DELAY                **
+	CALL	DELAY,*,AR7	;WAIT			  **
 * SET EXEBIN BIT					 ***
         TBLW    SPAD2           ;EXECUTE COMMAND         ***
-        LAR     AR6,#D100       ;SET DELAY               ***
-	CALL	DELAY,*,AR6	;WAIT			 ***
+        LAR     AR7,#D100       ;SET DELAY               ***
+	CALL	DELAY,*,AR7	;WAIT			 ***
 * STOP WRITE OPERATION					   *
         SPLK    #0,SPAD1        ;SHUTDOWN WRITE OPERATION  *
         TBLW    SPAD1           ;EXECUTE COMMAND           *
         TBLW    SPAD1           ;EXECUTE COMMAND           *
-        LAR     AR6,#D10        ;SET DELAY                 *
-	CALL	DELAY,*,AR6	;WAIT			   *
+        LAR     AR7,#D10        ;SET DELAY                 *
+	CALL	DELAY,*,AR7	;WAIT			   *
 *							   *
 	RET		;RETURN TO CALLING SEQUENCE	   *
 ************************************************************
@@ -275,8 +275,8 @@ SET_RD_VER0                     ;                         *
         LACL    FL_ST           ;ACC => FLASH             *
         SPLK    #VER0,SPAD1     ;ACTIVATE VER0            *
         TBLW    SPAD1           ;EXECUTE COMMAND          *
-        LAR     AR6,#D10        ;SET DELAY                *
-	CALL	DELAY,*,AR6	;WAIT			  *
+        LAR     AR7,#D10        ;SET DELAY                *
+	CALL	DELAY,*,AR7	;WAIT			  *
 	CALL	ARRAY		;ACCESS FLASH ARRAY	  *
         LACL    FL_ADRS         ;POINT TO ADRS            *
         TBLR    FL_DATA         ;GET FLASH WORD 1x read   *
@@ -286,8 +286,8 @@ SET_RD_VER0                     ;                         *
         LACL    FL_ST           ;ACC => FLASH             *
         SPLK    #STOP,SPAD1     ;DEACTIVATE VER0          *
         TBLW    SPAD1           ;EXECUTE COMMAND          *
-        LAR     AR6,#D10        ;SET DELAY                *
-	CALL	DELAY,*,AR6	;WAIT			  *
+        LAR     AR7,#D10        ;SET DELAY                *
+	CALL	DELAY,*,AR7	;WAIT			  *
 	CALL	ARRAY		;ACCESS FLASH ARRAY	  *
         RET             ;RETURN TO CALLING SEQUENCE       *
 ***********************************************************
@@ -299,7 +299,7 @@ SET_RD_VER0                     ;                         *
 ************************************************
 PRG_BYTE:
         CALL    SET_RD_VER0             ;Read word at VER0 level.
-        MAR     *,AR3                   ;ARP -> buffer addr index.
+        MAR     *,AR4                   ;ARP -> buffer addr index.
         LACL    *                       ;Get word to program.
         XOR     FL_DATA                 ;Xor with read-back value.
         AND     BASE_5                  ;Mask off hi/lo byte.

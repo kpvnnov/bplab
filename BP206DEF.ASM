@@ -1,4 +1,4 @@
-* $Id: BP206DEF.ASM,v 1.15 2001-02-23 09:48:22 peter Exp $
+* $Id: BP206DEF.ASM,v 1.16 2001-08-22 14:17:37 peter Exp $
 MAX_PRESS 	.set 08000h
 
 PRESS_280 	.set 0E000h
@@ -80,7 +80,19 @@ MetodFlashClear .set 2
 
 FirstAdressInRam .set 08000h ; место, где размещается процедура
 
+ .if TwoChanel=1
+ModeOutput 	.set 3h
+ .else
 ModeOutput 	.set 1h
+ .endif
+
+ .if TwoChanel=1
+;выводить на экран скорректированное значение
+; с учетом коэфициета температуры
+DisplayCorrect	.set 1
+ .else
+DisplayCorrect	.set 0
+ .endif
 
 OutputSectoring	.set 1
 

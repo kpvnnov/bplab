@@ -1,4 +1,4 @@
-* $Id: AN_SP_UP.ASM,v 1.15 2001-07-04 08:13:22 peter Exp $
+* $Id: AN_SP_UP.ASM,v 1.16 2001-08-22 14:17:35 peter Exp $
 Level_zero
 	LACC    SubroutMode,1
 	ADD     #LevelZero_branch
@@ -10,19 +10,19 @@ LevelZero_branch
 	B	LevelZero2
 
 Onn_Izmer
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	mOn_Interval
 	Beep
 	End_measurement
 	RET
 Off_Izmer
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	mOff_Interval
 	Beep
 	End_measurement
 
-;	MAR	*,AR1
-;	LAR	AR1,#AVRProg
+;	MAR	*,AR2
+;	LAR	AR2,#AVRProg
 ;	SPLK	#1,*+
 ;	SPLK	#1101h,*		;SystemState
 ;	CALL	SendCommandAVR
@@ -39,7 +39,7 @@ LevelZero0
 	SUB 	#3
 	BCND	Off_Izmer,EQ
 
-	SPLK 	#6h,MDSPL 	;переходим на номер измерения
+	SPLK 	#6h,_MDSPL 	;переходим на номер измерения
  .if WriteDebug=0
 	mWait 1			;лишние три секунды нам ни к чему
  .else
@@ -50,7 +50,7 @@ LevelZero0
 	CALL 	SuperBeep
 	PowerAnalogOn
 	Clear_measurement
-	LAR	AR6,#TimeOfBeginMeas
+	LAR	AR7,#TimeOfBeginMeas
 	CALL	SaveTimeOfBeginMeas
 	mResetInterval		;загружаем интервал следующего измерения
 	mResetFastInterval	;запоминаем три минуты
@@ -70,7 +70,7 @@ LevelZero1			;высвечиваем номер измерения
  .endif
 	Clear_measurement
 	BeginADC       ;начинаем измерять ADC
-*	SPLK 	#3h,MDSPL 	;переходим на уровень давления
+*	SPLK 	#3h,_MDSPL 	;переходим на уровень давления
 * отладка
 ;       Beep
 * конец отладки
@@ -134,7 +134,7 @@ Start_Debug_Write_branch
 	B	Write_branch4
 Write_branch0
 	mNext_sub_mode
-	SPLK 	#3h,MDSPL
+	SPLK 	#3h,_MDSPL
 
 	LACC 	#0
 	SACL 	Preset0		;Ноль в начальное значение давления
@@ -160,8 +160,8 @@ Write_branch1
 Write_branch2
 	CLRC 	SXM
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 
 	LACC 	*,8  	;Вычисление среднего по 3-м каналам
 	ADD  	#4000h,9
@@ -170,7 +170,7 @@ Write_branch2
 	ADDS 	Preset0+2
 	SACH 	Preset0+1,0
 	SACL 	Preset0+2,0
-	LAR	AR5,#ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
 
 	LACC 	*,8  	;Вычисление среднего по 3-м каналам
 	ADD  	#4000h,9
@@ -207,8 +207,8 @@ Write_branch3
 	mValve_hold
 	mBegin_write_flash
 	Beep
-*	SPLK 	#iCURRENT_PRESSURE,MDSPL 	;переходим на уровень давления
-	SPLK 	#3,MDSPL 	;переходим на уровень давления
+*	SPLK 	#iCURRENT_PRESSURE,_MDSPL 	;переходим на уровень давления
+	SPLK 	#3,_MDSPL 	;переходим на уровень давления
 	LACC	StartCode+1
 	BCND	largeTime,NEQ
 	SPLK 	#10500,ModeCnt

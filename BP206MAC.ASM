@@ -1,15 +1,15 @@
-* $Id: BP206MAC.ASM,v 1.19 2001-07-04 08:13:22 peter Exp $
+* $Id: BP206MAC.ASM,v 1.20 2001-08-22 14:17:37 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
  .endm
 
 mSendBabyModeToAVR .macro
-	MAR  	*,AR1
-	LAR	AR1,#MayModify+1
+	MAR  	*,AR2
+	LAR	AR2,#MayModify+1
 	LACC	*
         OR	#09900h
-	LAR	AR1,#AVRProg
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SACL	*		;детский/взрослый
 	CALL	SendCommandAVR
@@ -387,7 +387,7 @@ mNext_sub_mode	.macro
 
 
 *mEnd_error_meas .macro code
-*	SPLK 	#0h,MDSPL
+*	SPLK 	#0h,_MDSPL
 *	mMotor_off
 *	mValve_off
 *	SPLK #code,ErrMeas
@@ -405,10 +405,10 @@ mEnd_error_meas .macro code
 mEnd_meas .macro
 ;	SPLK #code,ErrMeas
  .newblock
-	LACC    MDSPL
+	LACC    _MDSPL
 	SUB	#5
 	BCND	$3,EQ
-	SPLK 	#0,MDSPL
+	SPLK 	#0,_MDSPL
 $3
         BIT	Jobs,15-Manual_Meas
         BCND	$5,TC
@@ -426,10 +426,10 @@ $4
         LACC	ProtectShow
         ADD	#1
         SACL	ProtectShow
-	LACC    MDSPL
+	LACC    _MDSPL
 	SUB	#5
 	BCND	$1,EQ
-	SPLK 	#iSYSTOL_PRESSURE,MDSPL
+	SPLK 	#iSYSTOL_PRESSURE,_MDSPL
 	mWait_Display_Meas
 	mNum_Display_Meas
 	B	$2
@@ -463,53 +463,54 @@ mPush_stack	.macro
 ******
 * Макрос сохранения вычислительных регистров стеке
 * стек организуется в 0 странице (DP 0)
-* AR7 используется указателем на стека
-* AR7 при инициализации должен равен 07Fh
+* AR1 используется указателем на стека
+* AR1 при инициализации должен равен 07Fh
 *     (не должен нигде использоваться)
-* сохраняется ACC,PREG,TREG,AR0-AR6
+* сохраняется ACC,PREG,TREG,AR0-AR7
 	SST     #0,SST0		;сохранение статусных регистров
 	SST     #1,SST1		;0 и 1 в странице DP 0
-	MAR     *,AR7
-	SACL    *-		; Сохpанение в стек ACC_L
-	SACH    *-		; Сохpанение в стек ACC_H
+	MAR     *,AR1
+	MAR     *+,AR1
+	SACL    *+		; Сохpанение в стек ACC_L
+	SACH    *+		; Сохpанение в стек ACC_H
 	PAC
 	MPY     #1              ;TREG -> PREG
-	SPL     *-              ;TREG -> stack
-	SACH    *-              ;PREG_H -> stack
-	SACL    *-		;PREG_L -> stack
-	SAR     AR0,*-
-	SAR     AR1,*-
-	SAR     AR2,*-
-	SAR     AR3,*-
-	SAR     AR4,*-
-	SAR     AR5,*-
-	SAR     AR6,*-
-	POPD	*-
+	SPL     *+              ;TREG -> stack
+	SACH    *+              ;PREG_H -> stack
+	SACL    *+		;PREG_L -> stack
+	SAR     AR0,*+
+	SAR     AR2,*+
+	SAR     AR3,*+
+	SAR     AR4,*+
+	SAR     AR5,*+
+	SAR     AR6,*+
+	SAR     AR7,*+
+	POPD	*+
  .endm
 
 mPop_stack	.macro
 ******
 * Макрос восстановления вычислительных регистров из стека
 * стек организуется в 0 странице (DP 0)
-* AR7 используется указателем на стек
+* AR1 используется указателем на стек
 *     (не должен нигде использоваться)
 * восстановление обратно макросу mPush_stack
-	MAR     *,AR7           ;  Восстановление пpедыдущего состояния
-	MAR     *+,AR7          ;  выводим указатель на нужное место
-	PSHD	*+
-	LAR     AR6,*+
-	LAR     AR5,*+
-	LAR     AR4,*+
-	LAR     AR3,*+
-	LAR     AR2,*+
-	LAR     AR1,*+
-	LAR     AR0,*+
-	LT      *+
+	MAR     *,AR1           ;  Восстановление пpедыдущего состояния
+	MAR     *-,AR1          ;  выводим указатель на нужное место
+	PSHD	*-
+	LAR     AR7,*-
+	LAR     AR6,*-
+	LAR     AR5,*-
+	LAR     AR4,*-
+	LAR     AR3,*-
+	LAR     AR2,*-
+	LAR     AR0,*-
+	LT      *-
 	MPY     #1
-	LPH     *+
-	LT      *+
-	LACC    *+,16		;восстановление ACC_H
-	OR      *		;хитро восстанавливаем ACC_L
+	LPH     *-
+	LT      *-
+	LACC    *-,16		;восстановление ACC_H
+	OR      *-		;хитро восстанавливаем ACC_L
 	LDP	#0
 	LST     #1,SST1      	;восстановление статусных регистров 0 и 1
 	LST     #0,SST0      	;первым надо восстанавливать ST1
@@ -552,8 +553,8 @@ mEnd_write_flash	.macro
 
 * установка текущего времени в ноль :(
 mResetTime	.macro
-	MAR	*,AR6
-	LAR	AR6,#WATCH
+	MAR	*,AR7
+	LAR	AR7,#_WATCH
 	LACC	#0
 	RPT	#6
 	SACL	*+
@@ -564,46 +565,46 @@ mResetTime	.macro
 mResetInterval .macro
 	SPLK	#0200h+DayLightTimeSh,FLADR
 
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
+	MAR  	*,AR7
 	SACL	*+
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
+	MAR  	*,AR7
 	SACL	*+
 	;сейчас в
 	;TMP+0 - единицы часов начала дня
@@ -637,8 +638,8 @@ mResetInterval .macro
 	ADD	TMP+6
 	SACL	TMP+6		;окончание дня
 
-	LAR	AR5,#WATCH+5
-	MAR	*,AR5
+	LAR	AR6,#_WATCH+5
+	MAR	*,AR6
 
 	LACC	*,3		;*8
 	ADD	*-,1
@@ -667,7 +668,7 @@ mResetInterval .macro
 	BCND	NotSpecial,LEQ	;в спец интервал не попадает
 	;СПЕЦИАЛЬНЫЙ ИНТЕРВАЛ!!!
 Load_Special
-	LAR	AR2,#DayTimeInter+2
+	LAR	AR3,#DayTimeInter+2
         mOnSound
 	B	LoadInterval_1
 
@@ -701,7 +702,7 @@ NotSpecial
 	BCND	NotDay,LEQ	;в дневной интервал не попадает
 	;Дневной ИНТЕРВАЛ!!!
 Load_Day
-	LAR	AR2,#DayTimeInter
+	LAR	AR3,#DayTimeInter
         mOnSound
 	B	LoadInterval_1
 
@@ -717,38 +718,38 @@ NotDay
 
 	;Ночной ИНТЕРВАЛ!!!
         mOffSound
-	LAR	AR2,#DayTimeInter+1
+	LAR	AR3,#DayTimeInter+1
 
 LoadInterval_1
-	MAR	*,AR2
-	LAR	AR1,#CounterToBegin
-*	LAR	AR2,#DayTimeInter
-	LACC	*+,AR1
+	MAR	*,AR3
+	LAR	AR2,#CounterToBegin
+*	LAR	AR3,#DayTimeInter
+	LACC	*+,AR2
 	SACL	*
  .endm
 
 mResetFastInterval .macro
-	MAR	*,AR1
-	LAR	AR1,#CounterFastToBegin
+	MAR	*,AR2
+	LAR	AR2,#CounterFastToBegin
 	SPLK	#180,*		;3*60 секунд
  .endm
 
 mLoadFastInterval .macro
-	MAR	*,AR1
-	LAR	AR1,#CounterFastToBegin
+	MAR	*,AR2
+	LAR	AR2,#CounterFastToBegin
 	LACC	*
-	LAR	AR1,#CounterToBegin
+	LAR	AR2,#CounterToBegin
 	SACL	*
  .endm
 
 mSetInterval5s .macro
-	MAR	*,AR1
-	LAR	AR1,#CounterToBegin
+	MAR	*,AR2
+	LAR	AR2,#CounterToBegin
 	SPLK	#5,*		;пять секунд
  .endm
 mSetInterval3min .macro
-	MAR	*,AR1
-	LAR	AR1,#CounterToBegin
+	MAR	*,AR2
+	LAR	AR2,#CounterToBegin
 
 	SPLK	#180,*		;3*60 секунд
  .endm
@@ -970,16 +971,16 @@ mRead_512b	.macro
 *  адрес для чтения, из него выбрать адрес страницы
 *  ASFLMSB     15-20bit
 *  AFLLSB      0-14bit
-*	AR6 - куда загружать
-* процедура берет байты из флеш и загружает парами в слова AR6
+*	AR7 - куда загружать
+* процедура берет байты из флеш и загружает парами в слова AR7
 * то есть начальный адрес должен быть четным
-*	AR6 - куда загружать
+*	AR7 - куда загружать
 
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR     AR1,*-
-	SAR     AR0,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR2,*+
+	SAR     AR0,*+
 
 	LACC 	DPA0
 	AND  	#01Fh
@@ -992,28 +993,28 @@ mRead_512b	.macro
 	LACC    FLADR
 	OR	#08000H
 	SACL	*
-	LAR  	AR1,*
+	LAR  	AR2,*
 	LAR	AR0,#255
-	MAR	*,AR1
+	MAR	*,AR2
 $1
-	LACC	*+,0,AR7	;берем четный байт
+	LACC	*+,0,AR1	;берем четный байт
 	AND	#0FFh
-	SACL	*,0,AR1		;записываем в стек
+	SACL	*,0,AR2		;записываем в стек
 
-	LACC	*+,8,AR7	;берем нечетный байт
+	LACC	*+,8,AR1	;берем нечетный байт
 	AND	#0FF00H
 *	OR	*		;складываем со значением в стеке
-*	MAR	*,AR6
-	OR	*,AR6
+*	MAR	*,AR7
+	OR	*,AR7
 	SACL	*+,0,AR0	;записываем в буффер
-	BANZ    $1,*-,AR1	;считаем 256 слов
+	BANZ    $1,*-,AR2	;считаем 256 слов
 	OUT  	DPA0,PA0
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
-	LAR     AR1,*+
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
+	LAR     AR2,*-
+	LAR     AR7,*-
 	PSHD	*
 	RET
  .newblock
@@ -1036,10 +1037,10 @@ $4	SUB  	#1
 	RETC	LEQ
 	BCND 	$4,BIO
 
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR     AR0,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR0,*+
 
 	SPLK 	#SSPS,*    ;SSP start
 	OUT  	*,SSPCR    ;Synchronous Serial Port Control Register
@@ -1105,7 +1106,7 @@ $3
 
 	CALL 	$2           ;4-передаем четвертое слово
 	IN   	*,SDTR     	;(4)чтение четвертого результата (мусор)
-	OUT	*,SDTR,AR6     	;6.шестое слово для передачи
+	OUT	*,SDTR,AR7     	;6.шестое слово для передачи
 				;([неважно что])
 
 	LAR	AR0,#255-2
@@ -1131,7 +1132,7 @@ $1
 	OUT	*,SDTR,AR0     	;7+N слово для передачи
 				;([неважно что])
 *	MAR	*,AR0
-	BANZ    $1,*-,AR6
+	BANZ    $1,*-,AR7
 
 	CALL 	$2           	;предпоследнее слово(N=254)
 *************************************************
@@ -1158,10 +1159,10 @@ $1
 	;;в * данные
 	LACC	#0FFFFH
 	XOR	*
-	SACL	*+,0,AR7
+	SACL	*+,0,AR1
  .else
 * в старых платах инверсии нет
-	IN   	*+,SDTR,AR7    	;чтение результата (слово данных N=255)
+	IN   	*+,SDTR,AR1    	;чтение результата (слово данных N=255)
 	;;в * данные
  .endif
 
@@ -1172,10 +1173,10 @@ $1
 	SPLK 	#SSPR,*    	;RESET SSP
 	OUT  	*,SSPCR
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
+	LAR     AR7,*-
 	PSHD	*
 	RET
 $2
@@ -1251,8 +1252,8 @@ WriteParams .macro code
 
 **** чтение с первого канала АЦП
 	CLRC 	SXM
-	LAR  	AR1,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
-	MAR  	*,AR1
+	LAR  	AR2,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
+	MAR  	*,AR2
 	LACC 	*,12       ;считываем значение полученное с АЦП
 	ADD  	#1000h,15 ; на 16 сдвигать нельзя, поэтому так извратились
 	AND  	#0FFFh,16
@@ -1296,7 +1297,7 @@ $3
 
 **** чтение с первого канала после фильтра
 	CLRC 	SXM
-	LACC 	OUTF+2,12
+	LACC 	_OUTF+2,12
 
 	SUB 	BeginLevel+1,16
 	BCND 	$1,GEQ ;больше или равно нулю
@@ -1335,12 +1336,12 @@ $3
 
 **** чтение со второго канала (мл. часть) с АЦП
 	CLRC 	SXM
-*	LAR  	AR1,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
-*	MAR  	*,AR1
+*	LAR  	AR2,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
+*	MAR  	*,AR2
 *	LACC 	*,12
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+9;AIN9 (PR3)
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+9;AIN9 (PR3)
 
 *	LACC	Channel_two,12
 	LACC	*,12
@@ -1349,12 +1350,12 @@ $3
 
 
 **** чтение с второго канала (ст. часть) с АЦП
-*	LAR  	AR1,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
-*	MAR  	*,AR1
+*	LAR  	AR2,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
+*	MAR  	*,AR2
 *	LACC 	*,4
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+9;AIN9 (PR3)
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+9;AIN9 (PR3)
 *	LACC	Channel_two,4
 	LACC	*,4
 	ADD  	#100h,11
@@ -1369,8 +1370,8 @@ $3
 **** чтение со второго канала (мл. часть) с АЦП
 *!! исключая нуль
 	CLRC 	SXM
-	LAR  	AR1,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
-	MAR  	*,AR1
+	LAR  	AR2,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
+	MAR  	*,AR2
 	LACC 	*,16
 	BCND 	$3,NEQ
 	ADD  	#16,15
@@ -1389,8 +1390,8 @@ $3
 $1
 
 **** чтение с второго канала (ст. часть) с АЦП
-	LAR  	AR1,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
-	MAR  	*,AR1
+	LAR  	AR2,#SR30+16       ;Адреса начала сдвиг.рег.ФНЧ
+	MAR  	*,AR2
 	LACC 	*,8
 	ADD  	#100h,15
 
@@ -1410,8 +1411,8 @@ $2
  .elseif code=22
 **** чтение со второго канала после фильтра (мл. часть)
 	CLRC 	SXM
-	LACC 	OUTF+1,16   ;второй сигнал - младшая часть после фильтра
-*        ;для 12 разрядов   LACC OUTF+1,12
+	LACC 	_OUTF+1,16   ;второй сигнал - младшая часть после фильтра
+*        ;для 12 разрядов   LACC _OUTF+1,12
 	SACH 	TMP
 	CALL 	FLPROG
 
@@ -1424,8 +1425,8 @@ $2
 	ADD  	#1
 	SACL 	AFLMSB
 $1
-	LACC 	OUTF+1,8    ;
-*        ;для 12 разрядов   LACC OUTF+1,4
+	LACC 	_OUTF+1,8    ;
+*        ;для 12 разрядов   LACC _OUTF+1,4
 	SACH 	TMP
 	CALL 	FLPROG
 
@@ -1479,26 +1480,26 @@ $2
 **** чтение с усиленного канала после фильтра (мл. часть)
 ;	CLRC 	SXM
 	SETC	SXM
-	LACC 	OUTF   ;усиленный сигнал - младшая часть после фильтра
-*	LAR  	AR1,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
-*	MAR  	*,AR1
+	LACC 	_OUTF   ;усиленный сигнал - младшая часть после фильтра
+*	LAR  	AR2,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
+*	MAR  	*,AR2
 *	LACC 	*       ;считываем значение полученное с АЦП
 
 	SUB	Preset0
 	ADD	#4000h,1
 
-*        ;для 12 разрядов   LACC OUTF,12
+*        ;для 12 разрядов   LACC _OUTF,12
 	SACL 	TMP
 	CALL 	FLPROG
 
-	LACC 	OUTF,8    ;усиленный сигнал - старшая часть
-*	LAR  	AR1,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
-*	MAR  	*,AR1
+	LACC 	_OUTF,8    ;усиленный сигнал - старшая часть
+*	LAR  	AR2,#SR30       ;Адреса начала сдвиг.рег.ФНЧ
+*	MAR  	*,AR2
 *	LACC 	*,8       ;считываем значение полученное с АЦП
 
 	SUB	Preset0,8
 	ADD	#4000h,9
-*        ;для 12 разрядов   LACC OUTF,4
+*        ;для 12 разрядов   LACC _OUTF,4
 	SACH 	TMP
 	CALL 	FLPROG
 
@@ -1507,8 +1508,8 @@ $2
 
 **** чтение с усиленного канала (мл. часть) с АЦП
 	CLRC SXM
-	LAR  AR1,#SR30+32       ;Адреса начала сдвиг.рег.ФНЧ
-	MAR  *,AR1
+	LAR  AR2,#SR30+32       ;Адреса начала сдвиг.рег.ФНЧ
+	MAR  *,AR2
 	LACC *,16
 	SACH TMP
 	CALL FLPROG
@@ -1524,8 +1525,8 @@ $2
 $1
 
 **** чтение с усиленного канала (ст. часть) с АЦП
-        LAR  AR1,#SR30+32       ;Адреса начала сдвиг.рег.ФНЧ
-        MAR  *,AR1
+        LAR  AR2,#SR30+32       ;Адреса начала сдвиг.рег.ФНЧ
+        MAR  *,AR2
         LACC *,8
         ADD  #100h,15
 
@@ -1621,8 +1622,8 @@ WriteEKG    .macro code
  .if code=1
 
 	SETC	SXM
-	LAR     AR6,#ResultADC+0       ;Адреса PL3
-	MAR     *,AR6
+	LAR     AR7,#_ResultADC+0       ;Адреса PL3
+	MAR     *,AR7
 	LACC	*
 	ADD     #4000h,1
 ;	AND     #0FFFFh
@@ -1631,8 +1632,8 @@ WriteEKG    .macro code
 	SACL 	TMP
 	CALL 	FLPROG
 
-	LAR  AR6,#ResultADC+0      ;Адреса  PL3
-	MAR  *,AR6
+	LAR  AR7,#_ResultADC+0      ;Адреса  PL3
+	MAR  *,AR7
 
 	LACC 	*,8
 	ADD     #4000h,1+8
@@ -1640,8 +1641,8 @@ WriteEKG    .macro code
 	CALL 	FLPROG
  .elseif code =2
 	SETC	SXM
-	LAR  AR6,#ResultADC+2       ;Адреса PL3
-	MAR  *,AR6
+	LAR  AR7,#_ResultADC+2       ;Адреса PL3
+	MAR  *,AR7
 
 	LACC 	*
 	ADD     #4000h,1
@@ -1649,8 +1650,8 @@ WriteEKG    .macro code
 	SACL 	TMP
 	CALL 	FLPROG
 
-	LAR  AR6,#ResultADC+2      ;Адреса  PL3
-	MAR  *,AR6
+	LAR  AR7,#_ResultADC+2      ;Адреса  PL3
+	MAR  *,AR7
 
 	LACC 	*,8
 	ADD     #4000h,1+8

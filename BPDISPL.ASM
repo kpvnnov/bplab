@@ -1,7 +1,8 @@
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.17 2001-07-04 08:13:23 peter Exp $
+* $Id: BPDISPL.ASM,v 1.18 2001-08-22 14:17:38 peter Exp $
 *****************************************************************************
+	.globl	_compute
 
 MDSPLV  B 	MDSPL0    ;вывод времени на дисплей
 
@@ -43,11 +44,11 @@ iCURRENT_PRESSURE	.set	12
 	B	MDSPL13		;сколько времени осталось
 
 MDSPL0:
-	MAR  	*,AR1      	;modify auxiliary register
-	LAR  	AR1,#ProtectInterval	;защитный интервал?
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR  	AR7,#ProtectInterval	;защитный интервал?
 	LACC	*
 	BCND	MayShow,EQ
-	LAR	AR1,#iSYMBL
+	LAR	AR7,#_iSYMBL
 
 	SPLK 	#14h,*+
 	SPLK 	#15h,*+
@@ -56,32 +57,32 @@ MDSPL0:
         RET
 
 MayShow:
-	LAR  	AR1,#WATCH+2
+	LAR  	AR2,#_WATCH+2
 
 DisplayCopy
-	LAR	AR6,#iSYMBL+3
-	MAR  	*,AR1      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL+3
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 
-	LACC 	*+,AR6		; Часы -> на дисплей
-	SACL	*-,AR1
+	LACC 	*+,AR7		; Часы -> на дисплей
+	SACL	*-,AR2
 
-	LACC 	*+,AR6
-	SACL	*-,AR1
+	LACC 	*+,AR7
+	SACL	*-,AR2
 
-	LACC 	*+,AR6
-	SACL	*-,AR1
+	LACC 	*+,AR7
+	SACL	*-,AR2
 
-	LACC 	*+,AR6
-	SACL	*-,AR1
+	LACC 	*+,AR7
+	SACL	*-,AR2
 	RET
 
 MDSPL1
  .if Sertificarion=1
-	LAR  	AR1,#TestTime   ;выводим на экран тестовое время
+	LAR  	AR2,#TestTime   ;выводим на экран тестовое время
  .else
-	LAR  	AR1,#WATCH
+	LAR  	AR2,#_WATCH
  .endif
 	B	DisplayCopy     ; Часы с секундами -> на дисплей
 
@@ -89,9 +90,23 @@ MDSPL1
 MDSPL2
 	CLRC 	SXM        ;Текущее давление Канал 0->на дисплей
 
-	LACC 	OUTF
+	LACC 	_OUTF
 	ADD  	#4000h,1
 	SACL 	TMP,0
+
+;вывод на экран с учетом коээфициента температуры?
+ .if DisplayCorrect=1
+* unsigned short compute(unsigned short shift,unsigned short value)
+
+        MAR	*,AR1		;выбираем стек
+        LACC	TMP		;давление в канале 0
+	SACL	*+
+        LACC    Preset0		;смещение в канале 0
+	SACL	*+
+	CALL	_compute
+	SBRK	2
+	SACL	TMP
+ .endif
 
 	LACC 	TMP,9
 	SUB  	TMP,7
@@ -102,8 +117,8 @@ MDSPL2
 	RET
 
 ConvBIN2DEC
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL+3
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL+3
 	LACC 	TMP,0
 	ADD  	#TABL10,0
 	TBLR 	TMP
@@ -125,10 +140,10 @@ ConvBIN2DEC
 
 MDSPL3
 	SETC	SXM
-	MAR	*,AR5
+	MAR	*,AR6
 	LACC	StartCode+1
         BCND	SecondChannel,NEQ
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 	LACC	*
 	ADD  	#4000h,1
 	AND	#0ffffh
@@ -136,9 +151,9 @@ MDSPL3
 	B	ChannelSelected
 SecondChannel:
  .if Sertificarion=0
-	LAR	AR5,#ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
  .else
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
  .endif
 	LACC	*
 	ADD  	#4000h,1
@@ -159,8 +174,8 @@ No_minus121
  .endif
 
 MDSPL4  CLRC 	SXM        ;Текущее давление Канал 2->на дисплей
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+9;AIN9 (PR3)
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+9;AIN9 (PR3)
 
 	LACC	*
 	ADD	#4000,1
@@ -195,16 +210,16 @@ MDSPL9  SETC	SXM
 
 MDSPL10 SETC	SXM
 	SPM	#0
-	LAR	AR2,#TMP+3
-	LAR	AR3,#AveragePeriod
-	MAR	*,AR2
+	LAR	AR3,#TMP+3
+	LAR	AR4,#AveragePeriod
+	MAR	*,AR3
 	LACC	#6000
-	SACL	*,AR3
+	SACL	*,AR4
 
-*       ARP  = AR3
-*       AR2  - Указывает на числитель
-*       AR3  - Указывает на знаменаталь (AR3 - "Активан")
-*	AR2/AR3
+*       ARP  = AR4
+*       AR3  - Указывает на числитель
+*       AR4  - Указывает на знаменаталь (AR4 - "Активан")
+*	AR3/AR4
 
 	CALL	Division
 
@@ -230,8 +245,8 @@ MDSPL11  SETC	SXM
 
 MDSPL12
 	SETC	SXM
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 
 	LACC    *
 	ADD  	#4000h,1
@@ -247,8 +262,8 @@ No_minus12
 
 
 MDSPL5  		; вывод ошибки на экран
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
         LACC	ZERROR
         AND	#0FFh
         XOR	#081H
@@ -301,8 +316,8 @@ MDSPL6
 ; ну хотя бы выводить на экран скорость обмена ?
 MDSPL7
 	CLRC 	SXM
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
 
 	IN  	TMP,BRD		;считываем скорость обмена
 
@@ -352,18 +367,18 @@ MDSPL7_3
 MDSPL7
 	CLRC 	SXM
  .if DisableDisplay=1
-	MAR  	*,AR6
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7
+	LAR	AR7,#_iSYMBL
 	SPLK	#10,*+
 	SPLK	#10,*+
 	SPLK	#10,*+
 	SPLK	#10,*
  .elseif DisableDisplay=0
-	MAR  	*,AR5      	;modify auxiliary register
-	LAR	AR5,#iCntReceve
-	LAR	AR6,#iSYMBL+3
+	MAR  	*,AR6      	;modify auxiliary register
+	LAR	AR6,#iCntReceve
+	LAR	AR7,#_iSYMBL+3
 
-	LACC 	*+,0,AR6
+	LACC 	*+,0,AR7
 	ADD  	#TABL10,0
 	TBLR 	TMP
 	LACC 	TMP,0
@@ -372,9 +387,9 @@ MDSPL7
 
 	LACC 	TMP,12
 	AND  	#000Fh,16
-	SACH 	*-,AR5
+	SACH 	*-,AR6
 
-	LACC 	*,0,AR6
+	LACC 	*,0,AR7
 	ADD  	#TABL10,0
 	TBLR 	TMP
 	LACC 	TMP,0
@@ -418,8 +433,8 @@ MDSPL8_0			;вывод давления до которого накачиваем
  .if Sertificarion=0
 
 MDSPL8_1			; 111 - запись давления на входе
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
 
 	SPLK 	#10,*+
 	SPLK 	#1,*+
@@ -430,8 +445,8 @@ MDSPL8_1			; 111 - запись давления на входе
 	RET
  .else
 MDSPL8_1			; 111 - запись давления на входе
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
 
 	LACC    StartCode+1
 	SUB	#1
@@ -459,8 +474,8 @@ CodeDebugRegim2:
  .endif
 
 MDSPL8_2			;OH
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
 
 	SPLK 	#10,*+
 	SPLK 	#16,*+
@@ -468,8 +483,8 @@ MDSPL8_2			;OH
 	SPLK 	#10,*+
 	RET
 MDSPL8_3			;OFF
-	MAR  	*,AR6      	;modify auxiliary register
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7      	;modify auxiliary register
+	LAR	AR7,#_iSYMBL
 
 	SPLK 	#10,*+
 	SPLK 	#16,*+
@@ -479,16 +494,16 @@ MDSPL8_3			;OFF
 
 MDSPL13                         ; сколько осталось до изм -> на дисплей
 
-	LAR	AR2,#CounterToBegin
-	LAR	AR3,#TMP+3
-	MAR	*,AR2
-	LACC	*,0,AR3
-	SPLK	#60,*,AR3
+	LAR	AR3,#CounterToBegin
+	LAR	AR4,#TMP+3
+	MAR	*,AR3
+	LACC	*,0,AR4
+	SPLK	#60,*,AR4
 
-*       ARP  = AR3
-*       AR2  - Указывает на числитель
-*       AR3  - Указывает на знаменаталь (AR3 - "Активан")
-*	AR2/AR3
+*       ARP  = AR4
+*       AR3  - Указывает на числитель
+*       AR4  - Указывает на знаменаталь (AR4 - "Активан")
+*	AR3/AR4
 
 	CALL	Division
 
@@ -501,8 +516,8 @@ MDSPL13                         ; сколько осталось до изм -> на дисплей
 
 
 MODIFSB
-	MAR  	*,AR6
-	LAR	AR6,#iSYMBL
+	MAR  	*,AR7
+	LAR	AR7,#_iSYMBL
 
 	LACC 	#DSIM0     	;преобразование символов дисплея
 	      			;в слова выдаваемые на экран
@@ -519,7 +534,7 @@ MODIFSB
 	TBLR 	TMP+2
 	LACC 	#DSIM0
 	ADD	*
-	LAR	AR6,#iDISPL
+	LAR	AR7,#iDISPL
 
 	TBLR 	TMP+3
 	LACC 	TMP,8
@@ -562,8 +577,8 @@ DSIML   .word   0038h   ;13 Описание символа F           00111000
 DISPLAY
 	SPLK 	#SSPS,TMP    ;SSP start
 	OUT  	TMP,SSPCR    ;Synchronous Serial Port Control Register
-	MAR	*,AR6
-	LAR	AR6,#iDISPL
+	MAR	*,AR7
+	LAR	AR7,#iDISPL
 
 	OUT  	*+,SDTR
 	OUT  	*,SDTR

@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.20 2001-07-04 08:13:23 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.21 2001-08-22 14:17:40 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -8,29 +8,29 @@ INTTIM
 				;регистров в стеке
 
 	LDP  	#4
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR  	AR1,#IFR   	;загружаем указатель на Interrupt
+				;т.е. при дальнейшей записи индексом AR2
+	LAR  	AR2,#IFR   	;загружаем указатель на Interrupt
 				;Flag Register
 	SPLK 	#04h,*     	;Time Interrupt pending
 
 
-	MAR	*,AR1
-	LAR	AR1,#AVRProg+6
+	MAR	*,AR2
+	LAR	AR2,#AVRProg+6
 	LACC	*
 	SUB	#1
 	SACL	*
 	BCND	NoPowerDown,GT
 	SPLK	#1600,*
-	LAR	AR1,#AVRProg
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SPLK	#1101h,*		;SystemState
 ;	CALL	SendCommandAVR
 NoPowerDown
 *** отладка
-*	MAR	*,AR1
-*	LAR	AR1,#AVRProg
+*	MAR	*,AR2
+*	LAR	AR2,#AVRProg
 *	SPLK	#1,*+
 *	SPLK	#0000h,*		;SystemState
 *	CALL	SendCommandAVR
@@ -50,8 +50,8 @@ NoAdc:
 	BCND 	NoBeep,NTC
 	mBeepEnd
  .if AVRProcessor=1
-	MAR	*,AR1
-	LAR	AR1,#AVRProg
+	MAR	*,AR2
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SPLK	#0BB01h,*		;SetBuzzer
 	CALL	SendCommandAVR
@@ -68,8 +68,8 @@ NoBeep
 	BCND 	NootLongBeeping,NTC
  .if AVRProcessor=1
 	mBeepLongEnd
-	MAR	*,AR1
-	LAR	AR1,#AVRProg
+	MAR	*,AR2
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SPLK	#0BB07h,*		;SetBuzzer
 	CALL	SendCommandAVR
@@ -110,15 +110,15 @@ NoCountBeep
 ********************************
 	BIT 	Jobs,13     	;последовательный порт работает ?
 	BCND 	PortNotJob,NTC 	;нет, не работает. проверять не будем
-	MAR  	*,AR1      	;modify auxiliary register
-	LAR	AR1,#iCNTASP
+	MAR  	*,AR2      	;modify auxiliary register
+	LAR	AR2,#iCNTASP
 *	LACC 	CNTASP,0
 	LACC 	*,0
 	SUB  	#1         	;Декрементация счетчика
 *	SACL 	CNTASP,0
 	SACL 	*,0
 	BCND 	PortNotJob,NEQ 	;пока еще не достигли нуля
-	SPLK 	#0h,MDSPL  	;выводим на экран время
+	SPLK 	#0h,_MDSPL  	;выводим на экран время
 	LACC 	Jobs,0
 	AND  	#0FFFBh
 	SACL 	Jobs     	;порт на "автопилоте" ;)
@@ -244,8 +244,8 @@ ToNextRegim
 NotPumping
 
 
-	LAR	AR1,#iCNTCLK
-	MAR	*,AR1
+	LAR	AR2,#iCNTCLK
+	MAR	*,AR2
 
 *	BIT  	CNTCLK,15  		;каждое второе прерывание
 	BIT  	*,15  		;каждое второе прерывание
@@ -264,20 +264,20 @@ CallValueProcessing
 	ADD	#1
 	SACL	massiv
 	LACC	TMP
-	MAR     *,AR1
-	LAR     AR1,#Signal
+	MAR     *,AR2
+	LAR     AR2,#Signal
 	LAR     AR0,SampleNumber
-	MAR     *0+,AR1
+	MAR     *0+,AR2
 	SACL    *,0
 	CALL	ADC_value_processing
  .else
 	SETC	SXM
-	LACC	OUTF
+	LACC	_OUTF
 	SUB	Preset0
-	MAR     *,AR1
-	LAR     AR1,#Signal
+	MAR     *,AR2
+	LAR     AR2,#Signal
 	LAR     AR0,SampleNumber
-	MAR     *0+,AR1
+	MAR     *0+,AR2
 	SACL    *,0
 	CALL	ADC_value_processing
 	BIT     Jobs,7			;пишем во флеш ?
@@ -302,10 +302,10 @@ NetIzmereniya
 * а через некоторое время их надо разрешить (размаскировать)
 ********************************
 
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR	AR1,#iCNTKEYB
+				;т.е. при дальнейшей записи индексом AR2
+	LAR	AR2,#iCNTKEYB
 	LACC 	*,0
 	BCND 	NoEnable,EQ
 	SUB  	#1         	;Декрементация счетчика разрешения
@@ -313,7 +313,7 @@ NetIzmereniya
 	SACL 	*,0
 
 	BCND 	NoEnable,NEQ
-	LAR  	AR1,#IMR   	;загружаем указатель на Interrupt Mask Register
+	LAR  	AR2,#IMR   	;загружаем указатель на Interrupt Mask Register
 	LACC 	*          	;load accumulator with shift
 	OR   	#02h       	;устанавливаем маску INT2
 				;(разрешаем эти прерывания)
@@ -325,26 +325,26 @@ NetIzmereniya
 	SACL	TMP
 	OUT	TMP,ICR
 
-	LAR  	AR1,#IFR   	;загружаем указатель на Interrupt Flag Register
+	LAR  	AR2,#IFR   	;загружаем указатель на Interrupt Flag Register
 	SPLK 	#02h,*     	;pending INT2
 				;pending flag interrupts
 NoEnable
-	LAR	AR1,#iCNTKEYB+1
+	LAR	AR2,#iCNTKEYB+1
 	LACC 	*,0
 	BCND 	NoEnable1,EQ
 	SUB  	#1         	;Декрементация счетчика разрешения
 				;прерывания от кнопки
 	SACL 	*,0
 	BCND 	NoEnable1,NEQ
-	LAR  	AR1,#IMR   	;загружаем указатель на Interrupt Mask Register
+	LAR  	AR2,#IMR   	;загружаем указатель на Interrupt Mask Register
 	LACC 	*          	;load accumulator with shift
 	OR   	#01h       	;устанавливаем маску INT1
 				;(разрешаем эти прерывания)
 	SACL 	*          	;store mask interrupts
-	LAR  	AR1,#IFR	;загружаем указатель на Interrupt Flag Register
-	MAR  	*,AR1      	;modify auxiliary register
+	LAR  	AR2,#IFR	;загружаем указатель на Interrupt Flag Register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 	SPLK 	#01h,*     	;pending INT1
 NoEnable1
 * конец блока слежки за прерыванием кнопки
@@ -354,8 +354,8 @@ NoEnable1
 ********************************
 * работа с часами
 *
-	LAR	AR1,#iCNTCLK
-	MAR	*,AR1
+	LAR	AR2,#iCNTCLK
+	MAR	*,AR2
 
 *	LACC 	CNTCLK,0      	;Таймер часов
 	LACC 	*,0      	;Таймер часов
@@ -375,23 +375,23 @@ NoEnable1
 * декрементация всяких переменных
 * (чаще с проверкой доходит ли до нуля)
  .newblock
-	MAR  	*,AR1
+	MAR  	*,AR2
 *******
-	LAR  	AR1,#CounterToBegin
+	LAR  	AR2,#CounterToBegin
 	LACC	*
 	BCND	$1,EQ
 	SUB	#1
 	SACL	*
 $1
 ********
-	LAR  	AR1,#CounterFastToBegin
+	LAR  	AR2,#CounterFastToBegin
 	LACC	*
 	BCND	$2,EQ
 	SUB	#1
 	SACL	*
 $2
 ********
-	LAR  	AR1,#ProtectInterval
+	LAR  	AR2,#ProtectInterval
 	LACC	*
 	BCND	$3,EQ
 	SUB	#1
@@ -399,7 +399,7 @@ $2
 $3
 ************************
 * следим, когда последний раз меряли давление
-	LAR  	AR1,#LastMeas
+	LAR  	AR2,#LastMeas
 	LACC	*
 	BCND	EnsShpion3min,EQ
 	SUB	#1
@@ -415,13 +415,13 @@ EnsShpion3min
 	BCND	EndSheduler,NTC
 	BIT     Jobs,15			;процесс измерения идет?
 	BCND    EndSheduler,TC         ;да идет
-	MAR  	*,AR1
-	LAR  	AR1,#CounterToBegin
+	MAR  	*,AR2
+	LAR  	AR2,#CounterToBegin
 
 	LACC	*,0		;единицы секунд
 	BCND    SCHEnd,NEQ
 
-	LAR  	AR1,#ProtectInterval	;защитный интервал?
+	LAR  	AR2,#ProtectInterval	;защитный интервал?
 	LACC	*
 	BCND	SCHEnd,NEQ
 
@@ -443,7 +443,7 @@ EndSheduler
 
 
 **отладка
-	LACC MDSPL
+	LACC _MDSPL
 	SUB #3 ; если на экране вывод давления
 	BCND NoPress1Chanal,NEQ
 	SendToDAC
@@ -451,7 +451,7 @@ EndSheduler
 NoPress1Chanal
 **
 **отладка
-;        LACC MDSPL
+;        LACC _MDSPL
 ;        BCND ItIsNoTime,NEQ
 ;        LACC Jobs
 ;        OR   #02h     ;кончаем баловаться
@@ -461,16 +461,16 @@ NoPress1Chanal
 ;        LACC Jobs
 ;        AND   #0FFFDh     ;кончаем баловаться
 ;        SACL Jobs
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR  	AR1,#WATCH
+				;т.е. при дальнейшей записи индексом AR2
+	LAR  	AR2,#_WATCH
 
  .if ShowBeginTime=1
 
 	BIT     Jobs,6			;sheduler on?
 	BCND	NotfingBlank,NTC
-	LACC	MDSPL
+	LACC	_MDSPL
 	BCND	ItIsTime,EQ
 	SUB	#13
 	BCND    NotfingBlank,NEQ
@@ -481,10 +481,10 @@ ItIsTime
 	LACC	*
 	AND	#03h
 	BCND	NotfingBlank,NEQ
-	SPLK	#0,MDSPL
+	SPLK	#0,_MDSPL
 	B	NotfingBlank
 OnnWaiting
-	SPLK	#13,MDSPL
+	SPLK	#13,_MDSPL
 
 NotfingBlank
 
@@ -513,7 +513,7 @@ CLK001
  .if Sertificarion=1
 * если сертификационная версия, то заодно увеличиваем время
 * тестовых часов
-	LAR  	AR1,#TestTime
+	LAR  	AR2,#TestTime
 	LACC 	*,0
 	ADD  	#1
 	SACL 	*,0
@@ -550,8 +550,8 @@ CLKSERT001
  .if Sertificarion=1
 * если сертификационная версия, то проверяем, необходимо ли включать
 * режим хода тестовых
-	MAR	*,AR6
-	LAR	AR6,#TestTime+4
+	MAR	*,AR7
+	LAR	AR7,#TestTime+4
 	LACC	*
 	BCND	NoTestTime,EQ
 	SUB	#1
@@ -573,16 +573,16 @@ WaitThreeSecond_1
 	LACC	*
 	ADD	#1
 	SACL	*
-	LAR	AR6,#TestTime
+	LAR	AR7,#TestTime
 	LACC	#0
 	SACL	*+
 	SACL	*+
 	SACL	*+
 	SACL	*+
-	SPLK	#1,MDSPL	;вывод времени на дисплей с секундами
+	SPLK	#1,_MDSPL	;вывод времени на дисплей с секундами
 	B	NoTestTime
 WaitEndOfTestTimeReg
-	LAR	AR6,#TestTime+3
+	LAR	AR7,#TestTime+3
 	LACC	*-
 	SUB	#1
 	BCND    NoTestTime,NEQ
@@ -594,7 +594,7 @@ WaitEndOfTestTimeReg
 	LACC	*-
 	BCND	NoTestTime,NEQ
 	Beep
-	LAR	AR6,#TestTime+4
+	LAR	AR7,#TestTime+4
 	SPLK	#0,*
 	B	NoTestTime
 
@@ -609,14 +609,14 @@ ENDTIME
 	SUB  	#1
 	SACL    CountResult
 	BCND	NotDisplayed,NEQ
-	LACC	MDSPL
+	LACC	_MDSPL
 	SUB	#iSYSTOL_PRESSURE
 	BCND	NotDisplayed,LT
 	SUB	#iDIASTOL_PRESSURE-iSYSTOL_PRESSURE
 	BCND	NotDisplayed,GT
 	BCND	NotLastDisplayed,NEQ
-*	SPLK	#0,MDSPL
-	SPLK	#iSYSTOL_PRESSURE,MDSPL
+*	SPLK	#0,_MDSPL
+	SPLK	#iSYSTOL_PRESSURE,_MDSPL
 	mWait_Display_Meas
 	LACC    CountResult+1
 	BCND	OffResult,EQ
@@ -624,18 +624,18 @@ ENDTIME
 	SACL	CountResult+1
 	B	NotDisplayed
 OffResult
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	B	NotDisplayed
 NotLastDisplayed
-	LACC	MDSPL
+	LACC	_MDSPL
 	ADD	#1
-	SACL	MDSPL
+	SACL	_MDSPL
 	mWait_Display_Meas
 NotDisplayed
 *не очень критичные (по началу времени относительно прерывания таймера)
 *процедурки
-	MAR	*,AR6
-	LAR	AR6,#iCNTERROR
+	MAR	*,AR7
+	LAR	AR7,#iCNTERROR
 *	LACC CNTERROR,0
 	LACC *,0
 	BCND COUNTERR,NEQ 	;счетчик не равен нулю?
@@ -648,11 +648,11 @@ NotDisplayed
 	LACC	TMP,8
 	SACH	ZERROR
 	BeepLong
-	MAR	*,AR6
-	LAR	AR6,#iCNTERROR
+	MAR	*,AR7
+	LAR	AR7,#iCNTERROR
 *	SPLK 	#CNTERRDISPL,CNTERROR
 	SPLK 	#CNTERRDISPL,*
-	SPLK 	#5h,MDSPL
+	SPLK 	#5h,_MDSPL
 	SPLK	#0,DispErrMeas
 	B    ENDCOUNTERR
 COUNTERR     ;да, мы еще считаем вывод ошибки
@@ -662,10 +662,10 @@ COUNTERR     ;да, мы еще считаем вывод ошибки
 
 	BCND ERRNOZERO,NEQ ;счетчик еще не стал равен нулю?
 	;счетчик ошибки стал равен нулю - переводим вывод на часы
-	LACC 	MDSPL
+	LACC 	_MDSPL
 	SUB	#5
 	BCND	ENDCOUNTERR,NEQ
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 ERRNOZERO
 ENDCOUNTERR
 
@@ -673,9 +673,9 @@ ENDCOUNTERR
 ************************
 * вывод на экран (дисплей)
 ************************
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 
  .if DisableDisplay=1
 	BIT 	Jobs,13     	;последовательный порт работает ?
@@ -687,7 +687,7 @@ ENDCOUNTERR
  .endif
 
 
-	LAR	AR1,#iCNTDISP
+	LAR	AR2,#iCNTDISP
 
 *	LACC 	CNTDISP,0
 	LACC 	*,0
@@ -696,23 +696,23 @@ ENDCOUNTERR
 	SACL 	*,0
 	BCND 	ENDDISPLAY,GT
 *	SPLK 	#CNSTDISP,CNTDISP     ;частота обновления дисплея (счетчик)
-	SPLK 	#CNSTDISP,*		;частота обновления дисплея (счетчик)	LACC 	MDSPL,1		;Подготовка символов дисплея
+	SPLK 	#CNSTDISP,*		;частота обновления дисплея (счетчик)	
 
-	LACC 	MDSPL,1
+	LACC 	_MDSPL,1
 	ADD  	#MDSPLV,0
 	CALA
 	CALL 	MODIFSB
 
-	LACC 	MDSPL,0
+	LACC 	_MDSPL,0
 	SUB  	#2
 	BCND 	ENDPOINTSEC,GEQ ;выводим "не" часы?
 
-	LAR	AR1,#iCNTCLK
-	LAR	AR6,#iDISPL
-	MAR	*,AR1
+	LAR	AR2,#iCNTCLK
+	LAR	AR7,#iDISPL
+	MAR	*,AR2
 
 *	LACC	CNTCLK,1
-	LACC	*,1,AR6
+	LACC	*,1,AR7
 	SUB	#CNSTCLK
 
 *	BIT  	CLK0,15    	;выводим секундную точку
@@ -738,21 +738,21 @@ ENDPOINTSEC
 *******************************
 *смена полярности для LCD
 *******************************
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR	AR1,#iCNTDISP+1
+				;т.е. при дальнейшей записи индексом AR2
+	LAR	AR2,#iCNTDISP+1
 *	LACC 	CNTDISP+1,0  	;уменьшаем счетчик рефреша
 	LACC 	*,0  	;уменьшаем счетчик рефреша
 	SUB  	#1
 *	SACL 	CNTDISP+1,0
 	SACL 	*,0
 	BCND 	ENDREFRESH,NEQ  ;refresh пока не делаем (ACC!=0)
-	LAR	AR6,#iDISPL
+	LAR	AR7,#iDISPL
 
 *	SPLK 	#CNSTREFDISP,CNTDISP+1
 				;частота refresh дисплея (счетчик)
-	SPLK 	#CNSTREFDISP,*,AR6
+	SPLK 	#CNSTREFDISP,*,AR7
 				;частота refresh дисплея (счетчик)
 *	LACC 	DISPL          	;производим refresh
 	LACC 	*          	;производим refresh
@@ -780,15 +780,15 @@ ENDDISPLAY
 
 *********
 * преобразование времени минуты, десятки минут в секунды
-* AR6 - указатель на две ячейки, содержащие минуты и десятки минут
+* AR7 - указатель на две ячейки, содержащие минуты и десятки минут
 * ACC - результат
 *  ==1 ошибка интервала
 *********
 
 Hour2BIN
-	;([AR6+1]*10   +[AR6])*60
-	;([AR6+1]*(8+2)+[AR6])*60
-	MAR	*,AR6
+	;([AR7+1]*10   +[AR7])*60
+	;([AR7+1]*(8+2)+[AR7])*60
+	MAR	*,AR7
 	LACC	*+
 	SUB	#9
 	BCND	ErrorMinute,GT	;количество единиц минут >9
@@ -796,8 +796,8 @@ Hour2BIN
 	SUB	#9
 	BCND	ErrorMinute,GT	;количество десяток минут >9
 	LACC 	*,3
-	ADD	*-,1		;ACC=[AR6+1]*(8+2)
-	ADD	*               ;ACC=([AR6+1]*(8+2)+[AR6])
+	ADD	*-,1		;ACC=[AR7+1]*(8+2)
+	ADD	*               ;ACC=([AR7+1]*(8+2)+[AR7])
 	SACL	TMP
 
 	SPM	#0
@@ -811,29 +811,29 @@ ErrorMinute
 	RET
 
 *********
-* записывает текущее время в формате сек, мин(BCD), час по указателю AR6
-* use ACC,AR5
+* записывает текущее время в формате сек, мин(BCD), час по указателю AR7
+* use ACC,AR6
 *********
 SaveTimeOfBeginMeas
-	MAR  	*,AR5      	;modify auxiliary register
-	LAR  	AR5,#WATCH+1
+	MAR  	*,AR6      	;modify auxiliary register
+	LAR  	AR6,#_WATCH+1
 
 	LACC 	*,3
 	ADD  	*-,1
-	ADD  	*+,AR6       	;посчитали количество секунд
-	SACL    *+,AR5          ;записали в [AR6]
+	ADD  	*+,AR7       	;посчитали количество секунд
+	SACL    *+,AR6          ;записали в [AR7]
 
-	MAR	*+,AR5
+	MAR	*+,AR6
 	LACC 	*+	     	;единицы минут
-	ADD  	*+,4,AR6		;десятки минут
-	SACL    *+,AR5          ;записали в [AR6]
+	ADD  	*+,4,AR7		;десятки минут
+	SACL    *+,AR6          ;записали в [AR7]
 
 	LACC 	*+		;единицы часов
-	ADD  	*+,4,AR6	;десятки часов
-	SACL    *+,AR5	        ;записали в [AR6]
+	ADD  	*+,4,AR7	;десятки часов
+	SACL    *+,AR6	        ;записали в [AR7]
 
-	LACC 	*+,AR6		;номер суток
-	SACL 	*+		;номер суток записали в [AR6]
+	LACC 	*+,AR7		;номер суток
+	SACL 	*+		;номер суток записали в [AR7]
 
 
 
@@ -841,12 +841,12 @@ SaveTimeOfBeginMeas
 
 *******************
 * проверяет время на валидность
-* время по указателю AR6
+* время по указателю AR7
 * формат единицы минут, десятки минут, единицы часов, десятки часов
 * ACC=0 все OK
 
 CheckTime
-	MAR	*,AR6
+	MAR	*,AR7
 	LACC	*+
 	SUB	#9
 	BCND	ErrorCheck,GT	;количество единиц минут >9
@@ -876,12 +876,12 @@ ErrorCheck
 	RET
 ***************
 * устанавливает системное время на время инициализации
-* use ar1,ar2
+* use AR2,AR3
 **************
 SetWatchToInit
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR2,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR3,*+
 
 	SPLK	#0,FLADR+1
 ;по данному адресу находится Время инициализации
@@ -890,34 +890,34 @@ SetWatchToInit
 *              В двоичном коде
 	SPLK	#0200h+TimeInitSh,FLADR
 
-	LAR	AR2,#WATCH+2
+	LAR	AR3,#_WATCH+2
 	;устанавливаем время (смещение + TimeInitSh)
 	CALL	FLREAD
-	MAR	*,AR2
+	MAR	*,AR3
 	AND	#0Fh
-	SACL	*+,AR1		;начинаем с единиц минут
+	SACL	*+,AR2		;начинаем с единиц минут
 
 	CALL	FLREAD
-	MAR	*,AR2
+	MAR	*,AR3
 	AND	#0Fh
-	SACL	*+,AR1		;десятки минут
+	SACL	*+,AR2		;десятки минут
 
 	CALL	FLREAD
-	MAR	*,AR2
+	MAR	*,AR3
 	AND	#0Fh
-	SACL	*+,AR1          ;единицы часов
+	SACL	*+,AR2          ;единицы часов
 
 	CALL	FLREAD
-	MAR	*,AR2
+	MAR	*,AR3
 	AND	#0Fh
-	SACL	*+,AR2          ;десятки часов
+	SACL	*+,AR3          ;десятки часов
 
 	SPLK	#0,*		;номер суток
 
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR2,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR3,*-
 	PSHD	*
 	RET
 *************
@@ -925,11 +925,11 @@ SetWatchToInit
 * (находится запись в формате измерения)
 *************
 SetWatchRecordTime
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
-	MAR	*,AR1
-	LAR	AR1,#WATCH+2
+	MAR	*,AR2
+	LAR	AR2,#_WATCH+2
 	LACC	TMP+1
 	AND	#0Fh
 	SACL	*+		;единицы минут
@@ -962,12 +962,12 @@ SetWatchRecordTime
 	BCND	ClearSetRecordTime,GT
 ;//теперь надо посчитать количество суток
 
-	MAR	*,AR7
+	MAR	*,AR1
 	LACC	TMP+2
 	AND	#0Fh
 	SACL	*
 
-	MAR	*,AR1
+	MAR	*,AR2
 
 	SPM  	#0              ;Set P Register Output Shift Mode
 				;multiplier output is left-shifted one place
@@ -979,74 +979,74 @@ SetWatchRecordTime
 
 	SPLK	#0,*	;попутно обнуляем количество суток
 
-	MAR	*,AR7
+	MAR	*,AR1
 	ADD	*
 	SACL	*
 	SUB	#24
 	BCND	ClearSetRecQuit,LT	;если не переваливает, то выходим
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LACC	*
 	ADD	#1	;увеличиваем количество суток
 	SACL	*
 
-	MAR	*,AR7
+	MAR	*,AR1
 	LACC	*
 	SUB	#48
 	BCND	ClearSetRecCompute,LT	;если не переваливает, то выходим
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LACC	*
 	ADD	#1	;увеличиваем количество суток
 	SACL	*
 
-	MAR	*,AR7
+	MAR	*,AR1
 	LACC	*
 	SUB	#72
 	BCND	ClearSetRecCompute,LT	;если не переваливает, то выходим
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LACC	*
 	ADD	#1	;увеличиваем количество суток
 	SACL	*
 
-	MAR	*,AR7
+	MAR	*,AR1
 	LACC	*
 	SUB	#96
 	BCND	ClearSetRecCompute,LT	;если не переваливает, то выходим
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LACC	*
 	ADD	#1	;увеличиваем количество суток
 	SACL	*
 
 ClearSetRecCompute
-	MAR	*,AR1
+	MAR	*,AR2
 
 	SPM	#0
 	LT      *-
 	MPY     #24
 
-	MAR	*,AR7
-	LACC	*-
+	MAR	*,AR1
+	LACC	*+
 	SPAC		;ACC-PREG
 
 	CALL	ConvertBCD2BIN
-	MAR	*+,AR7
+	MAR	*-,AR1
 
 	SACL	*
-	LACC	*,12,AR1
+	LACC	*,12,AR2
 	AND	#00F0H,12
-	SACH	*-,AR7		;десятки часов
+	SACH	*-,AR1		;десятки часов
 
-	LACC	*,AR1
+	LACC	*,AR2
 	AND	#00FH
 	SACL	*
 
 
 ClearSetRecQuit
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
@@ -1057,8 +1057,8 @@ ClearSetRecordTime
 ;//преобразуем число в двоично десятичную системы
 ;//из бинарного числа, с проверкой до 24
 ConvertBCD2BIN
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 	SACL	*
 	SUB	#10
@@ -1079,49 +1079,49 @@ AlreadyConverted
 	LACC	*
 
 ConvertBCDQuit
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
 * преобразование бинарного к двоично-десятичному виду
 ConvertBIN2BCD
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
-	SPLK	#0,*-
+	SPLK	#0,*+
 	SACL	*
 
 Converted10_1
 	SUB	#10
 	BCND	Converted10,LT
-	SACL	*+
+	SACL	*-
 	LACC	*
 	ADD	#10h
-	SACL	*-
+	SACL	*+
 	LACC	*
 	B	Converted10_1
 Converted10
-	LACC	*+
+	LACC	*-
 	ADD	*
 
-;	MAR	*,AR7
-	MAR	*+,AR7
+;	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
 * преобразование двоично-десятичного к бинарному  виду
 ConvertBCD2BIN_
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 	SPM	#0
 	SACL	*
-	LACC	*-,12		;выделяем старшую букву в байте
+	LACC	*+,12		;выделяем старшую букву в байте
 	AND	#0F0h,12
 	SACH	*
 
-	LT      *+
+	LT      *-
 	MPY     #10		;умножаем на 10
 				;результат в PREG
 
@@ -1131,8 +1131,8 @@ ConvertBCD2BIN_
 ;	PAC
 	APAC			;складываем все это хозяйство
 
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
@@ -1140,8 +1140,8 @@ ConvertBCD2BIN_
 * добавляем к системному времени минуту
 ************************
 Add1minutetoWatch
-	MAR	*,AR1
-	LAR	AR1,#WATCH+2
+	MAR	*,AR2
+	LAR	AR2,#_WATCH+2
 	LACC 	*,0          ;а если =60, то инкрементация минут
 	ADD  	#1              ;единиц минут
 	SACL 	*,0
@@ -1167,7 +1167,7 @@ Add1minutetoWatch
 	ADD  	#1
 	SACL 	*-,0
 
-CLK24   MAR	*+,AR1
+CLK24   MAR	*+,AR2
 	LACC 	*-,4          ;Проверка на 24 часа
 	OR   	*
 	SUB  	#24h
@@ -1180,8 +1180,8 @@ CLK24   MAR	*+,AR1
 	RET
 
 ReadAllInterval
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 ******
 * чтение дневного интервала
@@ -1189,21 +1189,21 @@ ReadAllInterval
 	SPLK	#0,FLADR+1
 	SPLK	#0200h+IntervalDayLightSh,FLADR
 
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
+	MAR  	*,AR7
 	SACL	*+
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR6,#DayTimeInter
+	LAR	AR7,#DayTimeInter
 	SACL	*
 
 ******
@@ -1211,59 +1211,59 @@ ReadAllInterval
 ****
 	SPLK	#0200h+IntervalDayNightSh,FLADR
 
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
+	MAR  	*,AR7
 	SACL	*+
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR6,#DayTimeInter+1
+	LAR	AR7,#DayTimeInter+1
 	SACL	*
 ******
 * чтение специального интервала
 ****
 	SPLK	#0200h+IntervalSpecSh,FLADR
 
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
-	SACL	*+,0,AR1
+	MAR  	*,AR7
+	SACL	*+,0,AR2
 
 	CALL	FLREAD
 	AND	#0FFh
-	MAR  	*,AR6
+	MAR  	*,AR7
 	SACL	*+
-	LAR     AR6,#TMP
+	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR6,#DayTimeInter+2
+	LAR	AR7,#DayTimeInter+2
 	SACL	*
 
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
 *******************************************************
 * tmp+1 возвращает результат
 CheckScheduler:
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
         B	CheckIntervals	;!!! внимание, брэнч в другую процедуру
 
 InitScheduler:
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 	;здесь собраны все процедуры загрузки
 	;параметров в память
@@ -1293,8 +1293,8 @@ Init_On_Sheduler
 Init_End_Preset
 
 CheckIntervals:
-	MAR	*,AR6
-	LAR	AR6,#WATCH+2
+	MAR	*,AR7
+	LAR	AR7,#_WATCH+2
 	CALL	CheckTime
 	BCND	TimeOkey,EQ
 	mResetTime
@@ -1304,8 +1304,8 @@ CheckIntervals:
 TimeOkey
 *************************************
 * проверка интервалов измерения прибора
-	LAR	AR6,#DayTimeInter
-	MAR	*,AR6
+	LAR	AR7,#DayTimeInter
+	MAR	*,AR7
 	LACC	*+
 	SUB	#3
 	BCND	Interval_error,LT
@@ -1327,8 +1327,8 @@ Interval_ok
 ;команда не может быть выполнена из-за запрещенного сочетания параметров
 ;программирования
 	SPLK	#0AAh,TMP+1
-	MAR  	*,AR6
-	LAR	AR6,#MayModify+1
+	MAR  	*,AR7
+	LAR	AR7,#MayModify+1
 	SPLK	#05Ah,*		;по умолчанию на детский режим
 ;по данному адресу находится Age
 * Возраст Менее 14  лет - считается ребенком
@@ -1364,8 +1364,8 @@ Child_OK:
 	XOR	#0A5h
 	BCND	Age_False,NEQ
 	SPLK	#0h,TMP+1	;прибор запрограммирован на взрослый режим
-	MAR  	*,AR6
-	LAR	AR6,#MayModify+1
+	MAR  	*,AR7
+	LAR	AR7,#MayModify+1
 	SPLK	#0A5h,*		;взрослый режим
 	B	ChildAge_Check_OK
 CheckChildSet:
@@ -1403,8 +1403,8 @@ NoEnableSound:
 NoEnableResult:
 * конец проверки бита разрешения выдачи результатов
 
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
@@ -1412,8 +1412,8 @@ CheckBabyLevel:
 	;по умолчанию детский режим
 	SPLK    #PRESS_160-08000h,PrevPressureLevel
 
-	MAR  	*,AR1
-	LAR	AR1,#MayModify+1
+	MAR  	*,AR2
+	LAR	AR2,#MayModify+1
 	LACC	*
 	SUB	#0A5h		;взрослый режим
 	BCND	ItIsBigMan,EQ
@@ -1424,8 +1424,8 @@ ItIsBigMan:
 SuperBeep:
         BIT	Jobs,15-MayBeeping_Flag
 	BCND 	NotSuperBeep,NTC
-	MAR	*,AR1
-	LAR	AR1,#AVRProg
+	MAR	*,AR2
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SPLK	#0BB18h,*		;SetBuzzer
 	CALL	SendCommandAVR

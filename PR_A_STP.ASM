@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: PR_A_STP.ASM,v 1.5 2001-04-11 10:03:40 peter Exp $
+; $Id: PR_A_STP.ASM,v 1.6 2001-08-22 14:17:43 peter Exp $
 ;* 	Pressure_augment_stop() - Процесс остановки нагнетания давления
 ;*	При переключении в этот режим необходимо задать:
 ;*  	1. Время до выключения клапана (ModeCnt = VALVE_WHITE_TIME)!
@@ -12,10 +12,10 @@ Pressure_augment_stop
 
 ;{
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,SampleNumber
-        LAR     AR1,#Signal
-        MAR     *0+,AR1
+        LAR     AR2,#Signal
+        MAR     *0+,AR2
 
 ; switch ( SubroutMode )
 ; {
@@ -59,7 +59,7 @@ Pr_a_stp_case1
 ;  case 1:
 ;   if ( Signal[SampleNumber] < NewPressure )
 
-        LACC    *,0,AR1
+        LACC    *,0,AR2
         SUB     NewPressure
         RETC    GEQ
 
@@ -110,7 +110,7 @@ Pr_a_stp_case3
 ;  case 3:
 ;   if ( Signal[SampleNumber] > Signal[SampleNumber-1] )
 
-        LACC    *-,0,AR1
+        LACC    *-,0,AR2
         SUB     *
         RETC    LEQ
 
@@ -148,9 +148,9 @@ Pr_a_stp_case3
 
 ;     StartMeasAdress[StepNumber] = SampleNumberShift;
 
-	LAR	AR1,#StartMeasAdress
+	LAR	AR2,#StartMeasAdress
 	LACC	SampleNumberShift
-	SACL	*,0,AR1
+	SACL	*,0,AR2
 
 ;     if ( SynchroFlag == FALSE)
 ;     {

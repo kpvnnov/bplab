@@ -1,4 +1,4 @@
-* $Id: BP206CON.ASM,v 1.11 2000-12-15 16:42:29 peter Exp $
+* $Id: BP206CON.ASM,v 1.12 2001-08-22 14:17:37 peter Exp $
 ;CLKIN 3.6864 Мгц
 ;DIV1==DIV2=0 Internal divide-by-two
 ;CLOCKOUT1 = 1.8432 Мгц
@@ -65,9 +65,9 @@ SSPS    .set   0CC38h   ;SSP start
 
 
 *
-IMR     .set       4h
-GREG    .set       5h
-IFR     .set       6h
+;IMR     .set       4h
+;GREG    .set       5h
+;IFR     .set       6h
 FACCES0 .set   0FFE0h
 FACCES1 .set   0FFE1h
 PMST    .set   0FFE4h
@@ -85,7 +85,7 @@ TIM     .set   0FFFAh
 WSGR    .set   0FFFCh
 *
 
-DATART  .set   00800h  ;указатель на область памяти
+DATART  .set   00900h  ;указатель на область памяти
 
 ;Ppa1_prog .set 04FEh  ; половина шкалы (5 мм рт ст)
 ;Ppa1_progMul2 .set 09FCh   ; тоже значение, но умноженное на 2

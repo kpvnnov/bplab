@@ -32,9 +32,9 @@
 *                                                           *
 * The following resources are used for temp storage:        *
 *        AR0  - Used for comparison.                        *
-*        AR1  - Flash-Write Pulse Count.                    *
-*        AR2  - Used for main BANZ loop.                    *
-*        AR6  - Parameter passed to DELAY.                  *
+*        AR2  - Flash-Write Pulse Count.                    *
+*        AR3  - Used for main BANZ loop.                    *
+*        AR7  - Parameter passed to DELAY.                  *
 *      BASE_0 - Parameter passed to SET_MODE.               *
 *      BASE_1 - Used for flash address.                     *
 *      BASE_2 - Used for flash data.                        *
@@ -59,8 +59,8 @@ Beginfl_wrt	.set $
 * FLWS: This routine is used to check for bits *
 * in depletion mode. If any are found, flash-  *
 * write is used to recover.                    *
-*        AR1  - Flashwrite pulse count.        *
-*        AR2  - Used for main banz loop.       *
+*        AR2  - Flashwrite pulse count.        *
+*        AR3  - Used for main banz loop.       *
 *      BASE_0 - Parameter passed to Set_mode.  *
 *      BASE_1 - Used for flash address.        *
 *      BASE_2 - Used for flash data.           *
@@ -70,14 +70,14 @@ FLWS:
 ************************************************************
 * Code initialization section				   *
 * Initialize test loop counters:			   *
-*   AR1 is the number of flash-write pulses.               *
+*   AR2 is the number of flash-write pulses.               *
 ************************************************************
         SETC    INTM            ;Disable maskable ints.
         LACL    SEG_ST          ;Get segment start address.
         AND     #04000h         ;Get array start address.
         SACL    FL_ST           ;Save array start address.
         SPLK    #0,ERROR        ;Reset error flag.
-        LAR     AR1,#0          ;Set FLW count to 0.
+        LAR     AR2,#0          ;Set FLW count to 0.
         SPLK    #STOP,BASE_0    ;Flash STOP command.
         CALL    SET_MODE        ;Disable any flash commands.
 
@@ -85,8 +85,8 @@ INV_ERASE
         SPLK    #INV_ER,BASE_0
         CALL    SET_MODE        ;Set inverse-erase mode.
         BLDD    #FL_ST,BASE_1   ;Array start address.
-        LAR     AR2,#31         ;Loop count.
-        MAR     *,AR2
+        LAR     AR3,#31         ;Loop count.
+        MAR     *,AR3
 NEXT_IVERS
         LACL    BASE_1          ;Get address.
         TBLR    BASE_2          ;Dummy read.
@@ -122,8 +122,8 @@ EXIT    SPLK    #1,ERROR        ;Update error flag
 * mask. The following resources are used for   *
 * temporary storage:                           *
 *         AR0 - Used for comparison.           *
-*         AR1 - Used for pulse count (Global). *
-*         AR6 - Parameter passed to DELAY.     *
+*         AR2 - Used for pulse count (Global). *
+*         AR7 - Parameter passed to DELAY.     *
 *      BASE_0 - Parameter passed to SET_MODE.  *
 *      BASE_2 - Used for flw cmd.              *
 *      BASE_3 - Used for EXE + flw cmd.        *
@@ -141,23 +141,23 @@ FL_WRITE
         CALL    REGS            ;Access flash regs.
         LACC    FL_ST           ;ACC => SEG_CTL.
         TBLW    BASE_2          ;Initiate fl_write.
-        LAR     AR6,#D10        ;Set delay.
-        CALL    DELAY,*,AR6     ;Wait,10US flw stabilization time.
+        LAR     AR7,#D10        ;Set delay.
+        CALL    DELAY,*,AR7     ;Wait,10US flw stabilization time.
 
 *Set the EXE bit (start flash-write pulse).
         TBLW    BASE_3          ;Start flw pulse.
-        LAR     AR6,#D7K        ;Set delay to 7ms.
-        CALL    DELAY,*,AR6     ;WAIT,7ms.
-        LAR     AR6,#D7K        ;Set delay to 7ms.
-        CALL    DELAY,*,AR6     ;WAIT,7ms.
+        LAR     AR7,#D7K        ;Set delay to 7ms.
+        CALL    DELAY,*,AR7     ;WAIT,7ms.
+        LAR     AR7,#D7K        ;Set delay to 7ms.
+        CALL    DELAY,*,AR7     ;WAIT,7ms.
 *A 14mS flash write pulse has been applied.
 
         SPLK    #STOP,BASE_0    ;Flash STOP command.
         CALL    SET_MODE        ;Disable flash commands.
-        MAR     *,AR1
+        MAR     *,AR2
         MAR     *+              ;Increment flw count.
         LAR     AR0,#MAX_FLW
-        CMPR    2               ;If AR1>MAX_FLW then
+        CMPR    2               ;If AR2>MAX_FLW then
         BCND    EXIT,TC         ;Fail, don't continue recovery.
         B       INV_ERASE       ;Else, perform iverase again.
 
@@ -170,8 +170,8 @@ SET_MODE
         CALL    REGS            ;ACCESS FLASH REGS    
         LACL    FL_ST           ;ACC => SEG_CTR.
         TBLW    BASE_0          ;Activate MODE.
-        LAR     AR6,#D10        ;SET DELAY                
-        CALL    DELAY,*,AR6     ;WAIT                     
+        LAR     AR7,#D10        ;SET DELAY                
+        CALL    DELAY,*,AR7     ;WAIT                     
         CALL    ARRAY           ;ACCESS FLASH ARRAY       
 	RET
 *************************************************

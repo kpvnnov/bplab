@@ -1,4 +1,4 @@
-* $Id: BPFLASHS.ASM,v 1.6 2001-04-26 16:11:01 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.7 2001-08-22 14:17:39 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -29,21 +29,22 @@ FlashPageCheck
 * использует
 *************************
 FLPROG
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
+
 	LACC	FLADR
-	SACL	*-
+	SACL	*+
 	LACC	FLADR+1
-	SACL	*-
+	SACL	*+
 	LACC	TMP
-	SACL	*-
+	SACL	*+
 
 	CALL	WriteToFifo
 
 ;проверяем, следующая запись набежит на хвост?
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail
 	LACC	*+			;загружаем указатель головы
 	ADD	#1
 	AND	#LengthFifo-1
@@ -55,13 +56,13 @@ SleepSpokoino:
 	CALL	MayBeWriteFlash	;если не можем записать во флеш
 				;то запишем в фифошку
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LACC	*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LACC	*-
 	SACL	TMP
-	LACC	*+
+	LACC	*-
 	SACL	FLADR+1
-	LACC	*+
+	LACC	*-
 	SACL	FLADR
 
 ;увеличиваем адрес на единицу
@@ -77,14 +78,14 @@ SleepSpokoino:
 	SACL 	FLADR+1
 FLPR_NoOver
 
-	LAR     AR6,*+
+	LAR     AR7,*-
 	PSHD	*
 	LACC	#0
 	RET
 
 MayBeWriteFlash:
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 MayBeWriteAgain:
 	CALL    ReadFromFifoNotInc
@@ -101,8 +102,8 @@ FLPR_2
 	CALL	FifoIsEmpty
 	BCND	MayBeWriteAgain,NEQ
 WaitForReady:
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
@@ -114,8 +115,8 @@ WaitForReady:
 *       ACC    -  Выходные данные
 *************************
 FLREAD
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 
 	CALL	Clear_Fifo
 
@@ -141,8 +142,8 @@ FLR_NoOver
 
 	LACC	*
 	AND	#0FFH
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 *************************
@@ -152,11 +153,11 @@ FLR_NoOver
 * ACC!=0        - страницу в кеше не нашли
 *************************
 Find_in_cache
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	LAR	AR6,#PageCache
+	LAR	AR7,#PageCache
 	LACC	FLADR,7
  .if Mem=20	;одна микросхема на 2 Mbyte
 	AND     #03FH,16
@@ -167,25 +168,25 @@ Find_in_cache
  .endif
 	SACH	*
 	LACC	FLADR+1,6
-	OR	*,AR6
+	OR	*,AR7
 	XOR	*
 	BCND	NotFoundPage,NEQ
 	LACC	*
 	SACL    TMPCASHE
 	LACC	#0
 NotFoundPage
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 *************************
 * пишем в кеш TMP
 *************************
 Write_to_cache
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
 	LACC	FLADR,15
 	SACH	*
@@ -193,8 +194,8 @@ Write_to_cache
 	AND	#0FFH
 	ADD	#FlashData
 	SACL	*
-	LAR	AR6,*
-	MAR	*,AR6
+	LAR	AR7,*
+	MAR	*,AR7
 
 *	LACC	TMP
 *	AND	#0FFh
@@ -220,16 +221,16 @@ Wr_Chetn
 Wr_to_cashe_1
 	SACL	*
 
-	LAR	AR6,#PageWrite	;увеличиваем счетчик записей
+	LAR	AR7,#PageWrite	;увеличиваем счетчик записей
 	LACC	*
 	ADD	#1
 	BCND	Wr_to_cashe_2,EQ
 	SACL	*
 Wr_to_cashe_2
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
@@ -237,9 +238,9 @@ Wr_to_cashe_2
 * читаем из кеш в ACC
 *************************
 Read_from_cache
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
 	LACC	FLADR,15
 	SACH	*
@@ -247,12 +248,12 @@ Read_from_cache
 	AND	#0FFH
 	ADD	#FlashData
 	SACL	*
-	LAR	AR6,*
-	MAR	*,AR6
+	LAR	AR7,*
+	MAR	*,AR7
 
 	BIT	FLADR,15
 	BCND	Rd_Chetn,NTC	;четный байт
-	LACC	*,8,AR7
+	LACC	*,8,AR1
 	SACH	*
 *	B	Rd_to_cashe_1
 
@@ -262,9 +263,9 @@ Rd_Chetn
 
 Rd_to_cashe_1
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 *************************
@@ -277,35 +278,35 @@ Rd_to_cashe_1
 *  ACC в этом случае не равно нулю
 *  если все страницы записаны, TMPCASHE=0, ACC=0
 Write_cache_to_flash
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR     AR6,#PageWrite
+	MAR	*,AR7
+	LAR     AR7,#PageWrite
 	LACC	*
 	BCND	Wr_cache_to_f_1,EQ
 	SPLK	#0,*
-	LAR     AR6,#PageCache
+	LAR     AR7,#PageCache
 	LACC	*
 	SACL	TMPCASHE
-	LAR	AR6,#FlashData
+	LAR	AR7,#FlashData
 	CALL	Write_page
 Wr_cache_to_f_1
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 **************
 * загружаем страницу AFLMSB/AFLLSB в кэш
 Read_flash_to_cache
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	LAR	AR6,#PageCache
-	MAR	*,AR6
+	LAR	AR7,#PageCache
+	MAR	*,AR7
 
 	LACC	FLADR,7
  .if Mem=20	;одна микросхема на 2 Mbyte
@@ -320,39 +321,39 @@ Read_flash_to_cache
 	OR	*
 	SACL	*
 
-	LAR	AR6,#FlashData
+	LAR	AR7,#FlashData
 	CALL	Read_page
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
 * освобождаем кеш от незаписанных данных
 * путем их спихивания во флеш
 Clear_cashe:
-	MAR	*,AR7
-	POPD	*-
+	MAR	*,AR1
+	POPD	*+
 
 	CALL	Clear_Fifo
 	CALL	Write_cache_to_flash
 
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
 *спихиваем фифо в основной кеш или флеш
 Clear_Fifo:
-	MAR	*,AR7
-	POPD	*-
+	MAR	*,AR1
+	POPD	*+
 	LACC	FLADR
-	SACL	*-
+	SACL	*+
 	LACC	FLADR+1
-	SACL	*-
+	SACL	*+
 	LACC	TMP
-	SACL	*-
+	SACL	*+
 
 
 	SPLK	#07FFFh,TMPFIFO
@@ -366,13 +367,13 @@ MayBeClearAgain:
 	CALL	MayBeWriteFlash
         B	MayBeClearAgain
 False_Clear:
-	MAR	*,AR7
-	MAR	*+,AR7
-	LACC	*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LACC	*-
 	SACL	TMP
-	LACC	*+
+	LACC	*-
 	SACL	FLADR+1
-	LACC	*+
+	LACC	*-
 	SACL	FLADR
 	PSHD	*
 	RET
@@ -394,54 +395,54 @@ FifoHeadTail	.usect "flbuf",2		;адрес "головы" и "хвоста"
 *       TMP  -  Входные данные
 
 WriteToFifo:
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail
 	LACC	*			;загружаем указатель головы
 	ADD	#1
 	AND	#LengthFifo-1
 	SACL	*
 	PUSH				;сохраняем указатель
 	ADD	#FifoData
-	MAR	*,AR7
+	MAR	*,AR1
 	SACL	*
-	LAR     AR6,*,AR6
+	LAR     AR7,*,AR7
 	LACC	TMP
 	SACL	*
 	POP
 	SFL
 	ADD	#FifoAddr
-	MAR	*,AR7
+	MAR	*,AR1
 	SACL	*
-	LAR     AR6,*,AR6
+	LAR     AR7,*,AR7
 	LACC	FLADR
 	SACL	*+
 	LACC	FLADR+1
 	SACL	*+
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
 InitFifoAndCache:
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail
 	LACC	#0
 	SACL	*+
 	SACL	*+
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
@@ -453,12 +454,12 @@ InitFifoAndCache:
 *       ACC    -  Выходные данные
 *
 ReadFromFifoNotInc:
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail+1
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail+1
 	LACC	*			;загружаем указатель головы
 	ADD	#1
 	AND	#LengthFifo-1
@@ -469,9 +470,9 @@ ReadFromFifoNotInc:
 
 	SFL
 	ADD	#FifoAddr
-	MAR	*,AR7
+	MAR	*,AR1
 	SACL	*
-	LAR     AR6,*,AR6
+	LAR     AR7,*,AR7
 	LACC	*+
 	SACL	FLADR
 	LACC	*+
@@ -480,48 +481,48 @@ ReadFromFifoNotInc:
 	POP
 
 	ADD	#FifoData
-	MAR	*,AR7
+	MAR	*,AR1
 	SACL	*
-	LAR     AR6,*,AR6
+	LAR     AR7,*,AR7
 	LACC	*
         SACL	TMP
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 * в АСС возвращает разницу головы и хвоста
 FifoIsEmpty:
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail
 	LACC	*+			;загружаем указатель головы
 	SUB	*
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 *делаем инкремент хвоста фифошки
 IncAddrFifo:
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
-	MAR	*,AR6
-	LAR	AR6,#FifoHeadTail+1
+	MAR	*,AR7
+	LAR	AR7,#FifoHeadTail+1
 	LACC	*			;загружаем указатель головы
 	ADD	#1
 	AND	#LengthFifo-1
 	SACL	*
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
@@ -532,8 +533,8 @@ IncAddrFifo:
 *  адрес для чтения, из него выбрать адрес страницы
 *  ASFLMSB     15-20bit
 *  AFLLSB      0-14bit
-*	AR6 - куда загружать
-* процедура берет байты из флеш и загружает парами в слова AR6
+*	AR7 - куда загружать
+* процедура берет байты из флеш и загружает парами в слова AR7
 * то есть начальный адрес должен быть четным
 ******
 Read_page
@@ -550,7 +551,7 @@ Read_p_1
 * запись страницы
 
 * адрес страницы TMPCASHE
-* сама страница - AR6
+* сама страница - AR7
 ***********  адрес для записи, из него выбрать адрес страницы
 *********  AFLMSB     15-20bit
 ***********  AFLLSB      0-14bit
@@ -574,10 +575,10 @@ Write_p_1
 	RETC	LEQ
 	BCND 	Write_p_1,BIO
 
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR     AR0,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR0,*+
 
 	SPLK 	#SSPS,*    ;SSP start
 	OUT  	*,SSPCR    ;Synchronous Serial Port Control Register
@@ -598,7 +599,7 @@ Write_p_1
 	mOutDIOSR
 
 	SPLK	#0,*
-	OUT  	*,SDTR,AR6     	;2.второе слово для передачи
+	OUT  	*,SDTR,AR7     	;2.второе слово для передачи
 				;[X..X,BA9-8],[BA7-0]
 
 	; * слово для передачи
@@ -608,7 +609,7 @@ Write_p_1
 	CALL 	CLKXF           ;1-передаем первое слово
 				;([code][X])
 	; * слово для передачи
-	OUT	*+,SDTR,AR7    	;4.четвертое слово для передачи
+	OUT	*+,SDTR,AR1    	;4.четвертое слово для передачи
 				;([второе слово])
 	IN   	*,SDTR     	;(1)чтение первого результата (мусор)
 	CALL 	CLKXF           ;2-передаем второе слово
@@ -619,12 +620,12 @@ Write_p_1
 
 Write_page_1
 	CALL 	CLKXF           ;передаем N слово (N=0..255)
-	IN   	*,SDTR,AR6     	;чтение (3+N) результата (мусор)
+	IN   	*,SDTR,AR7     	;чтение (3+N) результата (мусор)
 	; * слово для передачи
 	OUT	*+,SDTR,AR0    	;3+N слово для передачи
 				;([3+N слово данных])
 *	MAR	*,AR0
-	BANZ    Write_page_1,*-,AR7
+	BANZ    Write_page_1,*-,AR1
 
 *	LACC    AFLMSB
 
@@ -686,31 +687,31 @@ Write_page_1
 	SPLK 	#SSPR,*    	;RESET SSP
 	OUT  	*,SSPCR
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
 
 ***********
-* чтение по адресу FLADR 2 kb данных в AR1
+* чтение по адресу FLADR 2 kb данных в AR2
 ***********
 Read2K
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR0,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR0,*+
 
 	LAR	AR0,#2047
 Read2k_1
 	CALL	FLREAD
-	MAR	*,AR1
+	MAR	*,AR2
 	SACL	*+,0,AR0
-	BANZ    Read2k_1,*-,AR1
+	BANZ    Read2k_1,*-,AR2
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
 	PSHD	*
 	RET

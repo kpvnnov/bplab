@@ -104,10 +104,10 @@ Init:   SETC	INTM            ; All maskable interrupts disabled
 	SPLK	#0010h,Temp	; Stoped Timer
 	OUT	Temp,TCR
 *
-	MAR	*,AR1
-	LAR	AR1,#IMR
+	MAR	*,AR2
+	LAR	AR2,#IMR
 	SPLK	#003Fh,*
-	LAR	AR1,#IFR
+	LAR	AR2,#IFR
 	LACC	*
 	SACL	*
 *

@@ -1,4 +1,4 @@
-* $Id: BPAVRPRG.ASM,v 1.11 2001-05-22 11:21:42 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.12 2001-08-22 14:17:38 peter Exp $
  .copy bpavrprg.mac
 
 CLKXFAVR
@@ -57,10 +57,10 @@ NextCLKXFAVR2:
 * вход в синхронизацию с AVR
 * выход ACC=0 вошли в синхро
 * ACC=1 не вошли
-* use AR6
+* use AR7
 AVRSinc
-	MAR     *,AR7
-	POPD	*-
+	MAR     *,AR1
+	POPD	*+
 	mWait1ms
 	;ResetAVRClear
 	mOffPeriph
@@ -69,9 +69,9 @@ AVRSinc
 	ResetAVRSet
 
 	mWait40ms
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+3
-	SPLK	#64,*,AR7	;можно сделать 64 цикла входа в синхро
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+3
+	SPLK	#64,*,AR1	;можно сделать 64 цикла входа в синхро
 
 AgainProgrammingEnaled
 *┌───────────────────┬───────────┬──────────┬──────────┬──────────┐
@@ -101,11 +101,11 @@ AgainProgrammingEnaled
 	BCND	ProgrammEnabled,EQ
 	;надо посчитать количество ошибок и повторить при желании
 	; рекомендуется 32 попытки
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+3
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+3
 	LACC	*
 	SUB	#1
-	SACL	*,0,AR7
+	SACL	*,0,AR1
 	BCND    QPrgAVRNoSinc,EQ
 
 * чтобы выйти на новую синхронизацию
@@ -121,8 +121,8 @@ AgainProgrammingEnaled
 QPrgAVRNoSinc:
 	LACC	#1
 ProgrammEnabled
-	MAR	*,AR7
-	MAR	*+,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
 	PSHD	*
 	RET
 
@@ -136,19 +136,19 @@ ReadByteAVR
 
 	;в фифо добавляем еще два слова (команда чтения)
 	;таким образом в фифо окажется четыре слова (две команды чтения)
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 
-	LACC	*,7,AR7		;выделяем старшую часть адреса
-	SACH	*,0,AR6		;сохраняем ее в стеке
-	LACC	*,11,AR7	;выделяем младший бит (Hig/Low byte)
+	LACC	*,7,AR1		;выделяем старшую часть адреса
+	SACH	*,0,AR7		;сохраняем ее в стеке
+	LACC	*,11,AR1	;выделяем младший бит (Hig/Low byte)
 	AND	#00800H
 	OR	#02000H		;добавляем код команды
 	OR	*		;добавляем страшую часть адреса из стека
 	SACL	*		;сохраняем все в стеке
-	OUT  	*,SDTR,AR6	;отправляем в SPI
+	OUT  	*,SDTR,AR7	;отправляем в SPI
 
-	LACC	*,7,AR7		;выделяем младшую часть адреса
+	LACC	*,7,AR1		;выделяем младшую часть адреса
 				;переключаемся на стек
 	SACL	*		;сохраняем ее в стеке
 	OUT  	*,SDTR		;отправляем в SPI
@@ -167,19 +167,19 @@ ReadByteEEPROM
 
 	;в фифо добавляем еще два слова (команда чтения)
 	;таким образом в фифо окажется четыре слова (две команды чтения)
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 
-	LACC	*,7,AR7		;выделяем старшую часть адреса
-	SACH	*,0,AR6		;сохраняем ее в стеке
-	LACC	*,11,AR7	;выделяем младший бит (Hig/Low byte)
+	LACC	*,7,AR1		;выделяем старшую часть адреса
+	SACH	*,0,AR7		;сохраняем ее в стеке
+	LACC	*,11,AR1	;выделяем младший бит (Hig/Low byte)
 	AND	#00800H
 	OR	#02000H		;добавляем код команды
 	OR	*		;добавляем страшую часть адреса из стека
 	SACL	*		;сохраняем все в стеке
-	OUT  	*,SDTR,AR6	;отправляем в SPI
+	OUT  	*,SDTR,AR7	;отправляем в SPI
 
-	LACC	*,7,AR7		;выделяем младшую часть адреса
+	LACC	*,7,AR1		;выделяем младшую часть адреса
 				;переключаемся на стек
 	SACL	*		;сохраняем ее в стеке
 	OUT  	*,SDTR		;отправляем в SPI
@@ -198,10 +198,10 @@ ReadByteEEPROM
 * =3 не программируется (считывается 0FFh)
 
 Program_AVR
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 
 	CLRC	SXM
 
@@ -210,14 +210,14 @@ Program_AVR
 	SACL	FLADR+1		;начальный адрес во флеш
 	SPLK	#0,FLADR
 
-	LAR	AR6,#DATART+4
+	LAR	AR7,#DATART+4
 NextReadFlashAVR:
 	CALL	FLREAD
-	MAR	*,AR6
+	MAR	*,AR7
 	BIT     FLADR,15
 	BCND    NechetAdrAvr,NTC	;не стоит TC, значит адрес нечетный (так как предыдущий)
 	SFL
-	SACL	*,7,AR6		;четные адреса записываем в старшей части
+	SACL	*,7,AR7		;четные адреса записываем в старшей части
 	B	CheckEndAdr
 
 NechetAdrAvr:
@@ -233,7 +233,7 @@ CheckEndAdr:			;проверяем конечный адрес
 	SETC 	XF	; CLK = 0
 
 
-	MAR	*,AR7
+	MAR	*,AR1
 	SPLK 	#SSPS,*		;SSP start
 	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
 
@@ -246,11 +246,11 @@ CheckEndAdr:			;проверяем конечный адрес
 	B	QPrgAVR
 EnterToSync
 
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 	SPLK	#0,*            ;записываем начальный адресс
 				;программирования
-	LAR	AR5,#DATART+4	;откуда читаем данные
+	LAR	AR6,#DATART+4	;откуда читаем данные
 
 
 *┌──────────────┬────────────────┬──────────┬──────────┬──────────┐
@@ -264,11 +264,11 @@ EnterToSync
 *└────────────────────────────────────────────────────────────────┘
 ProgrammNext:
 	;ReadByte        ;чтение байта для программирования
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
-	BIT	*,15,AR5
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
+	BIT	*,15,AR6
 	BCND    ReadNechetAdrAvr,TC ;стоит TC, значит адрес нечетный
-	LACC	*,8,AR7		;четные адреса в старшей части
+	LACC	*,8,AR1		;четные адреса в старшей части
 	SACH	*
 	LACC	*
 	B	ChetReaded
@@ -277,25 +277,25 @@ ReadNechetAdrAvr
 ChetReaded:
 	AND	#0FFH
 	;если сравнить с 0FFh, то программировать нет необходимости
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+2
-	SACL	*-,0,AR6
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+2
+	SACL	*-,0,AR7
 	XOR	#0FFh
 	BCND	NextByte,EQ
 
-	LACC	*,7,AR7		;выделяем старшую часть адреса
-	SACH	*,0,AR6		;сохраняем ее в стеке
-	LACC	*,11,AR7	;выделяем младший бит (Hig/Low byte)
+	LACC	*,7,AR1		;выделяем старшую часть адреса
+	SACH	*,0,AR7		;сохраняем ее в стеке
+	LACC	*,11,AR1	;выделяем младший бит (Hig/Low byte)
 	AND	#00800H
 	OR	#04000H		;добавляем код команды
 	OR	*		;добавляем страшую часть адреса из стека
 	SACL	*		;сохраняем все в стеке
-	OUT  	*,SDTR,AR6	;отправляем в SPI
+	OUT  	*,SDTR,AR7	;отправляем в SPI
 
 	LACC	*+,7		;выделяем младшую часть адреса
 				;переключаемся на данные
 	AND	#0FF00h
-	OR	*,AR7		;к младшей части адреса добавляем данные
+	OR	*,AR1		;к младшей части адреса добавляем данные
 	SACL	*		;сохраняем ее в стеке
 	OUT  	*,SDTR		;отправляем в SPI
 
@@ -314,9 +314,9 @@ ChetReaded:
 	CALL 	CLKXFAVR
 	ReadSSP
 	;на данный момент в памяти fifo остается команда чтения(фиктивная)
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+3
-	SPLK	#15,*,AR7	;сколько ждать программирования (будем 15ms)
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+3
+	SPLK	#15,*,AR1	;сколько ждать программирования (будем 15ms)
 	; 3.2V  3.6V 4.0V 5.0V
 	; 9 ms  7 ms 6 ms 4 ms
 
@@ -337,23 +337,23 @@ CheckAgain:
 	CALL	ReadByteAVR
 	;на данный момент в фифо остается одна команда чтения (два слова)
 	;проверяем есть еще время проверять ?
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+3
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+3
 	LACC	*
 	SUB	#1
-	SACL	*,0,AR7
+	SACL	*,0,AR1
 	BCND    QPrgAVRNoWait,EQ
 
 	;сравниваем полученный байт с данными
 	;если 0FFh, то проверяем еще раз
 
-	LAR  	AR6,#AVRProg+2
+	LAR  	AR7,#AVRProg+2
 	LACC	*
 	AND	#000FFh
 *	XOR	#000FFh		;данные аппаратно инверсны уже
 				;поэтому должен быть 0(а на самом деле FF)
 	BCND	CheckAgain,EQ
-	LACC	*,0,AR6
+	LACC	*,0,AR7
 	AND	#000FFh
 	XOR	#000FFh
 	XOR	*
@@ -363,8 +363,8 @@ NextByte:
 	;увеличиваем адрес для программирования
 	;и программируем следующий байт
 	;AddAdress
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 	LACC	*
 	ADD	#1
 	SACL	*
@@ -374,8 +374,8 @@ QPrgAVROK:
 	LACC	#0		;нормальный конец
 * внимание!!! - это выход используется и процедуре чтения
 QPrgAVR:
-	MAR	*,AR7
-	SACL	*-		;заносим результат в стек
+	MAR	*,AR1
+	SACL	*+		;заносим результат в стек
 
 	CALL 	CLKXFAVR        ;передаем два первых байта
 				;которые остались в фифошке
@@ -387,14 +387,14 @@ QPrgAVR:
 	;ResetAVRClear
 	mOffPeriph
 	mOutDIOSR
-	MAR	*+,AR7		;достаем результат из стека
-	LACC	*+		;автоматом стек на след ячейку
+	MAR	*-,AR1		;достаем результат из стека
+	LACC	*-		;автоматом стек на след ячейку
 
-*	MAR	*,AR7
-*	MAR	*+,AR7
+*	MAR	*,AR1
+*	MAR	*-,AR1
 
-	LAR     AR5,*+
-	LAR     AR6,*+
+	LAR     AR6,*-
+	LAR     AR7,*-
 	PSHD	*
 	RET
 QPrgAVRErrprg:
@@ -415,21 +415,21 @@ QPrgAVRNoWait
 	RET
 
 * чтение программной памяти AVR
-* AR1 - куда читать
+* AR2 - куда читать
 ReadAVRMem
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	LAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 	CLRC	SXM
-	LAR  	AR6,#AVRProg
-	MAR	*,AR6
+	LAR  	AR7,#AVRProg
+	MAR	*,AR7
 	SPLK	#0,*
 	ResetAVRSet
 	SETC 	XF	; CLK = 0
 
 
-	MAR	*,AR7
+	MAR	*,AR1
 	SPLK 	#SSPS,*		;SSP start
 	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
 
@@ -441,34 +441,34 @@ ReadAVRMem
 	BCND	EnterToSync1,EQ
 	B	QPrgAVR		;будем использовать стандартный выход
 EnterToSync1
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 	LACC	FLADR
 	SACL	*            	;записываем начальный адрес
 				;чтения
-	LAR  	AR6,#AVRProg+3
+	LAR  	AR7,#AVRProg+3
 	SPLK	#2048,*		;количество байт для чтения
 
 	CALL	ReadByteAVR	;загоняем комманду чтения -
 				;на выходе сигнатура
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1	;увеличиваем адресс на единицу
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1	;увеличиваем адресс на единицу
 	LACC	*
 	ADD	#1
 	SACL	*
 ReadAVRNext
 	CALL	ReadByteAVR	;загоняем комманду чтения -
 				;на байт данных
-	LACC	*,0,AR1		;загружаем данные из стека
+	LACC	*,0,AR2		;загружаем данные из стека
 	XOR	#0FFh
-	SACL	*+,0,AR6
+	SACL	*+,0,AR7
 
-	LAR  	AR6,#AVRProg+3
+	LAR  	AR7,#AVRProg+3
 	LACC	*
 	SUB	#1
 	SACL	*
 	BCND	AllReadAvr,EQ
-	LAR  	AR6,#AVRProg+1
+	LAR  	AR7,#AVRProg+1
 	LACC	*
 	ADD	#1
 	SACL	*
@@ -477,21 +477,21 @@ ReadAVRNext
 AllReadAvr
 	B	QPrgAVROK
 * чтение программной памяти AVR
-* AR1 - куда читать
+* AR2 - куда читать
 ReadAVREEprom
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	LAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 	CLRC	SXM
-	LAR  	AR6,#AVRProg
-	MAR	*,AR6
+	LAR  	AR7,#AVRProg
+	MAR	*,AR7
 	SPLK	#0,*
 	ResetAVRSet
 	SETC 	XF	; CLK = 0
 
 
-	MAR	*,AR7
+	MAR	*,AR1
 	SPLK 	#SSPS,*		;SSP start
 	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
 
@@ -503,34 +503,34 @@ ReadAVREEprom
 	BCND	EnterToSync3,EQ
 	B	QPrgAVR		;будем использовать стандартный выход
 EnterToSync3
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1
 	LACC	FLADR
 	SACL	*            	;записываем начальный адрес
 				;чтения
-	LAR  	AR6,#AVRProg+3
+	LAR  	AR7,#AVRProg+3
 	SPLK	#2048,*		;количество байт для чтения
 
 	CALL	ReadByteEEPROM	;загоняем комманду чтения -
 				;на выходе сигнатура
-	MAR	*,AR6
-	LAR  	AR6,#AVRProg+1	;увеличиваем адресс на единицу
+	MAR	*,AR7
+	LAR  	AR7,#AVRProg+1	;увеличиваем адресс на единицу
 	LACC	*
 	ADD	#1
 	SACL	*
 ReadAVRNext1
 	CALL	ReadByteEEPROM	;загоняем комманду чтения -
 				;на байт данных
-	LACC	*,0,AR1		;загружаем данные из стека
+	LACC	*,0,AR2		;загружаем данные из стека
 	XOR	#0FFh
-	SACL	*+,0,AR6
+	SACL	*+,0,AR7
 
-	LAR  	AR6,#AVRProg+3
+	LAR  	AR7,#AVRProg+3
 	LACC	*
 	SUB	#1
 	SACL	*
 	BCND	AllReadAvr1,EQ
-	LAR  	AR6,#AVRProg+1
+	LAR  	AR7,#AVRProg+1
 	LACC	*
 	ADD	#1
 	SACL	*
@@ -542,16 +542,16 @@ AllReadAvr1
 
 * стерка программной памяти AVR
 EraseAVRMem
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	LAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 	CLRC	SXM
 	ResetAVRSet
 	SETC 	XF	; CLK = 0
 
 
-	MAR	*,AR7
+	MAR	*,AR1
 	SPLK 	#SSPS,*		;SSP start
 	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
 
@@ -566,7 +566,7 @@ EnterToSync2
 *┌─────────────────┬─────────────┬──────────┬──────────┬──────────┐
 *│Chip Erase       │   1010 1100 │ 100x xxx │xxxx xxxx │xxxx xxxx │
 *└─────────────────┴─────────────┴──────────┴──────────┴──────────┘
-	MAR	*,AR7
+	MAR	*,AR1
 	SendSSP	#0AC80h
 	SendSSP	#00000h
 
@@ -591,21 +591,21 @@ EnterToSync2
 
 
 SendCommandAVR
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	LAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 	CLRC	SXM
 
-	MAR	*,AR7
+	MAR	*,AR1
 	SPLK 	#SSPS,*		;SSP start
 	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
 
-	IN   	*,SDTR,AR6     	;команда лишнего чтения(!??)
+	IN   	*,SDTR,AR7     	;команда лишнего чтения(!??)
 				;для стабильности(надежности) работы с SSP
 
+	LAR  	AR7,#AVRProg
 	LAR  	AR6,#AVRProg
-	LAR  	AR5,#AVRProg
 	LACC	*+
 NExtParmSPIAVR:
 	OUT  	*+,SDTR
@@ -621,9 +621,9 @@ NextWordSPIAVR
 	mWait6mks
 	CALL	CLKAVRSPI
 	ReadSSP
-	LACC	*,0,AR6
+	LACC	*,0,AR7
 	XOR	#0FFFFh
-	SACL	*+,0,AR5
+	SACL	*+,0,AR6
 	LACC	*
 	SUB	#1
 	SACL	*

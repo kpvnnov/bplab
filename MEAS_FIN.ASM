@@ -1,11 +1,11 @@
-* $Id: MEAS_FIN.ASM,v 1.9 2001-07-04 08:13:24 peter Exp $
+* $Id: MEAS_FIN.ASM,v 1.10 2001-08-22 14:17:43 peter Exp $
 Measurment_finish
-	MAR  	*,AR1
+	MAR  	*,AR2
  .if OnProtectInterval30s=1
-	LAR	AR1,#ProtectInterval
+	LAR	AR2,#ProtectInterval
 	SPLK	#30,*
  .endif
-	LAR  	AR1,#LastMeas
+	LAR  	AR2,#LastMeas
 	LACC	*
 	BCND    Measurment_finish1,EQ
 	;в течении трех минут смещение действительно
@@ -37,8 +37,8 @@ BeginNextMeas
 *****
 * защита от дурака
 	SETC	SXM
-	MAR  	*,AR1
-	LAR	AR1,#MayModify+1
+	MAR  	*,AR2
+	LAR	AR2,#MayModify+1
 	LACC	*
 	SUB	#0A5h		;взрослый режим
 	BCND	BigPeople,EQ

@@ -1,6 +1,6 @@
 *****************************************************************************
 *       Обработка ADC
-* $Id: BPADCPRO.ASM,v 1.9 2000-12-13 13:43:25 peter Exp $
+* $Id: BPADCPRO.ASM,v 1.10 2001-08-22 14:17:38 peter Exp $
 ****************************************************************************
 *       Вся шкала АЦП(0-4,8В) соответствует 320 мм.рт.ст.
 *       320*1.6=512; 512*(1-1/4-1/8)=512*0.625=320
@@ -15,7 +15,7 @@ FILTER  MAC  	CF30,*-            ;КИХ-фильтр 16-го порядка
 	RPT  	#14
 	MACD 	CF30+1,*-
 	APAC
-	SACH 	OUTF,0
+	SACH 	_OUTF,0
 	RET
 
 *              ;Коэфициенты фильтра Fs=30Гц.
@@ -82,10 +82,10 @@ ADCTABLE
  .word 0EC00h	;10.software power down
 
 ADCPRO
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR     AR5,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
 
 	SPM  	#1              ;Set P Register Output Shift Mode
 				;multiplier output is left-shifted one place
@@ -118,8 +118,8 @@ ADCPRO
 	IN	*,SDTR		;(1)чтение первого результата (мусор)
 
 
-	LAR	AR5,#10		;11 циклов
-	LAR	AR6,#ResultADC	;здесь будем запоминать результаты
+	LAR	AR6,#10		;11 циклов
+	LAR	AR7,#_ResultADC	;здесь будем запоминать результаты
 *******************
 * в таблице ADCTABLE записаны значения
 * которые будут передаваться в АЦП
@@ -130,29 +130,29 @@ ADCPRO
 ReadNextInput
 
 	OUT  	*,SDTR    	;4.(четвертое+0..N) слово для передачи(AIN3..(3+0..N))
-	TBLR 	*,AR6
+	TBLR 	*,AR7
 
 	mDelayConver		;пауза для преобразования ADC
 	CALL 	CLKXF		;2-передаем второе+0..N слово в АЦП
-	IN	*+,SDTR,AR5	;(1)чтение второго+0..N результата (AIN0..(0..N))
+	IN	*+,SDTR,AR6	;(1)чтение второго+0..N результата (AIN0..(0..N))
 	ADD	#1
 
-	BANZ	ReadNextInput,*-,AR7
+	BANZ	ReadNextInput,*-,AR1
 
 *************************************************
 * для новой платы данные идут с инверсией
 * здесь будет жить дополнительный цикл инверсии данных
  .if NewFerrum=1
 
-	LAR	AR5,#10		;11 циклов
-	LAR	AR6,#ResultADC	;здесь будем запоминать результаты
-	MAR	*,AR6
+	LAR	AR6,#10		;11 циклов
+	LAR	AR7,#_ResultADC	;здесь будем запоминать результаты
+	MAR	*,AR7
 InverseNextInput
 	LACC	#0FFFFh
 	XOR	*
-	SACL	*+,0,AR5
+	SACL	*+,0,AR6
 
-	BANZ	InverseNextInput,*-,AR6
+	BANZ	InverseNextInput,*-,AR7
  .endif
 * конец цикла инверсии данных для новой платы
 *************************************************
@@ -165,8 +165,8 @@ InverseNextInput
 	BIT  	Jobs,10   	;записать значение ЦАП в ячейку для обсчета?
 	BCND 	NotWriteFromDAC,NTC
 	ClearReadDAC
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+8	;AIN8 (значение на выходе ЦАП)
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+8	;AIN8 (значение на выходе ЦАП)
 	LACC 	*
 	ADD  	#Ppa1_prog,0   	;DAC1n+Ppa1_prog
 	SACL 	DAC2
@@ -180,8 +180,8 @@ NotWriteFromDAC
 ; DAC1n - значение на выходе ЦАП
 ; Ppa1n - значение на выходе усилителя
 ;
-	MAR     *,AR5
-	LAR	AR5,#ResultADC+7;AIN7(PR1)
+	MAR     *,AR6
+	LAR	AR6,#_ResultADC+7;AIN7(PR1)
 
 	MAC  	Const1,DAC2 	;Const1* DAC2= "(32768*k1/(1+k1))"*
 				;* "(значение на выходе ЦАП+Ppa1_prog)"->P
@@ -190,17 +190,17 @@ NotWriteFromDAC
 				;*(значение усиленного канала)
 	APAC
 	SUB 	#Ppa1_progMul2,15 ;на 16 сдвигать нельзя
-	LAR  	AR5,#SR30  	;Адреса начала сдвиг.рег.ФНЧ
+	LAR  	AR6,#SR30  	;Адреса начала сдвиг.рег.ФНЧ
 	SACH 	*
-	LAR  	AR5,#SR30+15    ;Адреса конца сдвиг.рег.ФНЧ
+	LAR  	AR6,#SR30+15    ;Адреса конца сдвиг.рег.ФНЧ
 	CALL 	FILTER          ;FILTER
 
 
 ***********************************************
 * вычисляем давление с учетом смещения
 	SETC 	SXM
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 	LACC    *
 	ADD  	#4000h,1
 	AND  	#0FFFFh
@@ -235,8 +235,8 @@ No_minus
 
 	BCND 	DACC,TC    	; будем обязательно
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+7;AIN7(PR1) значение на выходе усилителя
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+7;AIN7(PR1) значение на выходе усилителя
 
 	LACC 	*
 	ADD  	#4000h,1
@@ -260,8 +260,8 @@ DACC
 *******************************
 	SETC 	SXM
 
-	MAR	*,AR5
-	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+	MAR	*,AR6
+	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 
 *****************************
 * чтобы не "переклинить" с вычислениями
@@ -310,13 +310,13 @@ EndComputeDAC
 *	mDelayConver		;пауза для преобразования ADC
 ****************************************
 	CALL 	CLKXF		;13 вызов (передаем команду Vref+)
-	MAR	*,AR6
+	MAR	*,AR7
 	IN	*+,SDTR		;Vref-
 
 	mDelayConver		;пауза для преобразования ADC
 	CALL 	CLKXF		;14 вызов (передаем команду PowerDown)
-	MAR	*,AR6
-	IN	*+,SDTR,AR7	;Vref+
+	MAR	*,AR7
+	IN	*+,SDTR,AR1	;Vref+
 *********
 * работа с АЦП закончена, аллах тут ни при чем...
 
@@ -354,10 +354,10 @@ NotDAC
 	mOffPeriph   		;выключаем всю периферию
 	mOutDIOSR		;записываем выборку устройств в регистр вывода
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR5,*+
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR6,*-
+	LAR     AR7,*-
 	PSHD	*
 
 	RET

@@ -45,10 +45,10 @@ Init:   SETC	INTM            ; All maskable interrupts disabled
 	SPLK	#0,Temp		; Stoped Sinchronous Serial Port
 	OUT	Temp,SSPCR
 *
-	MAR	*,AR1
-	LAR	AR1,#IMR
+	MAR	*,AR2
+	LAR	AR2,#IMR
 	SPLK	#003Fh,*
-	LAR	AR1,#IFR
+	LAR	AR2,#IFR
 	LACC	*
 	SACL	*
 *

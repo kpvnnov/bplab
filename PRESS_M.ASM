@@ -1,6 +1,6 @@
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.7 2001-04-11 10:03:40 peter Exp $
+* $Id: PRESS_M.ASM,v 1.8 2001-08-22 14:17:43 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
 
@@ -21,21 +21,21 @@ Pressure_measurement
 
 ;  {   /* Если Max находится в 0.5 от конца интервала */
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,MaxNumber
-        LAR     AR1,#Diff2Max
-        MAR     *0+,AR1
+        LAR     AR2,#Diff2Max
+        MAR     *0+,AR2
 
 ;   if ( Diff2Max[MaxNumber] > 0.25*LastDiff2Max)
 
-        LACC    *,16,AR1
+        LACC    *,16,AR2
         SUB     LastDiff2Max,14
         BCND    Press_m_SmallMax,LEQ
 
 ;   {
 ;    if ( Diff2Max[MaxNumber] < 4*LastDiff2Max)
 
-        LACC    *,0,AR1
+        LACC    *,0,AR2
         SUB     LastDiff2Max,2
         BCND    Press_m_BigMax,GEQ
 
@@ -53,19 +53,19 @@ Pressure_measurement
 ;     {
 
         LAR     AR0,StepNumber
-        LAR     AR1,#AverageAmplitude
-        MAR     *0+,AR1
+        LAR     AR2,#AverageAmplitude
+        MAR     *0+,AR2
 
 ;      if ( MaxAverageAmplitude <= AverageAmplitude[StepNumber])
 
         LACC    MaxAverageAmplitude
-        SUB     *,0,AR1
+        SUB     *,0,AR2
         BCND    Press_m_NotAmplMax,GT
 
 ;      {
 ;        MaxAverageAmplitude = AverageAmplitude[StepNumber];
 
-        LACC    *,0,AR1
+        LACC    *,0,AR2
         SACL    MaxAverageAmplitude
 
 ;        MaxAmplStepNumber = StepNumber;
@@ -80,7 +80,7 @@ Press_m_NotAmplMax
 ;       if (( 0.6*MaxAverageAmplitude > AverageAmplitude[StepNumber])&
 ;	   ( StepNumber > MIN_STEP_NUMBER ))
 
-        LACC    *,12,AR1
+        LACC    *,12,AR2
         LT      MaxAverageAmplitude
         MPY     #CONST_0_6
         SPAC
@@ -136,11 +136,11 @@ Press_m_next_mode
 ;	FinishMeasAdress[StepNumber] = SampleNumberShift;
 
 	LAR	AR0,StepNumber
-	LAR	AR1,#FinishMeasAdress
-	MAR	*0+,AR1
+	LAR	AR2,#FinishMeasAdress
+	MAR	*0+,AR2
 	LACC	SampleNumberShift
 	SUB	#1
-	SACL	*,0,AR1
+	SACL	*,0,AR2
 
 ;      StepNumber++;
 
@@ -226,13 +226,13 @@ Determination_s_a_d
 
 ;{
 
-        MAR     *,AR1
+        MAR     *,AR2
 
 ;	FinishMeasAdress[StepNumber] = SampleNumberShift;
 
 	LAR	AR0,StepNumber
-	LAR	AR1,#FinishMeasAdress
-	MAR	*0+,AR1
+	LAR	AR2,#FinishMeasAdress
+	MAR	*0+,AR2
 	LACC	SampleNumberShift
 	ADD	SampleNumber
 	SACL	*,0,AR0
@@ -246,9 +246,9 @@ Deter_while_flag_1:
 	MAR	*,AR0
 	SPLK	#0,Flag
 	LAR	AR0,StepNumber
-	MAR	*-,AR1
-	LAR	AR1,#AvrPress
-	LAR	AR2,#AverageAmplitude
+	MAR	*-,AR2
+	LAR	AR2,#AvrPress
+	LAR	AR3,#AverageAmplitude
 
 Deter_for_i_0:
 
@@ -256,8 +256,8 @@ Deter_for_i_0:
 ;    {
 ;      if ( AvrPress[k] < AvrPress[k+1])
 
-	LACC	*+,0,AR1
-	SUB	*,0,AR2
+	LACC	*+,0,AR2
+	SUB	*,0,AR3
 	BCND 	Deter_sequence_press_ok,GEQ
 
 ;      {
@@ -265,18 +265,18 @@ Deter_for_i_0:
 ;         AverageAmplitude[k+1] = AverageAmplitude[k];
 ;         AverageAmplitude[k] = Temp;
 
-	MAR	*+,AR2
-	LACC	*-,0,AR2
-	DMOV    *,AR2
-	SACL    *,0,AR1
+	MAR	*+,AR3
+	LACC	*-,0,AR3
+	DMOV    *,AR3
+	SACL    *,0,AR2
 
 ;         Temp = AvrPress[k+1];
 ;         AvrPress[k+1] = AvrPress[k];
 ;         AvrPress[k] = Temp;
 
-	LACC	*-,0,AR1
-	DMOV    *,AR1
-	SACL    *+,0,AR2
+	LACC	*-,0,AR2
+	DMOV    *,AR2
+	SACL    *+,0,AR3
 
 ;	  Flag = 1;
 
@@ -287,7 +287,7 @@ Deter_for_i_0:
 Deter_sequence_press_ok:
 
 	MAR	*+,AR0
-	BANZ    Deter_for_i_0,*-,AR1
+	BANZ    Deter_for_i_0,*-,AR2
 
 ;    }
 
@@ -307,20 +307,20 @@ Deter_sequence_press_ok:
 ;
 
 	LAR	AR0,StepNumber
-	LAR	AR1,#AverageAmplitude
-	LAR	AR2,#TempAverageAmplitude
-	LACC	*,14,AR2
-	SACH	*+,0,AR1
-	LACC	*,15,AR2
+	LAR	AR2,#AverageAmplitude
+	LAR	AR3,#TempAverageAmplitude
+	LACC	*,14,AR3
 	SACH	*+,0,AR2
+	LACC	*,15,AR3
+	SACH	*+,0,AR3
 	RPT	StepNumber
-	BLDD	#AverageAmplitude,*+,AR2
-	MAR	*,AR1
-	MAR	*0+,AR1
-	LACC	*,15,AR2
-	SACH	*+,0,AR1
-	LACC	*,14,AR2
-	SACH	*,0,AR1
+	BLDD	#AverageAmplitude,*+,AR3
+	MAR	*,AR2
+	MAR	*0+,AR2
+	LACC	*,15,AR3
+	SACH	*+,0,AR2
+	LACC	*,14,AR3
+	SACH	*,0,AR2
 
 ;  NewMaxAverageAmplitude = 0;
 
@@ -329,26 +329,26 @@ Deter_sequence_press_ok:
 ;  for ( i=StepNumber; i>=0; i--)
 ;  {
 
-	LAR	AR1,#TempAverageAmplitude+4
+	LAR	AR2,#TempAverageAmplitude+4
+	MAR	*0+,AR4
+	LAR	AR4,#NewAverageAmplitude
 	MAR	*0+,AR3
-	LAR	AR3,#NewAverageAmplitude
-	MAR	*0+,AR2
 
 Deter_for_i_1:
-	SAR	AR1,TMP
-	LAR	AR2,TMP
+	SAR	AR2,TMP
+	LAR	AR3,TMP
 
 ;    for ( k=0; k<5; k++)
 ;    {
 ;      NewAverageAmplitude[i] = TempAverageAmplitude[i-k]*WIN_BL_5[k];
 
-        MAC  	WIN_BL_5,*-,AR2
+        MAC  	WIN_BL_5,*-,AR3
 	LACC 	#0
 	RPT  	#3
-	MAC 	WIN_BL_5+1,*-,AR2
+	MAC 	WIN_BL_5+1,*-,AR3
 	APAC
-	MAR	*,AR3
-	SACH 	*,4,AR3
+	MAR	*,AR4
+	SACH 	*,4,AR4
 
 ;    }
 ;    if ( NewMaxAverageAmplitude <= NewAverageAmplitude[i])
@@ -360,29 +360,29 @@ Deter_for_i_1:
 ;      NewMaxAverageAmplitude = NewAverageAmplitude[i];
 ;      StepAveragePressure = i;
 
-	LACC	*,0,AR3
+	LACC	*,0,AR4
 	SACL    NewMaxAverageAmplitude
 	SAR	AR0,StepAveragePressure
 
 ;    }
 
 Deter_not_of_max:
-	MAR	*-,AR1
+	MAR	*-,AR2
 	MAR	*-,AR0
-	BANZ	Deter_for_i_1,*-,AR2
+	BANZ	Deter_for_i_1,*-,AR3
 ;  }
 ;  AveragePressure = AvrPress[StepAveragePressure];
 
 	LAR	AR0,StepAveragePressure
-        LAR     AR2,#AvrPress
-	MAR	*0+,AR2
-	LACC	*,0,AR1
+        LAR     AR3,#AvrPress
+	MAR	*0+,AR3
+	LACC	*,0,AR2
 	SACL	AveragePressure,0
 
 ;  if ( NewAverageAmplitude[0] <= THRESHOLD_OF_SISTOL*NewMaxAverageAmplitude )
 
-        LAR     AR1,#NewAverageAmplitude
-        LACC    *,12,AR1
+        LAR     AR2,#NewAverageAmplitude
+        LACC    *,12,AR2
         LT     	NewMaxAverageAmplitude
 	MPY     #THRESHOLD_OF_SISTOL
 	SPAC
@@ -406,16 +406,16 @@ Deter_next_step_1
 ;       i++;
 ;     }
 
-        B       Deter_next_step_1,*+,AR1
+        B       Deter_next_step_1,*+,AR2
 
 
 Deter_sistol
 
-        MAR     *,AR1
-        LAR     AR1,#NewAverageAmplitude
-        LAR     AR2,#AvrPress-1
+        MAR     *,AR2
+        LAR     AR2,#NewAverageAmplitude
+        LAR     AR3,#AvrPress-1
+        MAR     *0+,AR3
         MAR     *0+,AR2
-        MAR     *0+,AR1
 
 ;     SistolPressure = AvrPress[i] + ( AvrPress[i-1] - AvrPress[i])*
 ;                 ( NewAverageAmplitude[i] -
@@ -424,14 +424,14 @@ Deter_sistol
 
                ; ( NewAverageAmplitude[i] - NewAverageAmplitude[i-1]);
 
-        LACC    *-,0,AR1
-        SUB     *+,0,AR1
+        LACC    *-,0,AR2
+        SUB     *+,0,AR2
         SACL    TMP
 
                 ; 2^9*( NewAverageAmplitude[i] -
 		;       THRESHOLD_OF_SISTOL*NewMaxAverageAmplitude )
 
-        LACC    *,12,AR2
+        LACC    *,12,AR3
         SPAC
 	SACH	TMP+1,4
 	LACC	TMP+1,9
@@ -445,8 +445,8 @@ Deter_sistol
 
                 ;2^0*( AvrPress[i-1] - AvrPress[i])
 
-        LACC    *+,0,AR2
-        SUB     *,0,AR2
+        LACC    *+,0,AR3
+        SUB     *,0,AR3
         SACL    TMP
 
                 ;2^0*()*2^9*()/()
@@ -456,7 +456,7 @@ Deter_sistol
 
                 ; + 2^9*AvrPress[i]
 
-        ADD     *,9,AR1
+        ADD     *,9,AR2
 
                 ; SistolPressure/2^7
 
@@ -508,8 +508,8 @@ Deter_not_sistol
 ;	    THRESHOLD_OF_AVERAGE*NewMaxAverageAmplitude )||
 ;	  ( StepAveragePressure < 2 ))
 
-        LAR     AR1,#NewAverageAmplitude
-        LACC    *,12,AR1
+        LAR     AR2,#NewAverageAmplitude
+        LACC    *,12,AR2
         LT     	NewMaxAverageAmplitude
 	MPY     #THRESHOLD_OF_AVERAGE
 	SPAC
@@ -566,11 +566,11 @@ Deter_diastol_1
 ;  if ( NewAverageAmplitude[StepNumber] <=
 ;	THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,StepNumber
-        LAR     AR1,#NewAverageAmplitude
-        MAR     *0+,AR1
-        LACC    *,12,AR1
+        LAR     AR2,#NewAverageAmplitude
+        MAR     *0+,AR2
+        LACC    *,12,AR2
         LT      NewMaxAverageAmplitude
 	MPY     #THRESHOLD_OF_DIASTOL
         SPAC
@@ -593,16 +593,16 @@ Deter_next_step_2
 ;       i--;
 ;     }
 
-        B       Deter_next_step_2,*-,AR1
+        B       Deter_next_step_2,*-,AR2
 
 
 Deter_diastol_2
 
-        MAR     *,AR1
-        LAR     AR1,#NewAverageAmplitude
-        LAR     AR2,#AvrPress
+        MAR     *,AR2
+        LAR     AR2,#NewAverageAmplitude
+        LAR     AR3,#AvrPress
+        MAR     *0+,AR3
         MAR     *0+,AR2
-        MAR     *0+,AR1
 
 ;     DiastolPressure = AvrPress[i] - ( AvrPress[i] - AvrPress[i+1])*
 ;                  ( NewAverageAmplitude[i] -
@@ -612,14 +612,14 @@ Deter_diastol_2
 
                ; ( NewAverageAmplitude[i] - NewAverageAmplitude[i+1]);
 
-        LACC    *+,0,AR1
-        SUB     *-,0,AR1
+        LACC    *+,0,AR2
+        SUB     *-,0,AR2
         SACL    TMP
 
                 ; 2^9*( NewAverageAmplitude[i] -
 		; THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
 
-        LACC    *,12,AR2
+        LACC    *,12,AR3
         SPAC
 	SACH	TMP+1,4
 	LACC	TMP+1,9
@@ -633,15 +633,15 @@ Deter_diastol_2
 
                 ;2^0*( AvrPress[i] - AvrPress[i+1])
 
-        LACC    *+,0,AR2
-        SUB     *-,0,AR2
+        LACC    *+,0,AR3
+        SUB     *-,0,AR3
         SACL    TMP
 
                 ;2^0*()*2^9*()/()
 
         MPY     TMP                     ;2^9*()*()/()
 
-        LACC    *,9,AR1                 ; 2^9*AvrPress[i]
+        LACC    *,9,AR2                 ; 2^9*AvrPress[i]
 
         SPAC                            ; DiastolPressure/2^7
 
@@ -670,8 +670,8 @@ Deter_next_mode
 ;}
 
 	.if SIM == 1
-	MAR	*,AR1
-	LAR	AR1,#Diff2MaxAdressFinish
+	MAR	*,AR2
+	LAR	AR2,#Diff2MaxAdressFinish
 	RPT	#64
 	OUT	*+,3
 	NOP

@@ -1,7 +1,7 @@
 ***********************************************************************
 *       Check_higher_sistol_pressure() - Проверка превышения
 *                                        систолического давлени
-* $Id: CH_PR_HS.ASM,v 1.6 2001-03-20 16:07:20 peter Exp $
+* $Id: CH_PR_HS.ASM,v 1.7 2001-08-22 14:17:41 peter Exp $
 ***********************************************************************
 Check_higher_sistol_pressure:
 ;{
@@ -25,10 +25,10 @@ Check_higher_sistol_pressure:
 
 ;  Подготовка адpеса  Diff2Max[MaxNumber]
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,MaxNumber
-        LAR     AR1,#Diff2Max
-        MAR     *0+,AR1
+        LAR     AR2,#Diff2Max
+        MAR     *0+,AR2
 
 ;   if ( SynchroFlag == True )
 
@@ -38,14 +38,14 @@ Check_higher_sistol_pressure:
 ;   {   // Синхронизация есть.
 ;    if ( Diff2Max[MaxNumber] > 0.25*LastDiff2Max )
 
-	LACC    *,13,AR1
+	LACC    *,13,AR2
 	SUB     LastDiff2Max,11
 	BCND    Ch_Pr_Synchro_Small_Impulse,LEQ
 
 ;    {
 ;     if ( Diff2Max[MaxNumber] < 4*LastDiff2Max)
 
-	LACC    *,12,AR1
+	LACC    *,12,AR2
 	SUB     LastDiff2Max,14
 	BCND    Ch_Pr_Synchro_Big_Impulse,GEQ
 
@@ -92,14 +92,14 @@ Ch_Pr_Not_Synchro
 ;   {   // Синхронизации нет.( Анализ формы, пока просто по длительности импульсов)
 ;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_SISTOL )  // > 0.2 мм.рт.ст.
 
-        LACC    *,AR1
+        LACC    *,AR2
         SUB     #MIN_THRESHOLD_SISTOL
         BCND    Ch_Pr_Not_S_Small_Impulse,LEQ
 
 ;    {
 ;     if ( Diff2Max[MaxNumber] < MAX_THRESHOLD_SISTOL )  // < 10 мм.рт.ст.
 
-        LACC    *,AR1
+        LACC    *,AR2
         SUB     #MAX_THRESHOLD_SISTOL
         BCND    Ch_Pr_Not_S_Big_Impulse,GEQ
 
@@ -133,7 +133,7 @@ Ch_Pr_Not_Synchro
 ;	  if ( TempAmplitudeDiff < 0.499*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
-	LT	*,AR1
+	LT	*,AR2
 	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Ch_Pr_TempAmpl_not_equal,GEQ
@@ -186,7 +186,7 @@ Ch_Pr_Not_S_default
 ;	  if ( TempAmplitudeDiff < 0.3*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
-	LT	*,AR1
+	LT	*,AR2
 	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Ch_Pr_TempAmpl_not_equal_2,GEQ
@@ -207,8 +207,8 @@ Ch_Pr_Not_S_default
 ;	    if (( abs( Max[2]-Max[1]) < 0.35 Max[2])&&
 ; 	        ( abs( Max[1]-Max[0]) < 0.35 Max[1]))
 
-        MAR     *,AR1
-	LAR	AR1,#Max+2
+        MAR     *,AR2
+	LAR	AR2,#Max+2
 	LACC	*,13                    ;14
 	LT	*-
 	MPY	#CONST_0_35              ;CONST_0_2
@@ -227,40 +227,40 @@ Ch_Pr_Not_S_default
 ;          /* Средние Амплитуда и Давление на этой ступеньке */
 
         LAR     AR0,StepNumber
-        LAR     AR1,#AverageAmplitude
-        MAR     *0+,AR2
-        LAR     AR2,#AvrPress
+        LAR     AR2,#AverageAmplitude
         MAR     *0+,AR3
-        LAR     AR3,#Max
+        LAR     AR3,#AvrPress
+        MAR     *0+,AR4
+        LAR     AR4,#Max
 
 ;             AverageAmplitude[StepNumber] = ( Max[0] + Max[1] + Max[2])*0.33;
 
-        LACC    *+,14,AR3
-        ADD     *+,14,AR3
-        ADD     *,14,AR1
-        SACH    *,0,AR1
-	LT	*,AR1
+        LACC    *+,14,AR4
+        ADD     *+,14,AR4
+        ADD     *,14,AR2
+        SACH    *,0,AR2
+	LT	*,AR2
 	MPY	#CONST_0_33
 	PAC
-	SACH	*,5,AR1
+	SACH	*,5,AR2
 
 ;             AvrPress[StepNumber] = ( MaxAvrPress[0] + MinAvrPress[0] +
 ;                                      MaxAvrPress[1] + MinAvrPress[1] +
 ;                                      MaxAvrPress[2] + MinAvrPress[2])*0.1667;
 
-        LAR     AR1,#MaxAvrPress
-        LACC    *+,13,AR1
-        ADD     *+,13,AR1
-        ADD     *,13,AR1
-        LAR     AR1,#MinAvrPress
-        ADD     *+,13,AR1
-        ADD     *+,13,AR1
+        LAR     AR2,#MaxAvrPress
+        LACC    *+,13,AR2
+        ADD     *+,13,AR2
         ADD     *,13,AR2
-        SACH    *,0,AR2
-	LT	*,AR2
+        LAR     AR2,#MinAvrPress
+        ADD     *+,13,AR2
+        ADD     *+,13,AR2
+        ADD     *,13,AR3
+        SACH    *,0,AR3
+	LT	*,AR3
 	MPY	#CONST_0_33
 	PAC
-	SACH	*,5,AR1
+	SACH	*,5,AR2
 
 ;             /* Подготовка к следующему режиму */
 ;             NextModeFlag = 1;
@@ -339,28 +339,28 @@ Ch_Pr_Not_Period_2
 
 Ch_Pr_Next_MaxNumber
 
-        MAR     *,AR2
+        MAR     *,AR3
         LAR     AR0,MaxNumber
-        LAR     AR2,#Diff2Max
-        MAR     *0+,AR2
+        LAR     AR3,#Diff2Max
+        MAR     *0+,AR3
 
 ;   LastDiff2Max = Diff2Max[MaxNumber];
 
-        LACC    *,0,AR3
+        LACC    *,0,AR4
         SACL    LastDiff2Max
 
-        LAR     AR3,#Diff2MaxAdress
-        MAR     *0+,AR4
+        LAR     AR4,#Diff2MaxAdress
+        MAR     *0+,AR5
         LAR     AR0,MaxNumberShift
-        LAR     AR4,#Diff2MaxAdressFinish
-        MAR     *0+,AR3
+        LAR     AR5,#Diff2MaxAdressFinish
+        MAR     *0+,AR4
 
 ;       Diff2MaxAdressFinish[MaxNumberShift] = Diff2MaxAdress[MaxNumber] +
 ;                                              SampleNumberShift;
 
-        LACC    *,AR4
+        LACC    *,AR5
         ADD     SampleNumberShift,0
-        SACL    *,AR1
+        SACL    *,AR2
 
 ;        MaxNumberShift++;
 
@@ -377,23 +377,23 @@ Ch_Pr_Next_MaxNumber
 ;        Max2DiffAdress[2] = Max2DiffAdress[1];
 ;        Max2DiffAdress[1] = Max2DiffAdress[0];
 
-	LAR	AR1,#Max2DiffAdress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#Max2DiffAdress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;        MaxAvrPress[2] = MaxAvrPress[1];
 ;        MaxAvrPress[1] = MaxAvrPress[0];
 
-	LAR	AR1,#MaxAvrPress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#MaxAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;        MinAvrPress[2] = MinAvrPress[1];
 ;        MinAvrPress[1] = MinAvrPress[0];
 
-	LAR	AR1,#MinAvrPress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#MinAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;     }
 
@@ -459,10 +459,10 @@ Ch_Pr_Pr_more_sys_fl_not:
 ;       {
 ;         if (( Max[0]+Max[1])/2 < 0.8 SistolPressureAmplitude )
 
-	MAR	*,AR1
-	LAR	AR1,#Max
-	LACC	*+,11,AR1
-	ADD     *,11,AR1
+	MAR	*,AR2
+	LAR	AR2,#Max
+	LACC	*+,11,AR2
+	ADD     *,11,AR2
 	LT	SistolPressureAmplitude
 	MPY	#CONST_0_8
 	SPAC
@@ -546,9 +546,9 @@ Start_diminution_pressure:
 
 ;	FinishMeasAdress[StepNumber] = SampleNumberShift;
 
-	LAR	AR1,#FinishMeasAdress
+	LAR	AR2,#FinishMeasAdress
 	LACC	SampleNumberShift
-	SACL	*,0,AR1
+	SACL	*,0,AR2
 
 ;	return;
 
@@ -567,10 +567,10 @@ Next_augment_pressure:
 
 ;    PressureTop = Signal[SampleNumber] + PRESS_30 + PRESS_PRESET;
 
-	MAR	*,AR1
+	MAR	*,AR2
 	LAR	AR0,#Signal
-	LAR	AR1,SampleNumber
-	MAR	*0+,AR1
+	LAR	AR2,SampleNumber
+	MAR	*0+,AR2
 	LACC	*
 	ADD	#PRESS_30 + PRESS_PRESET
 	SACL	PressureTop

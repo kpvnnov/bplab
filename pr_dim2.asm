@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: pr_dim2.asm,v 1.2 2001-03-20 16:07:21 peter Exp $
+; $Id: pr_dim2.asm,v 1.3 2001-08-22 14:17:46 peter Exp $
 ;*       Pressure_diminution_2() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       Для запуска процесса вызвать макрос:  mDim_pressure_init
 ;***********************************************************************/
@@ -154,7 +154,7 @@
 ; Предпологается, что модуль PressureDiminition2 вызывается внутри
 ; обработки прерывания АЦП, модуль использует эту же страницу памяти,
 ; при этом считается, что все локальные Tmp ячейки и ARx регистры
-; ( кроме AR7) свободны.
+; ( кроме AR1) свободны.
 **************************************************************************
 **************************************************************************
 ;int	DimModeSampleCounter;
@@ -180,14 +180,14 @@ DIM_PAUSE		.set	24
 
 Pressure_diminition_2:
 
-	MAR	*,AR7
-	SAR	AR0,*-,AR7
-	SAR	AR1,*-,AR1
+	MAR	*,AR1
+	SAR	AR0,*+,AR1
+	SAR	AR2,*+,AR2
 	SETC	SXM
 
 ; DimSignal[DimModeSampleCounter]=Pressure0;
 
-	LAR	AR1,#DimSignal+1
+	LAR	AR2,#DimSignal+1
 ;
 ; switch ( DimMode )
 
@@ -210,13 +210,13 @@ Dim_case_0:
 ;	  DimMode++;
 ;    	break;
 
-	LACC	*,0,AR1
+	LACC	*,0,AR2
 	SACL    Pline0,0
 	LACC    DimMode
 	ADD	#1
 	SACL    DimMode
 
-	;LAR	AR1,#IMR		;??????????????????????????????
+	;LAR	AR2,#IMR		;??????????????????????????????
 	;LACC	*
 	;AND	#001Fh
 	;SACL	*
@@ -243,11 +243,11 @@ Dim_case_1:
 	LACC	DimModeSampleCounter,0
 	SUB     #8
 	BCND	Dim_case_1_calculation,GEQ
-	LACC	*+,3,AR1
-	SUB	*,3,AR1
-	SUB	*+,0,AR1
-	MAR	*+,AR1
-	ADD	*-,0,AR1
+	LACC	*+,3,AR2
+	SUB	*,3,AR2
+	SUB	*+,0,AR2
+	MAR	*+,AR2
+	ADD	*-,0,AR2
 	BCND	Dim_quit,LT
 
 ;        {
@@ -263,7 +263,7 @@ Dim_case_1_calculation:
 ;          Tdimstart = DimModeSampleCounter;
 ;          DimMode++;
 
-	MAR	*-,AR1
+	MAR	*-,AR2
 	LACC	*-,0
 	SACL	Pline1,0
 	SUB	*,0
@@ -315,9 +315,9 @@ Dim_case_2_Pclose_calculation:
 
 	LACC	Pnew,16
 	SUB     Preturn,16
-	SUB	*,8,AR1
+	SUB	*,8,AR2
 	ADD	#B10mm*10,8
-	SUB	*,16,AR1
+	SUB	*,16,AR2
 	BCND	Dim_quit,LEQ
 
 ;	  {
@@ -328,7 +328,7 @@ Dim_case_2_Pclose_calculation:
 ;         }
 ;	}
 
-	LACC	*,0,AR1
+	LACC	*,0,AR2
 	SACL	Pclose,0
 	LACC	DimModeSampleCounter
 	SACL	Tdimstart
@@ -350,8 +350,8 @@ Dim_case_3:
 ;       if(( DimSignal[DimModeSampleCounter]-
 ;            DimSignal[DimModeSampleCounter-1]) > 0)
 
-	LACC	*+,0,AR1
-	SUB	*,0,AR1
+	LACC	*+,0,AR2
+	SUB	*,0,AR2
 	BCND	Dim_quit,LEQ
 
 ;       {
@@ -382,10 +382,10 @@ Dim_case_4:
 ;             ( DimSignal[DimModeSampleCounter-1]-
 ;               DimSignal[DimModeSampleCounter-2]))
 
-	LACC	*+,1,AR1
-	SUB	*,1,AR1
-	SUB	*+,0,AR1
-	ADD	*,0,AR1
+	LACC	*+,1,AR2
+	SUB	*,1,AR2
+	SUB	*+,0,AR2
+	ADD	*,0,AR2
 	BCND	Dim_quit,GT
 
 ;       {
@@ -434,9 +434,9 @@ Dim_case_5:
 
 	BIT	MeasurementFlags,15-FIRST_MEAS_FLAG
 	BCND    Dim_case_5_Preturn_32,NTC
-	LACC	*+,10,AR1
+	LACC	*+,10,AR2
 	RPT	#6
-	ADD	*+,10,AR1
+	ADD	*+,10,AR2
 	SACH    TMP+2,3
 	SUB	Pclose,13
 	SUB	Preturn,13
@@ -445,9 +445,9 @@ Dim_case_5:
 	B	Dim_case_5_Perror_culc
 
 Dim_case_5_Preturn_32:
-	LACC	*+,8,AR1
+	LACC	*+,8,AR2
 	RPT	#6
-	ADD	*+,8,AR1
+	ADD	*+,8,AR2
 	SACH    TMP+2,5
 	SUB	Pclose,11
 	SUB	Preturn,11
@@ -490,10 +490,10 @@ Dim_quit:
 
 ;	Stack is restore
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR1,*+,AR7
-	LAR	AR0,*,AR7
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR2,*-,AR1
+	LAR	AR0,*,AR1
 	RET
 
 **************************************************************************

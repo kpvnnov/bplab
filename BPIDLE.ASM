@@ -1,10 +1,10 @@
-* $Id: BPIDLE.ASM,v 1.5 2000-12-13 13:43:26 peter Exp $
+* $Id: BPIDLE.ASM,v 1.6 2001-08-22 14:17:39 peter Exp $
         CLRC INTM               ;RS,NMI,INT1,INT2,TINT,TXRXINT.
 
 IDLEST  NOP
         IDLE
         NOP
-        ;последний раз использовали AR1 - если где-то ошибка в прерывании
+        ;последний раз использовали AR2 - если где-то ошибка в прерывании
         ;то сразу будет выясняться это
 
 	BIT  	FLAGKEYB,15
@@ -25,7 +25,7 @@ CLEARINT1
 	LACC 	FLAGKEYB,0
 	AND  	#0FFFEh
 	SACL 	FLAGKEYB
-	LACC 	MDSPL,1 ;вызываем процедуру в зависимости от режима
+	LACC 	_MDSPL,1 ;вызываем процедуру в зависимости от режима
 	ADD  	#KEY1
 	CALA
 	CLRC 	INTM

@@ -44,9 +44,9 @@
 *                                                           *
 * The following resources are used for temporary storage:   *
 *        AR0  - Used for comparisons.                       *
-*        AR1  - Used for pgm pulse count.                   *
-*        AR2  - Used for row banz loop.                     *
-*        AR6  - Parameter passed to Delay.                  *
+*        AR2  - Used for pgm pulse count.                   *
+*        AR3  - Used for row banz loop.                     *
+*        AR7  - Parameter passed to Delay.                  *
 *    FL_ADRS  - Used for flash address.                     *
 *    FL_DATA  - Used for flash data.                        *
 *      FL_ST  - Used for flash start address.               *
@@ -79,8 +79,8 @@ Beginfl_clr	.set $
 * The following resources are used for temp    *
 * storage:                                     *
 *        AR0  - Used for comparisons.          *
-*        AR1  - Used for pgm pulse count.      *
-*        AR2  - Used for row banz loop.        *
+*        AR2  - Used for pgm pulse count.      *
+*        AR3  - Used for row banz loop.        *
 *    FL_ADRS  - Used for flash address.        *
 *    FL_DATA  - Used for flash data.           *
 *      BASE_0 - Used for row-done flag.        *
@@ -99,13 +99,13 @@ GCLR:
 
 NEWROW          ;********Begin a new row.*
         SACL    BASE_1          ;Save row start address.
-        LAR     AR1,#0          ;Init pulse count to zero.
+        LAR     AR2,#0          ;Init pulse count to zero.
 
 SAMEROW         ;********Same row, next pulse.*
         SPLK    #1,BASE_0       ;Set row done flag = 1(True).
         LACL    BASE_1          ;Get row start address.
         SACL    FL_ADRS         ;Save as current address.
-        LAR     AR2,#31         ;Init row index.
+        LAR     AR3,#31         ;Init row index.
 
 ********Repeat the following code 32 times until end of row.*
 LOBYTE          ;********First do low-byte.*
@@ -118,16 +118,16 @@ NEXTWORD        ;********Next word in row.
         LACL    FL_ADRS         ;Load address for next word.
         ADD     #1              ;Increment address.
         SACL    FL_ADRS         ;Save as current address.
-        MAR     *, AR2          ;Point to row index.
-        BANZ    LOBYTE          ;Do next word,and dec AR2.
+        MAR     *, AR3          ;Point to row index.
+        BANZ    LOBYTE          ;Do next word,and dec AR3.
 
 ********Reached end of row. Check if row done. *
         BIT     BASE_0,15       ;Get row_done flag.
         BCND    ROW_DONE,TC     ;If 1 then row is done.
-        MAR     *,AR1           ;Else, row is not done, so
+        MAR     *,AR2           ;Else, row is not done, so
         MAR     *+              ;inc row pulse count.
         LAR     AR0,#MAX_PGM    ;Check if passed allowable max.
-        CMPR    2               ;If AR1>MAX_PGM then
+        CMPR    2               ;If AR2>MAX_PGM then
         BCND    EXIT,TC         ;fail, don't continue.
         B       SAMEROW         ;else, go to beginning
                                 ;of same row.
@@ -155,7 +155,7 @@ EXIT    SPLK    #1,ERROR        ;Update error flag.
 * THE FLASH ADDRESS DEFINED BY FL_ADRS.                    *
 *							   *
 * The following resources are used for temporary storage:  *
-*        AR6  - Parameter passed to Delay.                 *
+*        AR7  - Parameter passed to Delay.                 *
 *        SPAD1 - Flash program and STOP commands.          *
 *        SPAD2 - Flash program + EXE command.              *
 ************************************************************
@@ -175,17 +175,17 @@ EXE_PGM                                                   ;*
         LACL    FL_ST           ;ACC => 0 (FLASH0)         *
 * ACTIVATE WRITE BIT					  **
         TBLW    SPAD1           ;EXECUTE COMMAND          **
-        LAR     AR6,#D10        ;SET DELAY                **
-	CALL	DELAY,*,AR6	;WAIT			  **
+        LAR     AR7,#D10        ;SET DELAY                **
+	CALL	DELAY,*,AR7	;WAIT			  **
 * SET EXEBIN BIT					 ***
         TBLW    SPAD2           ;EXECUTE COMMAND         ***
-        LAR     AR6,#D100       ;SET DELAY               ***
-	CALL	DELAY,*,AR6	;WAIT			 ***
+        LAR     AR7,#D100       ;SET DELAY               ***
+	CALL	DELAY,*,AR7	;WAIT			 ***
 * STOP WRITE OPERATION					   *
         SPLK    #0,SPAD1        ;SHUTDONW WRITE OPERATION  *
         TBLW    SPAD1           ;EXECUTE COMMAND           *
-        LAR     AR6,#D10        ;SET DELAY                 *
-	CALL	DELAY,*,AR6	;WAIT			   *
+        LAR     AR7,#D10        ;SET DELAY                 *
+	CALL	DELAY,*,AR7	;WAIT			   *
 *							   *
         RET                     ;RETURN TO CALLING SEQUENCE*
 ************************************************************
@@ -200,8 +200,8 @@ SET_RD_VER0                                               ;*
         LACL    FL_ST           ;ACC => FLASH              *
         SPLK    #VER0,SPAD1     ;ACTIVATE VER0             *
         TBLW    SPAD1           ;EXECUTE COMMAND           *
-        LAR     AR6,#D10        ;SET DELAY                 *
-        CALL    DELAY,*,AR6     ;WAIT                      *
+        LAR     AR7,#D10        ;SET DELAY                 *
+        CALL    DELAY,*,AR7     ;WAIT                      *
         CALL    ARRAY           ;ACCESS FLASH ARRAY        *
         LACL    FL_ADRS         ;POINT TO ADRS             *
         TBLR    FL_DATA         ;GET FLASH WORD 1x read    *
@@ -211,8 +211,8 @@ SET_RD_VER0                                               ;*
         LACL    FL_ST           ;ACC => FLASH              *
         SPLK    #STOP,SPAD1     ;DEACTIVATE VER0           *
         TBLW    SPAD1           ;EXECUTE COMMAND           *
-        LAR     AR6,#D10        ;SET DELAY                 *
-        CALL    DELAY,*,AR6     ;WAIT                      *
+        LAR     AR7,#D10        ;SET DELAY                 *
+        CALL    DELAY,*,AR7     ;WAIT                      *
         CALL    ARRAY           ;ACCESS FLASH ARRAY        *
         RET                     ;RETURN TO CALLING SEQUENCE*
 ************************************************************

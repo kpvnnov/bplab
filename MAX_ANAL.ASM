@@ -1,6 +1,6 @@
 ***********************************************************************
 * 	MaximumAnalysis()  - Анализ предпологаемого импульса
-* $Id: MAX_ANAL.ASM,v 1.5 2001-03-20 16:07:21 peter Exp $
+* $Id: MAX_ANAL.ASM,v 1.6 2001-08-22 14:17:43 peter Exp $
 ***********************************************************************/
 ;Maximum_analysis()
 
@@ -115,7 +115,7 @@ Max_an_case1
 ;      if ( TempAmplitudeDiff < 0.35*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
-	LT	*,AR1
+	LT	*,AR2
 	MPY	#CONST_0_35		;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal,GEQ
@@ -131,12 +131,12 @@ Max_an_case1
 
 ;        if ( abs( Max[1]-Max[0]) < 0.249 Max[1])
 
-        MAR     *,AR1
-        LAR     AR1,#Max+1
-	LACC    *,14,AR1
-	LT      *-,AR1
+        MAR     *,AR2
+        LAR     AR2,#Max+1
+	LACC    *,14,AR2
+	LT      *-,AR2
 	MPY     #CONST_0_249
-	SUB     *,14,AR1
+	SUB     *,14,AR2
 	ABS
 	SPAC
 	BCND    Max_an_Max_not_equal_1,GEQ
@@ -144,28 +144,28 @@ Max_an_case1
 ;        {
 
         LAR     AR0,StepNumber
-        LAR     AR1,#AverageAmplitude
-        MAR     *0+,AR2
-        LAR     AR2,#AvrPress
+        LAR     AR2,#AverageAmplitude
         MAR     *0+,AR3
-        LAR     AR3,#Max
+        LAR     AR3,#AvrPress
+        MAR     *0+,AR4
+        LAR     AR4,#Max
 
 ;      	   AverageAmplitude[StepNumber] = ( Max[0] + Max[1] )/2;
 
-        LACC    *+,15,AR3
-        ADD     *,15,AR1
-        SACH    *,0,AR1
+        LACC    *+,15,AR4
+        ADD     *,15,AR2
+        SACH    *,0,AR2
 
 ;          AvrPress[StepNumber] = ( MaxAvrPress[0] + MaxAvrPress[1] +
 ;            	 	     	    MinAvrPress[0] + MinAvrPress[1])/4;
 
-        LAR     AR1,#MaxAvrPress
-        LACC    *+,14,AR1
-        ADD     *,14,AR1
-        LAR     AR1,#MinAvrPress
-        ADD     *+,14,AR1
+        LAR     AR2,#MaxAvrPress
+        LACC    *+,14,AR2
         ADD     *,14,AR2
-        SACH    *,0,AR1
+        LAR     AR2,#MinAvrPress
+        ADD     *+,14,AR2
+        ADD     *,14,AR3
+        SACH    *,0,AR2
 
 ;          NextModeFlag = 0;
 
@@ -232,7 +232,7 @@ Max_an_ThreeImpulseFlag
 ;      if ( TempAmplitudeDiff < 0.3*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
-	LT	*,AR1
+	LT	*,AR2
 	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal_2,GEQ
@@ -285,7 +285,7 @@ Max_an_default
 ;      if ( TempAmplitudeDiff < 0.3*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
-	LT	*,AR1
+	LT	*,AR2
 	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal_Def,GEQ
@@ -302,20 +302,20 @@ Max_an_default
 ;      if (( abs( Max[2]-Max[1]) < 0.35 Max[2])&&
 ;      	   ( abs( Max[1]-Max[0]) < 0.35 Max[1]))
 
-        MAR     *,AR1
-	LAR	AR1,#Max+2
-	LACC    *,13,AR1         ;14
-	LT      *-,AR1
+        MAR     *,AR2
+	LAR	AR2,#Max+2
+	LACC    *,13,AR2         ;14
+	LT      *-,AR2
 	MPY     #CONST_0_35       ;CONST_0_2
-	SUB     *,13,AR1         ;14
+	SUB     *,13,AR2         ;14
 	ABS
 	SPAC
         BCND    Max_an_Max_not_equal_Def,GEQ
 
-	LACC    *,13,AR1         ;14
-	LT      *-,AR1
+	LACC    *,13,AR2         ;14
+	LT      *-,AR2
 	MPY     #CONST_0_35       ;CONST_0_2
-	SUB     *,13,AR1         ;14
+	SUB     *,13,AR2         ;14
 	ABS
 	SPAC
         BCND    Max_an_Max_not_equal_Def,GEQ
@@ -324,40 +324,40 @@ Max_an_default
 ;     	 /* Средние Амплитуда и Давление на этой ступеньке */
 
         LAR     AR0,StepNumber
-        LAR     AR1,#AverageAmplitude
-        MAR     *0+,AR2
-        LAR     AR2,#AvrPress
+        LAR     AR2,#AverageAmplitude
         MAR     *0+,AR3
-        LAR     AR3,#Max
+        LAR     AR3,#AvrPress
+        MAR     *0+,AR4
+        LAR     AR4,#Max
 
 ;        AverageAmplitude[StepNumber] = ( Max[0] + Max[1] + Max[2] ) * 0.33;
 
-        LACC    *+,14,AR3
-        ADD     *+,14,AR3
-        ADD     *,14,AR1
-        SACH    *,0,AR1
-	LT	*,AR1
+        LACC    *+,14,AR4
+        ADD     *+,14,AR4
+        ADD     *,14,AR2
+        SACH    *,0,AR2
+	LT	*,AR2
 	MPY	#CONST_0_33
 	PAC
-	SACH	*,5,AR1
+	SACH	*,5,AR2
 
 ;     	 AvrPress[StepNumber] = ( MaxAvrPress[0] + MinAvrPress[0] +
 ;                              MaxAvrPress[1] + MinAvrPress[1] +
 ;                              MaxAvrPress[2] + MinAvrPress[2])*0.1667;
 
-        LAR     AR1,#MaxAvrPress
-        LACC    *+,13,AR1
-        ADD     *+,13,AR1
-        ADD     *,13,AR1
-        LAR     AR1,#MinAvrPress
-        ADD     *+,13,AR1
-        ADD     *+,13,AR1
+        LAR     AR2,#MaxAvrPress
+        LACC    *+,13,AR2
+        ADD     *+,13,AR2
         ADD     *,13,AR2
-        SACH    *,0,AR2
-	LT	*,AR2
+        LAR     AR2,#MinAvrPress
+        ADD     *+,13,AR2
+        ADD     *+,13,AR2
+        ADD     *,13,AR3
+        SACH    *,0,AR3
+	LT	*,AR3
 	MPY	#CONST_0_33
 	PAC
-	SACH	*,5,AR1
+	SACH	*,5,AR2
 ;
 ;     	 NextModeFlag = 1;
 
@@ -438,28 +438,28 @@ Max_an_Not_Period_Def
 
 Max_an_End_Switch
 
-        MAR     *,AR2
+        MAR     *,AR3
         LAR     AR0,MaxNumber
-        LAR     AR2,#Diff2Max
-        MAR     *0+,AR2
+        LAR     AR3,#Diff2Max
+        MAR     *0+,AR3
 
 ;   LastDiff2Max = Diff2Max[MaxNumber];
 
-        LACC    *,0,AR3
+        LACC    *,0,AR4
         SACL    LastDiff2Max
 
-        LAR     AR3,#Diff2MaxAdress
-        MAR     *0+,AR4
+        LAR     AR4,#Diff2MaxAdress
+        MAR     *0+,AR5
         LAR     AR0,MaxNumberShift
-        LAR     AR4,#Diff2MaxAdressFinish
-        MAR     *0+,AR3
+        LAR     AR5,#Diff2MaxAdressFinish
+        MAR     *0+,AR4
 
 ;   Diff2MaxAdressFinish[MaxNumberShift] = Diff2MaxAdress[MaxNumber] +
 ;                                          SampleNumberShift;
 
-        LACC    *,AR4
+        LACC    *,AR5
         ADD     SampleNumberShift,0
-        SACL    *,AR1
+        SACL    *,AR2
 
 ;   MaxNumberShift++;
 
@@ -476,23 +476,23 @@ Max_an_End_Switch
 ;   Max2DiffAdress[2] = Max2DiffAdress[1];
 ;   Max2DiffAdress[1] = Max2DiffAdress[0];
 
-	LAR	AR1,#Max2DiffAdress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#Max2DiffAdress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;   MaxAvrPress[2] = MaxAvrPress[1];
 ;   MaxAvrPress[1] = MaxAvrPress[0];
 
-	LAR	AR1,#MaxAvrPress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#MaxAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;   MinAvrPress[2] = MinAvrPress[1];
 ;   MinAvrPress[1] = MinAvrPress[0];
 
-	LAR	AR1,#MinAvrPress+1
-	DMOV	*-,AR1
-	DMOV	*,AR1
+	LAR	AR2,#MinAvrPress+1
+	DMOV	*-,AR2
+	DMOV	*,AR2
 
 ;}
 

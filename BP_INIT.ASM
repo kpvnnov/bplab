@@ -15,17 +15,17 @@ INIT    SETC INTM               ;запрет прерываний
 *
 *
         LACC    #0              ;ZERO TO ALL DATE
-        LAR     AR1,#060h
+        LAR     AR2,#060h
         RPT     #01Fh
-        SACL    *+,AR1          ;0060h-007Fh
-        LAR     AR1,#200h
+        SACL    *+,AR2          ;0060h-007Fh
+        LAR     AR2,#200h
         SPLK    #01FFh,TMP
         RPT     TMP
-        SACL    *+,AR1          ;0200h-03FFh
-        LAR     AR1,#1000h      ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        SACL    *+,AR2          ;0200h-03FFh
+        LAR     AR2,#1000h      ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         SPLK    #0FFFh,TMP
         RPT     TMP
-        SACL    *+,AR1          ;0800h-17FFh
+        SACL    *+,AR2          ;0800h-17FFh
 
         SPLK    #0,SampleNumber
 ;        SPLK    #100,AnalysisStart

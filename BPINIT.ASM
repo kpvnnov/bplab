@@ -1,4 +1,4 @@
-* $Id: BPINIT.ASM,v 1.19 2001-05-28 10:06:26 peter Exp $
+* $Id: BPINIT.ASM,v 1.20 2001-08-22 14:17:40 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -21,8 +21,9 @@ INIT
 				;       001,  0, 0,  1,0,1,1,1,1, 1,1,1,00
 	LST  	#1,TMP	; load status register #1
 ;Параметры Interrupt.
-	LAR  	AR1,#IMR	;load auxiliary reg #IMR -> AR1
-	SPLK 	#0027h,*	; 0027H->[AR1==IMR], 0027->IMR(DS@0004h)
+        MAR	*,AR2
+	LAR  	AR2,#IMR	;load auxiliary reg #IMR -> AR2
+	SPLK 	#0027h,*	; 0027H->[AR2==IMR], 0027->IMR(DS@0004h)
 *проба
 *	SPLK 	#0025h,*
 				;Interrupt mask register
@@ -33,7 +34,7 @@ INIT
 				; - таймера
 				; - int2 (кнопочка)
 				; - int1 alarm!
-	LAR  	AR1,#IFR        ;load auxiliary reg #IFR -> AR1
+	LAR  	AR2,#IFR        ;load auxiliary reg #IFR -> AR2
 				;interrupt flag register
 	LACC 	*       	;load accumulator with shift
 	SACL 	*       	;pending all interrupts
@@ -173,30 +174,30 @@ INIT
 *	ZERO TO ALL DATE
 ********************************
 	LACC 	#0
-	LAR  	AR1,#060h
+	LAR  	AR2,#060h
 	RPT  	#01Fh
-	SACL 	*+,AR1         	;0060h-007Fh
-	LAR  	AR1,#200h
+	SACL 	*+,AR2         	;0060h-007Fh
+	LAR  	AR2,#200h
 	SPLK 	#01FFh,TMP
 	RPT  	TMP
-	SACL 	*+,AR1         	;0200h-03FFh
-	LAR  	AR1,#800h
+	SACL 	*+,AR2         	;0200h-03FFh
+	LAR  	AR2,#800h
 	SPLK 	#0FFFh,TMP
 	RPT  	TMP
-	SACL	*+,AR1         	;0800h-17FFh
+	SACL	*+,AR2         	;0800h-17FFh
 
 ********************************
 *	первоначальная установка переменных
 *	обнуляющие строчки заремлены(и так все занулено)
 ********************************
-	LAR	AR1,#iCNTDISP
+	LAR	AR2,#iCNTDISP
 
 *	SPLK 	#CNSTDISP,CNTDISP      ;частота обновления дисплея (счетчик)
 *	SPLK 	#CNSTREFDISP,CNTDISP+1 ;частота refresh дисплея (счетчик)
 	SPLK 	#CNSTDISP,*+		;частота обновления дисплея (счетчик)
 	SPLK 	#CNSTREFDISP,*		;частота refresh дисплея (счетчик)
 
-	LAR	AR1,#iCNTCLK
+	LAR	AR2,#iCNTCLK
 
 *	SPLK 	#CNSTCLK,CNTCLK        ;чтобы период таймера = 1сек.
 	SPLK 	#CNSTCLK,*		;чтобы период таймера = 1сек.
@@ -236,16 +237,16 @@ INIT
 	OUT  	DPA0,PA0 		;пока работа с флеш не выбрана
 *
 
-	SPLK 	#0000h,MDSPL       ;вывод времени на дисплей
+	SPLK 	#0000h,_MDSPL       ;вывод времени на дисплей
 
-	LAR  	AR7,#07Fh
+	LAR  	AR1,#0800h
 
  .if VersionFerrum=1		;без дешифратора
 
  .elseif VersionFerrum=2        ;с дешифратором
 	CALL	InitFifoAndCache
-        MAR	*,AR1
-	LAR	AR1,#PageCache
+        MAR	*,AR2
+	LAR	AR2,#PageCache
 	SPLK	#0FFFFh,*
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -300,9 +301,9 @@ INIT
 	RPT  	TMP
 	NOP
 
-	MAR	*,AR1
+	MAR	*,AR2
 
-	LAR  	AR1,#IFR        ;load auxiliary reg #IFR -> AR1
+	LAR  	AR2,#IFR        ;load auxiliary reg #IFR -> AR2
 				;interrupt flag register
 	LACC 	*       	;load accumulator with shift
 	NOP
@@ -313,8 +314,8 @@ INIT
 
  .if NewFerrum=1
 
-	MAR	*,AR1
-	LAR	AR1,#AVRProg+6
+	MAR	*,AR2
+	LAR	AR2,#AVRProg+6
 	SPLK	#1600,*
 
 

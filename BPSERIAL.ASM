@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.24 2001-05-29 12:05:56 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.25 2001-08-22 14:17:41 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -48,7 +48,7 @@ AutoBaund
 	LACC 	Jobs,0
 	OR  	#04h
 	SACL 	Jobs     	;порт заработал - взводим флаг
-	LAR  	AR1,#iCNTASP
+	LAR  	AR2,#iCNTASP
 
 *	SPLK 	#CNSTASP,CNTASP	;и взводим счетчик
 	SPLK 	#CNSTASP,*	;и взводим счетчик
@@ -117,8 +117,8 @@ Save_Correction
 *End_Correction
 ;AnswerInit
 ;а в ответ надо выслать 041h,00h
-	LAR  	AR1,#DATART
-	SAR  	AR1,PosTransmit ;начало буфера передачи
+	LAR  	AR2,#DATART
+	SAR  	AR2,PosTransmit ;начало буфера передачи
 
  .if DebugSerial=1		;включена оталка com порта
 *отладка
@@ -137,7 +137,7 @@ Save_Correction
 
  .if DisableDisplay=1
  .elseif DisableDisplay=0
-	LAR  	AR1,#iCntReceve
+	LAR  	AR2,#iCntReceve
 				;пока будем определять скорость обмена
 	SPLK 	#01h,*+		;количество принятых символов - один
 	SPLK 	#00h,*		;количсетво переданных символов - нуль
@@ -145,14 +145,14 @@ Save_Correction
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 
-	SPLK 	#7h,MDSPL       ;вывод на экран количества принятых
+	SPLK 	#7h,_MDSPL       ;вывод на экран количества принятых
 				;и переданных символов
 	SPLK 	#00h,Flags      ;мы пока еще ничего не сделали !!!
 
  .if ShowSpeedASP=1
 ; ну хотя бы выводить на экран скорость обмена ?
 
-	LACC 	MDSPL,1
+	LACC 	_MDSPL,1
 	ADD  	#MDSPLV,0
 	CALA
 	CALL 	MODIFSB
@@ -197,7 +197,7 @@ ASPTRANSMIT
 
  .if DisableDisplay=1
  .elseif DisableDisplay=0
-	LAR	AR1,#iCntReceve+1
+	LAR	AR2,#iCntReceve+1
 
 	LACC 	*,0
 	ADD  	#1
@@ -213,13 +213,13 @@ CountTrNotOver
  .endif
 
 
-	LAR  	AR1,PosTransmit ;загружаем указатель на начало буфера
+	LAR  	AR2,PosTransmit ;загружаем указатель на начало буфера
 	OUT  	*+,ADTR
-	SAR  	AR1,PosTransmit ;запоминаем начало буфера передачи
+	SAR  	AR2,PosTransmit ;запоминаем начало буфера передачи
 ********************************
 *pending flag interrupts
 ********************************
-	LAR  	AR1,#IFR   	;загружаем указатель на
+	LAR  	AR2,#IFR   	;загружаем указатель на
 				;Interrupt Flag Register
 	SPLK 	#20h,*     	;pending TXRXINT
 * Transmit/receive interrupt flag. Bit 5 is tied to the transmit/receive
@@ -234,8 +234,8 @@ CountTrNotOver
  .if DebugSerial=1		;включена отладка com порта
 *отладка
 *** отладжка
-	LAR  	AR1,#DATART
-	SAR  	AR1,PosTransmit ;начало буфера передачи
+	LAR  	AR2,#DATART
+	SAR  	AR2,PosTransmit ;начало буфера передачи
 	SPLK 	#1,CNTASPTR     ;в буфере один символ
 	B	RETASPINT
 ** конец отладки
@@ -278,7 +278,7 @@ CountTrNotOver
 				;При 3,6864мГц. 38,4kdit/c BRD=0003h
 				;При 3,6864мГц. 57,6kdit/c BRD=0002h
  .endif
-	SPLK 	#0h,MDSPL  	;выводим на экран время
+	SPLK 	#0h,_MDSPL  	;выводим на экран время
 	LACC 	Jobs,0
 	AND  	#0FFFBh
 	SACL 	Jobs     	;порт на "автопилоте" ;)
@@ -305,13 +305,13 @@ FromTrtoReceve
 	OUT  	TMP,ASPCR	;Параметры ASP. Enable receve
 **********
 ;буфер одинаково (сначала) использутся и для приема и для передачи
-;!!        LAR  AR1,#DATART
-;!!        SAR  AR1,PosTransmit ;начало буфера передачи
+;!!        LAR  AR2,#DATART
+;!!        SAR  AR2,PosTransmit ;начало буфера передачи
 QuitFromASPInt
 *****************************
 *pending flag interrupts
 ****************************
-	LAR  	AR1,#IFR	;загружаем указатель на Interrupt Flag Register
+	LAR  	AR2,#IFR	;загружаем указатель на Interrupt Flag Register
 	SPLK 	#20h,*     	;pending TXRXINT
 *Transmit/receive interrupt flag. Bit 5 is tied to the transmit/receive
 *interrupt for the asynchronous serial port. To avoid double interrupts,
@@ -349,7 +349,7 @@ ASPAutoBaundFalse
  .endif
 
 ;pending flag interrupts
-	LAR  	AR1,#IFR   	;загружаем указатель на
+	LAR  	AR2,#IFR   	;загружаем указатель на
 				;Interrupt Flag Register
 	SPLK #20h,*     	;pending TXRXINT
 ;Transmit/receive interrupt flag. Bit 5 is tied to the transmit/receive
@@ -368,10 +368,10 @@ INTASP
 				;регистров в стеке
 	LDP  	#4
 **********
-	MAR  	*,AR1
+	MAR  	*,AR2
 
 * проба
-*	LAR  	AR1,#IFR   	;загружаем указатель на Interrupt Flag Register
+*	LAR  	AR2,#IFR   	;загружаем указатель на Interrupt Flag Register
 *	SPLK 	#20h,*     	;pending TXRXINT
 * конец пробы
 
@@ -394,7 +394,7 @@ INTASP
 	IN   	TMP,ASPCR
 	BIT  	TMP,10	;а стоит ли бит автоподстройки?
 	BCND 	ASPAutoBaundFalse,TC	;бит автоподстройки стоит
-	LAR	AR1,#iCNTASP
+	LAR	AR2,#iCNTASP
 *	SPLK 	#CNSTASP,CNTASP	;взводим счетчик заново,
 				;так как прерывание произошло
 	SPLK 	#CNSTASP,*	;взводим счетчик заново,
@@ -412,11 +412,11 @@ ASPRECEVE
 	BIT  	TMP,6
 	BCND 	OverFlow,TC        ;Переполнение?
 ;а так значит все приняли :)
-	SPLK 	#7h,MDSPL       ;вывод на экран количества принятых
+	SPLK 	#7h,_MDSPL       ;вывод на экран количества принятых
 				;и переданных символов
  .if DisableDisplay=1
  .elseif DisableDisplay=0
-	LAR	AR1,#iCntReceve
+	LAR	AR2,#iCntReceve
 
 	LACC 	*,0
 	ADD  	#1
@@ -436,7 +436,7 @@ CountRecNotOver
 ********************************
 *	pending flag interrupts
 ********************************
-	LAR  AR1,#IFR   ;загружаем указатель на Interrupt Flag Register
+	LAR  AR2,#IFR   ;загружаем указатель на Interrupt Flag Register
 	SPLK #20h,*     ;pending TXRXINT
 * Transmit/receive interrupt flag. Bit 5 is tied to the transmit/receive
 * interrupt for the asynchronous serial port. To avoid double interrupts,
@@ -466,15 +466,15 @@ OUTFFErr
 ********************************
 * 	pending flag interrupts
 ********************************
-	LAR  	AR1,#IFR   	;загружаем указатель на Interrupt Flag Register
+	LAR  	AR2,#IFR   	;загружаем указатель на Interrupt Flag Register
 	SPLK 	#20h,*     	;pending TXRXINT
 ;Transmit/receive interrupt flag. Bit 5 is tied to the transmit/receive
 ;interrupt for the asynchronous serial port. To avoid double interrupts,
 ;write a 1 to this bit in the interrupt service routine.
 OUTFF
 ;а в ответ надо выслать 0FFh,0FFh,0FFh,0FFh
-	LAR  	AR1,#DATART
-	SAR  	AR1,PosTransmit	;начало буфера передачи
+	LAR  	AR2,#DATART
+	SAR  	AR2,PosTransmit	;начало буфера передачи
 	SPLK 	#0FFh,*		;заполняем буфер данными
 	RPT 	#2
 	DMOV 	*+
@@ -548,7 +548,7 @@ RecUserCode9	.set 16
       B		ReceveUserCode9
 
 CommandReceve
-	LAR  	AR1,#DATART   	;загружаем указатель на буфер приема-передачи
+	LAR  	AR2,#DATART   	;загружаем указатель на буфер приема-передачи
 	LACC 	ByteReceve,0  	;в акумулятор загружаем принятый байт
 	SACL 	*,0           	;запоминаем его в буфере приема-передачи
 	LACC 	ByteReceve,4  	;надо вычислить две цифры одинаковы?
@@ -559,7 +559,7 @@ CommandReceve
 	B 	RETASPINT 	;возрат из прерывания
 
 CommandRecSec
-	LAR  	AR1,#DATART
+	LAR  	AR2,#DATART
 	LACC 	*
 	XOR  	ByteReceve
 	BCND 	OUTFF,NEQ
@@ -573,17 +573,17 @@ CommandRecSec
 	B 	RETASPINT 	;возрат из прерывания
 
 CommandRecThird
-	LAR  	AR1,#DATART+2   ;загружаем указатель на буфер приема-передачи
+	LAR  	AR2,#DATART+2   ;загружаем указатель на буфер приема-передачи
 	LACC 	ByteReceve,0  	;в акумулятор загружаем принятый байт
 	SACL 	*,0           	;запоминаем его в буфере приема-передачи
 	SPLK 	#Rec4,WhatDoingReceve   ;следующий принимаем четвертый байт
 	B 	RETASPINT 	;возрат из прерывания
 
 CommandRecFour
-	LAR  	AR1,#DATART+3   ;загружаем указатель на буфер приема-передачи
+	LAR  	AR2,#DATART+3   ;загружаем указатель на буфер приема-передачи
 	LACC 	ByteReceve,0  	;в акумулятор загружаем принятый байт
 	SACL 	*,0           	;запоминаем его в буфере приема-передачи
-	LAR  	AR1,#DATART+1 	;загружаем указатель на буфер приема-передачи
+	LAR  	AR2,#DATART+1 	;загружаем указатель на буфер приема-передачи
 	LACC 	*,1  		;в акумулятор загружаем принятый байт комманды
 	AND  	#01EH
 	ADD  	#CodeRec
@@ -729,15 +729,15 @@ CommAndData
 				; прибора заново)
 	;следующий принимаем 256+4 байта данных
 	SPLK 	#ReceveData52,WhatDoingReceve
-	LAR  	AR1,#DATART+4
-	SAR  	AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  	AR2,#DATART+4
+	SAR  	AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B 	RETASPINT 	;возрат из прерывания
 CommandRecData52
 	;принимаем 256+4 байта данных
-	LAR  	AR1,PosTransmit
+	LAR  	AR2,PosTransmit
 	LACC 	ByteReceve,0  	;в акумулятор загружаем принятый байт
 	SACL 	*+              ;сдвигаем буфер на единичку
-	SAR  	AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  	AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC 	PosTransmit
 	SUB  	#DATART
@@ -749,18 +749,18 @@ CommandRecData52
 OutBuffer52
 ****отладка заполнение в params
 *//        CLRC SXM
-*//        LAR  AR1,#DATART+4
+*//        LAR  AR2,#DATART+4
 *//        SPLK #03fh,TMP
 *//        RPT  TMP
 *//        BLDD *+,#Params
 ****
 	SPLK 	#0FFFFh,CRC 	;надо посчитать контрольную сумму
 	DMOV 	CRC
-	LAR  	AR1,#DATART+4
+	LAR  	AR2,#DATART+4
 	LAR  	AR0,#255     ;256 байт данных
 	CLRC 	SXM
 	CALL 	CRCCALC
-	LAR  	AR1,#DATART+260 ;по этому смещению находится CRC
+	LAR  	AR2,#DATART+260 ;по этому смещению находится CRC
 	LACC 	*+
 	ADD  	*+,8
 	XOR  	CRC
@@ -774,17 +774,17 @@ OutBuffer52
 *   Пpогpаммиpование пpибоpа
 *
 	LAR  	AR0,#255        ;256 байт данных
-	LAR  	AR6,#DATART+4
+	LAR  	AR7,#DATART+4
 
 	SPLK 	#0,FLADR+1	;по адресу 000200h
 	SPLK 	#200h,FLADR     ;параметры программирования прибора
 
-	MAR  	*,AR6
+	MAR  	*,AR7
 NEXTWD  BLDD 	*+,#TMP
 	CALL 	FLPROG
 	BCND 	NOPROG,NEQ     	;если ACC!=0, то произошла ошибка записи
 	MAR  	*,AR0
-	BANZ 	NEXTWD,*-,AR6
+	BANZ 	NEXTWD,*-,AR7
 *
  .if VersionFerrum=1		;без дешифратора
 
@@ -810,15 +810,15 @@ NEXTWD  BLDD 	*+,#TMP
         mSendBabyModeToAVR
  .endif
 
-	MAR  	*,AR1
-	LAR  	AR1,#DATART+2
+	MAR  	*,AR2
+	LAR  	AR2,#DATART+2
 	LACC	TMP+1
 	SACL 	*
 	DMOV 	*
 	B 	SendBack
 
-NOPROG  MAR  	*,AR1
-	LAR  	AR1,#DATART+2
+NOPROG  MAR  	*,AR2
+	LAR  	AR2,#DATART+2
 	SPLK 	#0FFh,*  	;записываем код ошибки
 	DMOV 	*
 	B    	SendBack       	;и высылаем его в PC
@@ -874,7 +874,7 @@ CommAndCrc
 	AND  	#0FFFEh
 	SACL 	Flags      	;мы сделали это!!! (след раз определение
 				;сигнатуры заново)
-	LAR  AR1,#DATART+4  	;Считывание сигнатуpы в буфер
+	LAR  AR2,#DATART+4  	;Считывание сигнатуpы в буфер
 				;для передачи в компьютер
 	LACC 	#SIGNT
 	RPT  	#LengthSignat-1 ;LengthSignat байт данных
@@ -883,12 +883,12 @@ CommAndCrc
 	SPLK 	#0FFFFh,CRC 	; Подсчет контрольной суммы
 	DMOV 	CRC
 
-	LAR	AR1,#MayModify+1
+	LAR	AR2,#MayModify+1
 	LACC	*
-	LAR	AR1,#DATART+4+11
+	LAR	AR2,#DATART+4+11
 	SACL	*
 
-	LAR  	AR1,#DATART+4
+	LAR  	AR2,#DATART+4
 	LAR  	AR0,#LengthSignat-1   ;LengthSignat байт данных
 	CALL 	CRCCALC
 	LACC 	CRC
@@ -909,7 +909,7 @@ CommAndCrc
 	B 	SendBackC
 ********************************
 * вычисление контрольной суммы
-*	AR1 - указатель на массив
+*	AR2 - указатель на массив
 *	AR0 - (длина-1) байт
 *	CRC
 ********************************
@@ -932,7 +932,7 @@ CRCCALC LACC 	CRC
 	LACC 	TMP+2
 	XOR  	TMP+1
 	SACL 	CRC+1
-	BANZ 	CRCCALC,*-,AR1
+	BANZ 	CRCCALC,*-,AR2
 	RET
 
 
@@ -1002,7 +1002,7 @@ CommAndBlood
 *	OR   #20h
 *        SACL DPA0
 
-*        LAR  AR1,AFLLSB
+*        LAR  AR2,AFLLSB
 *	SPLK #07ffh,TMP
 *	RPT  TMP
 *        BLDD *+,#DATART+4
@@ -1022,7 +1022,7 @@ CommAndBlood
 	SACH FLADR+1,1
 	AND   #7FFFh
 	SACL FLADR
-	LAR	AR1,#DATART+4
+	LAR	AR2,#DATART+4
 	CALL	Read2K
  .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
  .else
@@ -1031,9 +1031,9 @@ CommAndBlood
 
 	SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV CRC
-	LAR  AR1,#DATART+4
+	LAR  AR2,#DATART+4
 	LAR  AR0,#07FFh
-	MAR	*,AR1
+	MAR	*,AR2
         CALL CRCCALC
         LACC CRC
         AND  #0FFh
@@ -1138,11 +1138,11 @@ NextPage1
 	CALL FLPROG
 	CLRC SXM
 	LACC TMP+1
-	BCND EndOkClear1,EQ
+	BCND EndOkCleAR2,EQ
 	SUB #1
 	SACL TMP+1
 	B NextPage1
-EndOkClear1
+EndOkCleAR2
  .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
  .else
 	Beep
@@ -1161,9 +1161,9 @@ EndOkClear1
  .endif
 
 
-	MAR  *,AR1
+	MAR  *,AR2
 
-	LAR  AR1,#DATART+2
+	LAR  AR2,#DATART+2
 	SPLK #00h,*
 	DMOV *
 	BIT  TMP,15
@@ -1209,8 +1209,8 @@ SendBackAndFlag
 SendBack
         SPLK #4,CNTASPTR     ;в буфере четыре символа
 SendBackC
-        LAR  AR1,#DATART
-        SAR  AR1,PosTransmit ;начало буфера передачи
+        LAR  AR2,#DATART
+        SAR  AR2,PosTransmit ;начало буфера передачи
         B EnableAndBeginTr   ;переходим на разрешение прерываний
 			     ;передачи
 CommAnd256
@@ -1220,14 +1220,14 @@ CommAnd256
         BCND OUTFF,NEQ ;если не совпадает, то назад 0FFh
         ;будем принимать 256 байт
         SPLK #Receve41h,WhatDoingReceve ;следующий принимаем 41h
-        LAR  AR1,#DATART+4
-        SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+        LAR  AR2,#DATART+4
+        SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
         B RETASPINT ;возрат из прерывания
 CommandRec5_41
-        LAR  AR1,PosTransmit
+        LAR  AR2,PosTransmit
         LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
         SACL *+              ;сдвигаем буфер на единичку
-        SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+        SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	XOR  #041h          ;если это не 41h,
 	BCND OUTFF,NEQ     ;то высылаем соответствующее
 *	BCND Error41,NEQ     ;то высылаем соответствующее
@@ -1238,10 +1238,10 @@ CommandRec5_41
 *Error41
 *	B	OUTFF
 CommandRec5_55
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	XOR  #055h          ;если это не 55h,
 	BCND OUTFF,NEQ     ;то высылаем соответствующее
 *	BCND Error41,NEQ     ;то высылаем соответствующее
@@ -1302,7 +1302,7 @@ CommAndControl
                         ;flash заново)
        ;здесь (потом !!!) надо проконтролировать flash давления
 
-        LAR  AR1,#DATART+2
+        LAR  AR2,#DATART+2
         SPLK #00h,*
         DMOV *
         B SendBack
@@ -1341,7 +1341,7 @@ CommAndDataEKG
                         ;давления заново)
         ;в DATART+2 и DATART+3 находится номер блока данных
         ;надо будет (потом !!!) заполнить 2кбайта данных
-        LAR  AR1,#DATART+4  ;Считывание флеш данных в компьютер
+        LAR  AR2,#DATART+4  ;Считывание флеш данных в компьютер
 	SPLK #07FFh,TMP
         LACC #8000h
 	RPT  TMP
@@ -1349,7 +1349,7 @@ CommAndDataEKG
         CLRC SXM
         SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
         DMOV CRC
-        LAR  AR1,#DATART+4
+        LAR  AR2,#DATART+4
         LAR  AR0,#07FFh
         CALL CRCCALC
         LACC CRC
@@ -1391,7 +1391,7 @@ CommAndClearEKG
                         ;flash заново)
        ;здесь (потом !!!) надо очистить flash ЭКГ
 
-	LAR  AR1,#DATART+2
+	LAR  AR2,#DATART+2
         SPLK #00h,*
         DMOV *
 	B SendBack
@@ -1422,7 +1422,7 @@ CommAndControlEKG
                         ;flash заново)
        ;здесь (потом !!!) надо проконтролировать flash давления
 
-        LAR  AR1,#DATART+2
+        LAR  AR2,#DATART+2
         SPLK #00h,*
         DMOV *
         B SendBack
@@ -1478,16 +1478,16 @@ CommAndBigData
         ;в DATART+2(мл) и DATART+3(ст) находится номер блока данных
         ;следующий принимаем 2048+4 байта данных
         SPLK #ReceveData2k,WhatDoingReceve
-        LAR  AR1,#DATART+4
-        SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+        LAR  AR2,#DATART+4
+        SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
         B RETASPINT ;возрат из прерывания
 
 CommandRecData2k
         ;принимаем 2k+4 байта данных + CRC
-        LAR  AR1,PosTransmit
+        LAR  AR2,PosTransmit
         LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
         SACL *+              ;сдвигаем буфер на единичку
-        SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+        SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
         LACC PosTransmit
         SUB  #DATART
@@ -1499,11 +1499,11 @@ CommandRecData2k
 OutBuffer2k
         SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
         DMOV CRC
-        LAR  AR1,#DATART+4
+        LAR  AR2,#DATART+4
         LAR  AR0,#2047     ;2048 байт данных
         CLRC SXM
         CALL CRCCALC
-        LAR  AR1,#DATART+2052 ;по этому смещению находится CRC
+        LAR  AR2,#DATART+2052 ;по этому смещению находится CRC
         LACC *+
         ADD  *+,8
         XOR  CRC
@@ -1516,8 +1516,8 @@ OutBuffer2k
 *                               Пpогpаммиpование пpибоpа
 *
         LAR  AR0,#2047        ;2048 байт данных
-	LAR  AR6,#DATART+4
-	LAR  AR1,#DATART+2
+	LAR  AR7,#DATART+4
+	LAR  AR2,#DATART+2
 
  .if Mem=20	;одна микросхема на 2 Mbyte
 	LACC *+,5
@@ -1533,13 +1533,13 @@ OutBuffer2k
 	AND	#07FFFH
 	SACL 	FLADR    ;запоминаем младшую часть адреса
 
-	MAR  	*,AR6
+	MAR  	*,AR7
 NEXTWD1 BLDD 	*+,#TMP
 	CALL FLPROG
 	BCND NOPROG1,NEQ ;если ACC!=0, то произошла ошибка записи
 
 	MAR  *,AR0
-	BANZ NEXTWD1,*-,AR6
+	BANZ NEXTWD1,*-,AR7
 *
  .if VersionFerrum=1		;без дешифратора
 
@@ -1556,15 +1556,15 @@ NEXTWD1 BLDD 	*+,#TMP
  .else
 	Beep
  .endif
-	MAR  *,AR1
-	LAR  AR1,#DATART+2
+	MAR  *,AR2
+	LAR  AR2,#DATART+2
 	SPLK #000h,*
 *	SPLK #0FFh,*
 	DMOV *
         B SendBack
 
-NOPROG1 MAR  *,AR1
-        LAR  AR1,#DATART+2
+NOPROG1 MAR  *,AR2
+        LAR  AR2,#DATART+2
         SPLK #0FFh,*         ;записываем код ошибки
         DMOV *
         B    SendBack        ;и высылаем его в PC
@@ -1616,7 +1616,7 @@ CommAndUserData
 	SACL Flags      ;мы сделали это!!! (след раз чтение данных
 			;давления заново)
 	;в DATART+2(мл) и DATART+3(ст) находится номер команды
-	LAR  AR1,#DATART+2
+	LAR  AR2,#DATART+2
 	LACC 	*
 	SUB  	#9         ;пока обрабатываем всего девять команд
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
@@ -1643,15 +1643,15 @@ UserCode:
 
 UserCode1
 	SPLK #RecUserCode1,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ; на данный момент просто высылаем назад код OK
 ReceveUserCode1
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1663,11 +1663,11 @@ ReceveUserCode1
 OutBufferUserCode1
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1676,22 +1676,22 @@ OutBufferUserCode1
 	ADD  *+,8
 	XOR  CRC+1
 	BCND OUTFF,NEQ
-	MAR	*,AR1
-	LAR  AR1,#DATART+2
+	MAR	*,AR2
+	LAR  AR2,#DATART+2
 	SPLK #00h,*
 	DMOV *
 	B SendBack
 UserCode2
 	SPLK #RecUserCode2,WhatDoingReceve	;пока ничего не делаем
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ; на данный момент просто высылаем назад код OK
 ReceveUserCode2
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1703,11 +1703,11 @@ ReceveUserCode2
 OutBufferUserCode2
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1716,8 +1716,8 @@ OutBufferUserCode2
 	ADD  *+,8
 	XOR  CRC+1
 	BCND OUTFF,NEQ
-	MAR	*,AR1
-	LAR  AR1,#DATART+2
+	MAR	*,AR2
+	LAR  AR2,#DATART+2
 	SPLK #00h,*
 	DMOV *
 	B SendBack
@@ -1725,14 +1725,14 @@ OutBufferUserCode2
 UserCode3
 	;разрешить модификацию прибора
 	SPLK 	#RecUserCode3,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ReceveUserCode3
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1744,11 +1744,11 @@ ReceveUserCode3
 OutBufferUserCode3
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-	LAR  AR1,#DATART+4
+	LAR  AR2,#DATART+4
 	LAR  AR0,#7     ;8 байт данных
 	CLRC SXM
 	CALL CRCCALC
-	LAR  AR1,#DATART+8+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+8+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1761,8 +1761,8 @@ OutBufferUserCode3
 ********
 * проверяем пароль
 ********
-	MAR	*,AR1
-	LAR  	AR1,#DATART+4
+	MAR	*,AR2
+	LAR  	AR2,#DATART+4
 
 	LACC	*+		;1 символ пароля
 	AND	#0FFh
@@ -1804,27 +1804,27 @@ OutBufferUserCode3
 	XOR	#'d'
 	BCND	PassFail,NEQ
 
-	MAR  	*,AR1
-	LAR  	AR1,#MayModify
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
 	SPLK	#MagicPass,*
 
 
-	MAR	*,AR1
-	LAR  AR1,#DATART+2
+	MAR	*,AR2
+	LAR  AR2,#DATART+2
 
 	SPLK #00h,*
 	DMOV *
 	B SendBack
 UserCode4
 	SPLK #RecUserCode4,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ReceveUserCode4
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1836,11 +1836,11 @@ ReceveUserCode4
 OutBufferUserCode4
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1850,12 +1850,14 @@ OutBufferUserCode4
 	XOR  CRC+1
 	BCND OUTFF,NEQ
 
-	MAR  	*,AR1
-	LAR  	AR1,#MayModify
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
 	LACC	*
 	XOR	#MagicPass
 	BCND	PassFail,NEQ
  .if SerialProg=1
+       	LAR  	AR1,#068h		;адрес стека подменяем, так как здесь
+        				;будет находится программа пересамопрограммирования
 	CALL 	CopyCodeToRam
 	B 	BeginPrgAlgor
  .elseif SerialProg=0
@@ -1863,19 +1865,19 @@ OutBufferUserCode4
  .endif
 
 
-*	MAR	*,AR1
-*	LAR  AR1,#DATART+2
+*	MAR	*,AR2
+*	LAR  AR2,#DATART+2
 *	SPLK #00h,*
 *	DMOV *
 *	B SendBack
 	B	PassFail
 
 PassFail
-	MAR  	*,AR1
-	LAR  	AR1,#MayModify
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
 	SPLK	#0,*
-ERRCOMM MAR  *,AR1
-	LAR  AR1,#DATART+2
+ERRCOMM MAR  *,AR2
+	LAR  AR2,#DATART+2
 	SPLK #0FFh,*         ;записываем код ошибки
 	DMOV *
 	B    SendBack        ;и высылаем его в PC
@@ -1884,14 +1886,14 @@ ERRCOMM MAR  *,AR1
 UserCode5
  .if AVRProcessor=1		;с AVR
 	SPLK #RecUserCode5,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ReceveUserCode5
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1903,11 +1905,11 @@ ReceveUserCode5
 OutBufferUserCode5
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1917,14 +1919,14 @@ OutBufferUserCode5
 	XOR  CRC+1
 	BCND OUTFF,NEQ
 
-	MAR  	*,AR1
-	LAR  	AR1,#MayModify
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
 	LACC	*
 	XOR	#MagicPass
 	BCND	PassFail,NEQ
 	CALL    Program_AVR
-	MAR	*,AR1
-	LAR  	AR1,#DATART+2
+	MAR	*,AR2
+	LAR  	AR2,#DATART+2
 
 	SACL 	*
 	DMOV 	*
@@ -1939,14 +1941,14 @@ ReceveUserCode5:
 UserCode6
  .if AVRProcessor=1		;с AVR
 	SPLK #RecUserCode6,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ReceveUserCode6
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -1958,11 +1960,11 @@ ReceveUserCode6
 OutBufferUserCode6
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -1972,14 +1974,14 @@ OutBufferUserCode6
 	XOR  CRC+1
 	BCND OUTFF,NEQ
 
-	MAR  	*,AR1
-	LAR  	AR1,#MayModify
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
 	LACC	*
 	XOR	#MagicPass
 	BCND	PassFail,NEQ
 	CALL    EraseAVRMem
-	MAR	*,AR1
-	LAR  	AR1,#DATART+2
+	MAR	*,AR2
+	LAR  	AR2,#DATART+2
 
 	SACL 	*
 	DMOV 	*
@@ -1991,14 +1993,14 @@ ReceveUserCode6:
 UserCode7
  .if Sertificarion=1	;включение режима тестового времени
 	SPLK #RecUserCode7,WhatDoingReceve
-	LAR  AR1,#DATART+4
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 	B RETASPINT ;возрат из прерывания
 ReceveUserCode7
-	LAR  AR1,PosTransmit
+	LAR  AR2,PosTransmit
 	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
 	SACL *+              ;сдвигаем буфер на единичку
-	SAR  AR1,PosTransmit ;чтобы сразу запоминать данные приема
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
 
 	LACC PosTransmit
 	SUB  #DATART
@@ -2010,11 +2012,11 @@ ReceveUserCode7
 OutBufferUserCode7
 	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
 	DMOV CRC
-*        LAR  AR1,#DATART+4
+*        LAR  AR2,#DATART+4
 *        LAR  AR0,#2047     ;2048 байт данных
 *        CLRC SXM
 *        CALL CRCCALC
-	LAR  AR1,#DATART+4 ;по этому смещению находится CRC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
 	LACC *+
 	ADD  *+,8
 	XOR  CRC
@@ -2024,18 +2026,18 @@ OutBufferUserCode7
 	XOR  CRC+1
 	BCND OUTFF,NEQ
 
-*	MAR  	*,AR1
-*	LAR  	AR1,#MayModify
+*	MAR  	*,AR2
+*	LAR  	AR2,#MayModify
 *	LACC	*
 *	XOR	#MagicPass
 *	BCND	PassFail,NEQ
 
-	MAR	*,AR1
-	LAR	AR1,#TestTime+4
+	MAR	*,AR2
+	LAR	AR2,#TestTime+4
 	SPLK	#1,*
 
 	LACC	#0
-	LAR  	AR1,#DATART+2
+	LAR  	AR2,#DATART+2
 
 	SACL 	*
 	DMOV 	*
@@ -2048,25 +2050,25 @@ ReceveUserCode7:
 UserCode8:
 ReceveUserCode8:	;он как бы и не нужен, но для проформы стоит
  .if AVRProcessor=1
-	MAR	*,AR1
-	LAR	AR1,#AVRProg
+	MAR	*,AR2
+	LAR	AR2,#AVRProg
 	SPLK	#1,*+
 	SPLK	#04401h,*		;Read Fatal Measurement Error
 	CALL	SendCommandAVR
  .else
  .endif
 
-	MAR	*,AR1
-	LAR	AR1,#AVRProg+2
+	MAR	*,AR2
+	LAR	AR2,#AVRProg+2
 	LACC	*
-	LAR	AR1,#DATART+4
+	LAR	AR2,#DATART+4
 	SACL	*
 
 	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV 	CRC
-	LAR  	AR1,#DATART+4
+	LAR  	AR2,#DATART+4
 	LAR  	AR0,#07FFh
-	MAR	*,AR1
+	MAR	*,AR2
 	CALL 	CRCCALC
 	LACC 	CRC
 	AND  	#0FFh
@@ -2084,8 +2086,8 @@ ReceveUserCode8:	;он как бы и не нужен, но для проформы стоит
 UserCode9:
 ReceveUserCode9:	;он как бы и не нужен, но для проформы стоит
 
-        MAR	*,AR1
-	LAR  	AR1,#DATART+4  	;Считывание номера версии и даты
+        MAR	*,AR2
+	LAR  	AR2,#DATART+4  	;Считывание номера версии и даты
 				;для передачи в компьютер
 	LACC 	#CurrentRevision
 
@@ -2109,9 +2111,9 @@ RevisionReaded:
 
 	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV 	CRC
-	LAR  	AR1,#DATART+4
+	LAR  	AR2,#DATART+4
 	LAR  	AR0,#07FFh
-	MAR	*,AR1
+	MAR	*,AR2
 	CALL 	CRCCALC
 	LACC 	CRC
 	AND  	#0FFh
@@ -2188,7 +2190,7 @@ CommAndAVR
 	SACH FLADR+1,1
 	AND   #7FFFh
 	SACL FLADR
-	LAR	AR1,#DATART+4
+	LAR	AR2,#DATART+4
 	CALL	ReadAVRMem
 	BCND	OUTFF,NEQ
 *	LACC	#10
@@ -2200,9 +2202,9 @@ CommAndAVR
 
 	SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV CRC
-	LAR  AR1,#DATART+4
+	LAR  AR2,#DATART+4
 	LAR  AR0,#07FFh
-	MAR	*,AR1
+	MAR	*,AR2
 	CALL CRCCALC
 	LACC CRC
 	AND  #0FFh

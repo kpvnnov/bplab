@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: PR_DIMIN.ASM,v 1.5 2001-04-11 10:03:40 peter Exp $
+; $Id: PR_DIMIN.ASM,v 1.6 2001-08-22 14:17:43 peter Exp $
 ;*       Pressure_diminution() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
 ;*       1. выключить клапан !
@@ -12,10 +12,10 @@ Pressure_diminution
 
 ;{
 
-        MAR     *,AR1
+        MAR     *,AR2
         LAR     AR0,SampleNumber
-        LAR     AR1,#Signal
-        MAR     *0+,AR1
+        LAR     AR2,#Signal
+        MAR     *0+,AR2
 
 ; switch ( SubroutMode )
 ; {
@@ -26,7 +26,7 @@ Pressure_diminution
 ;  case 0:
 ;    if ( Signal[SampleNumber] < NewPressure )
 
-        LACC    *,0,AR1
+        LACC    *,0,AR2
         SUB     NewPressure
         RETC    GEQ
 
@@ -80,7 +80,7 @@ Pr_dimin_case2
 ;  case 2:
 ;    if ( Signal[SampleNumber] > Signal[SampleNumber-1] )
 
-        LACC    *-,0,AR1
+        LACC    *-,0,AR2
         SUB     *
         RETC    LEQ
 
@@ -116,10 +116,10 @@ Pr_dimin_case2
 ;	StartMeasAdress[StepNumber] = SampleNumberShift;
 
 	LAR	AR0,StepNumber
-	LAR	AR1,#StartMeasAdress
-	MAR	*0+,AR1
+	LAR	AR2,#StartMeasAdress
+	MAR	*0+,AR2
 	LACC	SampleNumberShift
-	SACL	*,0,AR1
+	SACL	*,0,AR2
 
 ;      MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG)
 

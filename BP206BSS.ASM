@@ -1,4 +1,4 @@
-* $Id: BP206BSS.ASM,v 1.34 2001-07-04 08:13:22 peter Exp $
+* $Id: BP206BSS.ASM,v 1.35 2001-08-22 14:17:36 peter Exp $
 ;распределение памяти данных процессора
 ;блок B2 0060h-007Fh используется под стек
 *************************************
@@ -43,8 +43,8 @@ DPA0		.usect "bss2",1		;Данные порта 0
 	       ;   ++++++++++       - A15-A24
 rDIOSR		.usect "bss2",1      ;данные для IOSR
 
-MDSPL		.usect "bss2",1      ;режим дисплея
-
+_MDSPL		.usect "bss2",1      ;режим дисплея
+	.global	_MDSPL
 
 Jobs		.usect "bss2",1       ;
 
@@ -129,7 +129,8 @@ Preset0		.usect "bss2",3,1	;начальное давление канала
  .elseif WriteDebug<3
 Preset1		.usect "bss2",3,1	;начальное давление канала
  .endif
-OUTF		.usect "bss2",1		;Выход ФНЧ
+_OUTF		.usect "bss2",1		;Выход ФНЧ
+	.global _OUTF
 CurrPressure    .usect "bss2",1,1	;текущее давление
 
 * значение кода установки режима
@@ -221,7 +222,8 @@ massiv		.usect "bss2",1,1
 SR30	.usect "bss3",16,1    ;Сдвиговые регистры ФНЧ30
 
 *************************************
-WATCH	.usect "watch",7
+_WATCH	.usect "watch",7
+	.global	_WATCH
 ;+0 Таймер(единицы секунды)
 ;+1 Таймер(десятки секунды)
 ;+2 Часы(единицы минут)
@@ -274,7 +276,8 @@ MayModify	.usect "serial",2,1
 ;+0
 ;+1 - если равно A5 - это взрослый режим, в противном случае детский
 *************************************
-ResultADC	.usect	"adcrez",13,1
+_ResultADC	.usect	"adcrez",13,1
+	.global _ResultADC
 * 1.AIN0 (PL0)
 * 2.AIN1 (PL1)
 * 3.AIN2 (PL2)
@@ -300,7 +303,8 @@ iCNTCLK		.usect "clock",1
 iCNTDISP	.usect "displ",2,1
 *************************************
 * символы дисплея
-iSYMBL		.usect "displ",4,1
+_iSYMBL		.usect "displ",4,1
+	.global	_iSYMBL
 *************************************
 * Слова выдаваемые в дисплей
 iDISPL		.usect "displ",2,1

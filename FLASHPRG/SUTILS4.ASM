@@ -7,7 +7,7 @@
 *                                                          **
 * Filename: sutils20.asm                                   **
 * Modified for F2xx : Sam Saba                   12/24/96  **
-* Changes20: Changed DELAY parameter passing to use AR6    **
+* Changes20: Changed DELAY parameter passing to use AR7    **
 *            instead of a RAM location.                    **
 * Changes21: Added conditional assembly statements to REGS **
 *            and ARRAY subroutines for F206 versus F24X.   **
@@ -15,7 +15,7 @@
 *                                                          **
 * Called by: These utilites are used by CLEAR,ERASE,       **
 *            PROGRAM algorithms written for F2xx devices.  **
-* Function : DELAY - Delay loop specified by AR6.          **
+* Function : DELAY - Delay loop specified by AR7.          **
 *            REGS  - Clears MODE bit of F_ACCESS0/1 to     **
 *                    access flash module control registers.**
 *            ARRAY - Sets MODE bit of F_ACCESS0/1 to access**
@@ -28,7 +28,7 @@
 BeginDLY	.set	$
 *************************************
 *Delays as follows:                 *
-*  LAR      AR6,#N        2 Cycles  *
+*  LAR      AR7,#N        2 Cycles  *
 *  CALL     DELAY         4 Cycles  *
 *  RPT      #DLOOP  2*(N+1) Cycles  *
 *  NOP          DLOOP*(N+1) Cycles  *
@@ -40,7 +40,7 @@ BeginDLY	.set	$
 * get desired delay.                *
 *************************************
 
-DELAY                           ;AR6 = OUTER LOOP COUNT
+DELAY                           ;AR7 = OUTER LOOP COUNT
 DLY_LP  RPT     #DLOOP          ;APPROX 5US DELAY
         NOP
 	BANZ	DLY_LP,*-	;LOOP UNTIL DONE

@@ -57,9 +57,9 @@ ADCPRO
 	CALL 	CLKXF           ;1-передаем первое слово
 
 	SETC 	SXM
-	LAR  	AR2,#SR30  	;Адреса начала сдвиг.рег.ФНЧ
-	LAR  	AR3,#SR30+15    ;Адреса конца сдвиг.рег.ФНЧ
-	MAR     *,AR2
+	LAR  	AR3,#SR30  	;Адреса начала сдвиг.рег.ФНЧ
+	LAR  	AR4,#SR30+15    ;Адреса конца сдвиг.рег.ФНЧ
+	MAR     *,AR3
 
 	SPLK 	#09D00h,TMP  ;AIN9(PR3),16 bit,MSB first,bipolar
 	OUT  	TMP,SDTR     ;3.третье слово для передачи (PR3)
@@ -111,7 +111,7 @@ NotWriteFromDAC
 				;*(значение усиленного канала)
 	APAC
 	SUB 	#Ppa1_progMul2,15 ;на 16 сдвигать нельзя
-	SACH 	*,0,AR3
+	SACH 	*,0,AR4
 	CALL 	FILTER          ;FILTER
 
 	SPLK 	#0DC00h,TMP	;Vref+,16 bit,MSB first,bipolar

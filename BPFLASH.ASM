@@ -1,4 +1,4 @@
-* $Id: BPFLASH.ASM,v 1.14 2001-04-26 16:11:01 peter Exp $
+* $Id: BPFLASH.ASM,v 1.15 2001-08-22 14:17:39 peter Exp $
 ****отладка
 WriteEnd
 ;необходимо произвести подсчет количества измерения в таблице
@@ -130,10 +130,10 @@ Yes_It_Is:
 	ADD  	#0800h     ;смещение во flash
 	SACL 	FLADR
 
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR  	AR1,#TimeOfBeginMeas
+				;т.е. при дальнейшей записи индексом AR2
+	LAR  	AR2,#TimeOfBeginMeas
 
 	LACC	*
         AND	#03Fh
@@ -145,26 +145,26 @@ ItIsNotManualMeas:
 	CALL 	FLPROG     ;количество секунд записали
         mManual_MeasOff		;сбрасываем бит ручного измерения
 
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR  	AR1,#TimeOfBeginMeas+1
+				;т.е. при дальнейшей записи индексом AR2
+	LAR  	AR2,#TimeOfBeginMeas+1
 
 	LACC	*
 	SACL 	TMP
 	CALL 	FLPROG     ;количество минут записали
 
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
-	LAR  	AR1,#TimeOfBeginMeas+2
+				;т.е. при дальнейшей записи индексом AR2
+	LAR  	AR2,#TimeOfBeginMeas+2
 
 	LACC 	*+		;количество часов
 
 
 	CALL	ConvertBCD2BIN_
 
-	MAR  	*,AR1
+	MAR  	*,AR2
 
 
 	SPM  	#0              ;Set P Register Output Shift Mode
@@ -235,16 +235,16 @@ ItIsNotManualMeas:
 
 * AveragePeriod (период сердечных сокращений умноженный на 16)
 * вычисляем частоту f=60 сек * 100 (част дискр) * 16 / AveragePeriod
-	LAR	AR2,#TMP+3
-	LAR	AR3,#AveragePeriod
-	MAR	*,AR2
+	LAR	AR3,#TMP+3
+	LAR	AR4,#AveragePeriod
+	MAR	*,AR3
 	LACC	#6000
-	SACL	*,AR3
+	SACL	*,AR4
 
-*       ARP  = AR3
-*       AR2  - Указывает на числитель
-*       AR3  - Указывает на знаменаталь (AR3 - "Активан")
-*	AR2/AR3
+*       ARP  = AR4
+*       AR3  - Указывает на числитель
+*       AR4  - Указывает на знаменаталь (AR4 - "Активан")
+*	AR3/AR4
 
 	CALL	Division
 
@@ -390,7 +390,70 @@ AlreadyWrite
         XOR  #0FFFEh
         BCND NeChet,EQ ;не пишем, место кончилось
 
- .if ModeOutput=2
+ .if ModeOutput=3	;//два канала давления - прямой и аварийный
+
+	SETC	SXM
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+6;AIN6 (PR0)
+        LACC	*		;//выход прямой первого датчика давления
+
+	SUB	Preset0
+	ADD	#4000h,1
+
+	SACL 	TMP
+	CALL 	FLPROG
+
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+6;AIN6 (PR0)
+        LACC	*,8		;старшая часть
+
+	SUB	Preset0,8
+	ADD	#4000h,9
+	SACH 	TMP
+	CALL 	FLPROG
+
+	SETC	SXM
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+9;AIN6 (PR0)
+        LACC	*		;//выход прямой первого датчика давления
+
+	SUB	Preset0
+	ADD	#4000h,1
+
+	SACL 	TMP
+	CALL 	FLPROG
+
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+9;AIN6 (PR0)
+        LACC	*,8		;старшая часть
+
+	SUB	Preset0,8
+	ADD	#4000h,9
+	SACH 	TMP
+	CALL 	FLPROG
+
+ .if PsevdoEKG=1
+	CALL	puttable
+ .endif
+ .if ChannelEKG=1
+	WriteEKG	1
+	WriteEKG	2
+ .endif
+
+
+	LACC  	IZFLMSB,16
+	OR 	IZFLLSB
+	ADD  	#4
+ .if PsevdoEKG=1
+	ADD	#4
+ .endif
+ .if ChannelEKG=1
+	ADD	#4
+ .endif
+	SACL IZFLLSB
+	SACH IZFLMSB
+ .newblock
+ .elseif ModeOutput=2
 
         BIT Jobs,11
         BCND NormailWrite1,NTC
@@ -619,41 +682,41 @@ MakeSectoring
 AgainSaveMassiv1
 ******
 	LAR	AR0,TMP+2
-	LAR	AR4,#StartMeasAdress
-	MAR     *,AR4
-	MAR     *0+			;AR4 = & StartMeasAdress[i]
+	LAR	AR5,#StartMeasAdress
+	MAR     *,AR5
+	MAR     *0+			;AR5 = & StartMeasAdress[i]
 
 	LACC	*
 	SACL	TMP			;сохраняем младшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 
-	MAR	*,AR4
+	MAR	*,AR5
 	LACC	*,8
 	SACH	TMP			;сохраняем старшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 ******
 	LAR	AR0,TMP+2
-	LAR	AR4,#FinishMeasAdress
-	MAR     *,AR4
-	MAR     *0+			;AR4 = & StartMeasAdress[i]
+	LAR	AR5,#FinishMeasAdress
+	MAR     *,AR5
+	MAR     *0+			;AR5 = & StartMeasAdress[i]
 
 	LACC	*
 	SACL	TMP			;сохраняем младшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 
-	MAR	*,AR4
+	MAR	*,AR5
 	LACC	*,8
 	SACH	TMP			;сохраняем старшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 ******
 	LAR	AR0,TMP+2
-	LAR	AR4,#AvrPress
-	MAR     *,AR4
-	MAR     *0+			;AR4 = & StartMeasAdress[i]
+	LAR	AR5,#AvrPress
+	MAR     *,AR5
+	MAR     *0+			;AR5 = & StartMeasAdress[i]
 
 	LACC	*
 	ADD	#4000h,1
@@ -661,7 +724,7 @@ AgainSaveMassiv1
 	CALL 	FLPROG
 	mIncAddressToFlash
 
-	MAR	*,AR4
+	MAR	*,AR5
 	LACC	*,8
 	ADD	#4000h,1+8
 	SACH	TMP			;сохраняем старшую часть
@@ -669,16 +732,16 @@ AgainSaveMassiv1
 	mIncAddressToFlash
 ******
 	LAR	AR0,TMP+2
-	LAR	AR4,#AverageAmplitude
-	MAR     *,AR4
-	MAR     *0+			;AR4 = & StartMeasAdress[i]
+	LAR	AR5,#AverageAmplitude
+	MAR     *,AR5
+	MAR     *0+			;AR5 = & StartMeasAdress[i]
 
 	LACC	*
 	SACL	TMP			;сохраняем младшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 
-	MAR	*,AR4
+	MAR	*,AR5
 	LACC	*,8
 	SACH	TMP			;сохраняем старшую часть
 	CALL 	FLPROG
@@ -703,16 +766,16 @@ FinishSaveMassiv1
 
 AgainSaveMassiv2
 	LAR	AR0,TMP+2
-	LAR	AR4,#Diff2MaxAdressFinish
-	MAR     *,AR4
-	MAR     *0+			;AR4 = & Diff2MaxAdressFinish[i]
+	LAR	AR5,#Diff2MaxAdressFinish
+	MAR     *,AR5
+	MAR     *0+			;AR5 = & Diff2MaxAdressFinish[i]
 
 	LACC	*
 	SACL	TMP			;сохраняем младшую часть
 	CALL 	FLPROG
 	mIncAddressToFlash
 
-	MAR	*,AR4
+	MAR	*,AR5
 	LACC	*,8
 	SACH	TMP			;сохраняем старшую часть
 	CALL 	FLPROG
@@ -823,10 +886,10 @@ PoslednyaaZapis1
 ***********************
 
 GetRecordFlash
-	MAR     *,AR7
-	POPD	*-
-	SAR     AR6,*-
-	SAR	AR0,*-
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR	AR0,*+
 
 
 	SACL	FLADR
@@ -836,18 +899,18 @@ GetRecordFlash
 	SPLK	#0,FLADR+1
 
 	LAR	AR0,#7
-	LAR	AR1,#TMP
+	LAR	AR2,#TMP
 GetRec_1
 	CALL    FLREAD
-	MAR	*,AR1
+	MAR	*,AR2
 	SACL	*+,0,AR0
-	BANZ    GetRec_1,*-,AR1      ;Branch on Auxiliary Register Not Zero
+	BANZ    GetRec_1,*-,AR2      ;Branch on Auxiliary Register Not Zero
 
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
+	LAR     AR7,*-
 	PSHD	*
 	RET
 
@@ -857,13 +920,15 @@ GetRec_1
 *************************************************************************
 * копирование области программы из программной флеш, в програмную память
 *************************************************************************
-	.ref Lenfl_clr
+AddressForRead .set 00d00h
+
+        .ref Lenfl_clr
 	.ref Lenfl_ers
 	.ref Lenfl_wrt,Lenfl_prg
 	.ref LenDLY,LenREGS,LenARRAY
 CopyCodeToRam
-	LAR  	AR1,#00800h  	;переписывание программы
-	MAR	*,AR1
+	LAR  	AR2,#00800h  	;переписывание программы
+	MAR	*,AR2
 	LACC    #LenPrgAlgor-1
 	ADD	#Lenfl_clr
 	ADD	#Lenfl_ers
@@ -898,7 +963,7 @@ CopyCodeToRam
 VARS	.set	0300h
 				;required by the standard flash algos   *
 				;for temporary variables. Pointers to   *
-				;this space are hardcoded in SVAR2X.H,  *
+				;this space are hardcoded in SVAR3X.H,  *
 				;and variables are init'd at run-time.  *
 *************************************************************************
 *PARMS:   .usect  "PRG_parm",10  ;This is an uninitialized data section  *
@@ -927,7 +992,8 @@ ERS_COUNT   .set    PARMS+6     ;Used for erase fail count.             *
 *************************************************************************
 
 *        .text
-BeginOfBlock	.set	$
+;BeginOfBlock	.set	$
+BeginOfBlock	.set	0110h
        .sect "PrgAlgor"
 BeginPrgAlgor	.set	$
 *	.include "flashprg\sclr4.asm"
@@ -949,15 +1015,54 @@ BeginPrgAlgor	.set	$
 	SPLK    #03FFFh,SEG_END
 ***********First clear flash ************
 ers_loop:
+        MAR	*,AR1
+	LACK	0
+	SACL	*+
+	LACK	0
+	SACL	*+
+	CALL	_display_persent1
+	SBRK	2
+	CALL	MODIFSB1
+	LDP     #4		;у нас другая страница памяти :)
+	CALL	DISPL_REFRESH,*,AR1
+	LDP     #SEG_PARMS
+
 	CALL    GCLR            ;Clear flash.
 	LACL    ERROR           ;Check for CLEAR/ERASE error
 	BCND    ers_error,neq   ;If error, then hard fail.
 ***********Next erase flash ************
+
+        MAR	*,AR1
+	LACK	0
+	SACL	*+
+	LACK	1
+	SACL	*+
+	CALL	_display_persent1
+	SBRK	2
+	CALL	MODIFSB1
+	LDP     #4		;у нас другая страница памяти :)
+	CALL	DISPL_REFRESH,*,AR1
+	LDP     #SEG_PARMS
+
 	CALL    GERS            ;Erase flash.
 	LACL    ERROR           ;Check for CLEAR/ERASE error
 	BCND    depletion,neq   ;If error, then try Flash-write.
         B       ers_done        ;Else, no errors erasing.
 depletion:
+
+        MAR	*,AR1
+	LACL    ERS_COUNT       ;Get erase fail count.
+	SACL	*+
+	LACK	1
+	SACL	*+
+	CALL	_display_persent1
+	SBRK	2
+	CALL	MODIFSB1
+	LDP     #4		;у нас другая страница памяти :)
+	CALL	DISPL_REFRESH,*,AR1
+	LDP     #SEG_PARMS
+
+
 	LACL    ERS_COUNT       ;Get erase fail count.
         ADD     #1              ;Increment fail count.
         SACL    ERS_COUNT       ;Save new count.
@@ -968,13 +1073,6 @@ depletion:
         BCND    ers_error,neq   ;If couldn't recover, then hard fail.
         B       ers_loop        ;Else, Try erase again.
 
-ers_error:
-*******************************************************************
-** If here then an unrecoverable error has occured during erase. **
-** In an actual application, the system takes some action to     **
-** indicate that service is required.                            **
-*******************************************************************
-        B       ers_error       ;Error while erasing.
 
 ers_done:
 *******************************************************************
@@ -989,26 +1087,41 @@ ers_done:
 ** three SARAM locations are initialized.                        **
 *******************************************************************
 	LDP     #4		;у нас другая страница памяти :)
-	LAR	AR1,#0		;начальный адрес программирования
+	LAR	AR2,#0		;начальный адрес программирования
 
 	LACC    #1Fh,1		;#1F0000h адрес для зашивки
 	SACL	FLADR+1		;начальный адрес во флеш
 	SPLK	#0,FLADR
 Save_Next_Block
-	LAR     AR6, #0c00h     ;Using last 3K of SARAM as buffer.
+	LAR     AR7, #AddressForRead     ;Using last 3K of SARAM as buffer.
 	CALL	Read_512	;читаем 256 слов (512 байт)
 
 
 	CALL	PROGRAM_BLOCK	;программируем
 
+        MAR	*,AR1
+	SAR	AR2,*
+        LACC	*+,8
+        SACH	*+
+	LACK	1
+	SACL	*+
+	CALL	_display_persent1
+	SBRK	2
+	CALL	MODIFSB1
 	LDP     #4		;у нас другая страница памяти :)
-	SAR	AR1,*
+	CALL	DISPL_REFRESH,*,AR1
+        MAR	*-,AR1
+        LAR	AR2,*
+
+
+        LDP     #4		;у нас другая страница памяти :)
+	SAR	AR2,*
 	LACC	*
 	ADD	#100h
 	SACL	*
 	SUB	#4000h
 	BCND	prg_done,GEQ
-	LAR	AR1,*
+	LAR	AR2,*
 
 	;увеличиваем адрес чтения из флеш
 	LACC 	FLADR
@@ -1033,17 +1146,17 @@ Progr_Flash_NoOver
 *******************************************************************
 
 PROGRAM_BLOCK
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR1,*-
-	SAR     AR0,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR2,*+
+	SAR     AR0,*+
 
 	LDP     #SEG_PARMS
 **********Put parameters where they belong.**********
 	splk    #0ff00h,PROTECT
-	splk    #00c00h,PRG_bufaddr
+	splk    #AddressForRead,PRG_bufaddr
 *	splk    #00000h,PRG_paddr
-	SAR	AR1,PRG_paddr		;адрес для программирования храниться здесь
+	SAR	AR2,PRG_paddr		;адрес для программирования храниться здесь
 
 	splk    #00100h,PRG_length
 ***********Next program flash ************
@@ -1051,14 +1164,21 @@ PROGRAM_BLOCK
 	LACL    ERROR           ;Check for program error.
 	BCND    prg_error,neq   ;If error then clear ACC.
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR0,*+
-	LAR     AR1,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR0,*-
+	LAR     AR2,*-
 	PSHD	*
 	RET
 *	B       prg_done        ;Else, No errors programming.
 
+ers_error:
+*******************************************************************
+** If here then an unrecoverable error has occured during erase. **
+** In an actual application, the system takes some action to     **
+** indicate that service is required.                            **
+*******************************************************************
+;        B       ers_error       ;Error while erasing.
 prg_error:
 *******************************************************************
 ** If here then an error has occured during programming. In an   **
@@ -1120,7 +1240,7 @@ Beeping2khz_1
 *  адрес для чтения, из него выбрать адрес страницы
 *  ASFLMSB     15-20bit
 *  AFLLSB      0-14bit
-*	AR6 - куда загружать
+*	AR7 - куда загружать
 *
 Read_512
 
@@ -1132,7 +1252,7 @@ Read_512
 *  адрес для чтения, из него выбрать адрес страницы
 *  ASFLMSB     15-20bit
 *  AFLLSB      0-14bit
-*	AR6 - куда загружать
+*	AR7 - куда загружать
 *
 *  PA11-0 - адрес страницы
 *  BA9-0  - адрес байта внутри страницы
@@ -1148,6 +1268,198 @@ Read_512
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
+
+DISPL_REFRESH:
+        MAR	*,AR2
+	LAR	AR2,#iDISPL
+
+	LACC 	*          	;производим refresh
+	CMPL
+	SACL 	*+
+	LACC 	*
+	CMPL
+	SACL    *
+
+        MAR	*,AR1
+;вывод ячеек памяти индикатора на дисплей
+	SPLK 	#SSPS,*    ;SSP start
+	OUT  	*,SSPCR    ;Synchronous Serial Port Control Register
+	MAR	*,AR2
+	LAR	AR2,#iDISPL
+
+	OUT  	*+,SDTR
+	OUT  	*,SDTR
+
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+      	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+	mImp_ssp
+
+        MAR	*,AR1
+	SPLK 	#SSPR,*
+	OUT  	*,SSPCR
+
+	LACC 	DPA0,0
+	OR   	#02h
+	SACL 	DPA0
+	OUT  	DPA0,PA0
+	AND  	#0FFFDh
+	SACL 	DPA0
+	OUT  	DPA0,PA0
+	RET
+
+******************************************************
+* FUNCTION DEF : _display_persent
+******************************************************
+_display_persent1:
+LF4	.set	1
+	SAR	AR0,*+
+	SAR	AR1,*
+	LAR	AR0,*+,AR2
+*** 51	-----------------------    iSYMBL[3] = perc&0xffu;
+;>>>> 	  iSYMBL[3]=(perc&0x0FF);
+	LACK	255
+	LARK	AR2,-4+LF4
+	MAR	*0+
+	AND	* 
+	LDPK	_iSYMBL+3
+	SACL	_iSYMBL+3
+*** 52	-----------------------    iSYMBL[2] = perc>>8;
+;>>>> 	  iSYMBL[2]=(perc&0x0FF00)>>8;
+	RSXM
+	LAC	*+,7
+	LDPK	_iSYMBL+2
+	SACH	_iSYMBL+2,1
+*** 53	-----------------------    iSYMBL[1] = 10u;
+;>>>> 	  iSYMBL[1]=S_SPACE;
+;>>>> 	  switch(cod){
+;>>>> 	   case FLASH_CLEAR:
+;>>>> 	    iSYMBL[0]=S_C;
+;>>>> 	    break;
+;>>>> 	   case FLASH_ERASE:
+;>>>> 	    iSYMBL[0]=S_E;
+;>>>> 	    break;
+;>>>> 	   case FLASH_PROGRAM:
+	LACK	10
+	LDPK	_iSYMBL+1
+	SACL	_iSYMBL+1
+***  	-----------------------    switch ( cod ) {...};
+	ZALS	* 
+	BZ	L7
+	SUBK	1
+	BZ	L6
+	SUBK	1
+	BNZ	EPI0_4
+***	-----------------------g1:
+*** 62	-----------------------    iSYMBL[0] = 14u;
+;>>>> 	    iSYMBL[0]=S_P;
+	LACK	14
+	LDPK	_iSYMBL
+	SACL	_iSYMBL
+*** 63	-----------------------    goto g4;
+;>>>> 	    break;
+	B	EPI0_4
+L6:
+***	-----------------------g2:
+*** 59	-----------------------    iSYMBL[0] = 15u;
+	LACK	15
+	LDPK	_iSYMBL
+	SACL	_iSYMBL
+*** 60	-----------------------    goto g4;
+	B	EPI0_4
+L7:
+***	-----------------------g3:
+*** 56	-----------------------    iSYMBL[0] = 16u;
+	LACK	16
+	LDPK	_iSYMBL
+	SACL	_iSYMBL
+***	-----------------------g4:
+***  	-----------------------    return;
+EPI0_4:
+	MAR	* ,AR1
+	SBRK	2
+	LAR	AR0,* 
+	RET
+MODIFSB1:
+	LDP     #4		;у нас другая страница памяти :)
+	MAR  	*,AR7
+	LAR	AR7,#_iSYMBL
+
+	LACC 	#DSIM0_1     	;преобразование символов дисплея
+	      			;в слова выдаваемые на экран
+	ADD	*+
+
+	TBLR 	TMP
+	LACC 	#DSIM0_1
+	ADD	*+
+
+	TBLR 	TMP+1
+	LACC 	#DSIM0_1
+	ADD	*+
+
+	TBLR 	TMP+2
+	LACC 	#DSIM0_1
+	ADD	*
+	LAR	AR7,#iDISPL
+
+	TBLR 	TMP+3
+	LACC 	TMP,8
+	OR   	TMP+1
+	SACL 	*+
+	LACC 	TMP+2,8
+	OR   	TMP+3
+	SACL 	*
+	RET
+*                                                         GFEDCBA
+DSIM0_1 .word   003Fh   ; 0 Описание символа 0           00111111    A
+        .word   0006h   ; 1 Описание символа 1           00000110  F   B
+  	.word   005Bh   ; 2 Описание символа 2           01011011    G
+	.word   004Fh   ; 3 Описание символа 3           01001111  E   C
+	.word   0066h   ; 4 Описание символа 4           01100110    D
+	.word   006Dh   ; 5 Описание символа 5           01101101
+	.word   007Dh   ; 6 Описание символа 6           01111101
+	.word   0007h   ; 7 Описание символа 7           00000111
+	.word   007Fh   ; 8 Описание символа 8           01111111
+	.word   006Fh   ; 9 Описание символа 9           01101111
+	.word   0077h   ; A Описание символа "Пустота"   01110111
+	.word   007Fh   ; B Описание символа (верх.тире) 01111111
+	.word   0039h   ; C Описание символа (сред.тире) 00111001
+	.word   003Fh   ; D Описание символа (нижн.тире) 00111111
+	.word   0079h   ; E Описание символа P           01111001
+	.word   0071h   ; F Описание символа E           01110001
 
 
 LenPrgAlgor	.set	$-BeginPrgAlgor

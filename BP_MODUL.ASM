@@ -23,10 +23,10 @@ Next_Sample
         SPLK    #0C20h,TCR
         LDP     #4
 
-        MAR     *,AR1
-        LAR     AR1,#Signal
+        MAR     *,AR2
+        LAR     AR2,#Signal
         LAR     AR0,SampleNumber
-        MAR     *0+,AR1
+        MAR     *0+,AR2
         IN      *,0
 
         CALL    ADC_value_processing

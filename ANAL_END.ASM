@@ -1,4 +1,4 @@
-* $Id: ANAL_END.ASM,v 1.8 2001-04-11 10:03:39 peter Exp $
+* $Id: ANAL_END.ASM,v 1.9 2001-08-22 14:17:35 peter Exp $
 ;Analysis_of_end()
  .if WriteDebug!=0
 
@@ -156,7 +156,7 @@ Anal_end_PULSE_FREQ_EVALUATION:
 ;		  PressPulseFrEv = PRESS_80;
 ;		  SubroutMode = 0;
 ;		  Clear_measurement();
-;	 	  MDSPL = iCURRENT_PRESSURE;
+;	 	  _MDSPL = iCURRENT_PRESSURE;
 ;        	}
 
 	.if SIM != 1
@@ -172,15 +172,15 @@ Anal_end_PULSE_FREQ_EVALUATION:
 ;         i = MaxNumber - 1;
 ;         while ( i >= 0 )
 
-	MAR     *,AR2
+	MAR     *,AR3
         LAR     AR0,MaxNumberShift
-        LAR     AR2,#Diff2MaxAdressFinish
+        LAR     AR3,#Diff2MaxAdressFinish
         MAR     *0+,AR0
         LAR     AR0,MaxNumber
-        MAR     *-,AR1
-        LAR     AR1,#Diff2MaxAdress
+        MAR     *-,AR2
+        LAR     AR2,#Diff2MaxAdress
+        MAR     *0+,AR3
         MAR     *0+,AR2
-        MAR     *0+,AR1
 
 ;         {
 ;           Diff2MaxAdressFinish[MaxNumberShift+i] = Diff2MaxAdress[i];
@@ -189,9 +189,9 @@ Anal_end_PULSE_FREQ_EVALUATION:
 ;	}
 
 Anal_end_for_i:
-        LACC    *-,AR2
+        LACC    *-,AR3
         SACL    *-,AR0
-        BANZ    Anal_end_for_i,*-,AR1
+        BANZ    Anal_end_for_i,*-,AR2
 
 Anal_end_max_number_eq_zero:
 
@@ -219,7 +219,7 @@ Anal_end_max_number_eq_zero:
 	SACL    AnalysisStart
 
 	.if SIM != 1
-*	SPLK 	#iCURRENT_PRESSURE,MDSPL 	;переходим на уровень давления
+*	SPLK 	#iCURRENT_PRESSURE,_MDSPL 	;переходим на уровень давления
 	.endif
 
 	RET
@@ -239,10 +239,10 @@ Anal_end_CurrPress_MORE_60:
 ;		      StartMeasAdress[StepNumber]) >= 3*TEN_SECOND )
 
 Anal_end_PRESSURE_AUGMENT:
-	MAR	*,AR1
+	MAR	*,AR2
 	LAR	AR0,StepNumber
-	LAR	AR1,#StartMeasAdress
-	MAR	*0+,AR1
+	LAR	AR2,#StartMeasAdress
+	MAR	*0+,AR2
 	LACC	SampleNumberShift,0
 	ADD	SampleNumber,0
 	SUB	*

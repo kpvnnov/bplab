@@ -1,6 +1,6 @@
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.16 2001-06-07 07:37:09 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.17 2001-08-22 14:17:40 peter Exp $
 *****************************************************************************
 *
 
@@ -20,10 +20,10 @@ INTKEY
 	SACL	*
 	OUT 	*,ICR           ;ICR(IS@0FFECh) ->STACK
 				;pending INT3 (store 1->FINT3)
-	LAR  	AR1,#IFR	;загружаем указатель на Interrupt Flag Register
-	MAR  	*,AR1      	;modify auxiliary register
+	LAR  	AR2,#IFR	;загружаем указатель на Interrupt Flag Register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 
 	SPLK 	#02h,*     	;pending INT2
 
@@ -35,23 +35,23 @@ int3_IzmNeIdet
 	B	QuitFromINTKEY
 
 ItIsKeybord:
-	MAR	*,AR6
-	LAR	AR6,#iCNTKEYB
+	MAR	*,AR7
+	LAR	AR7,#iCNTKEYB
 
 	SPLK 	#CNSTKEYB,*
 
 	Beep
 
-	LACC 	MDSPL,1 ;вызываем процедуру в зависимости от режима
+	LACC 	_MDSPL,1 ;вызываем процедуру в зависимости от режима
 	ADD  	#KEY1
 	CALA
 
 
-	LAR  	AR1,#IMR       	;load auxiliary reg #IMR -> AR1
+	LAR  	AR2,#IMR       	;load auxiliary reg #IMR -> AR2
 				;interrupt mask register
-	MAR  	*,AR1      	;modify auxiliary register
+	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
-				;т.е. при дальнейшей записи индексом AR1
+				;т.е. при дальнейшей записи индексом AR2
 	LACC 	*              	;load accumulator with shift
 	AND  	#0FFFDh        	;очищаем маску INT2(запрещаем эти прерывания)
 	SACL 	*              	;store mask interrupts
@@ -84,21 +84,25 @@ KEY1    B KEY10 ;на экране время
 KEY19
 KEY110
 KEY111
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	RET
-KEY112   SPLK 	#0h,MDSPL
+KEY112   SPLK 	#0h,_MDSPL
 	mEnd_error_meas rCancelByUser
 	RET
 
 KEY10:
-	MAR  	*,AR1      	;modify auxiliary register
-	LAR  	AR1,#ProtectInterval	;защитный интервал?
+	MAR  	*,AR2      	;modify auxiliary register
+	LAR  	AR2,#ProtectInterval	;защитный интервал?
 	LACC	*
 	BCND	MayPressed,EQ
         Beep
         RET
 MayPressed:
 	mManual_MeasOn
+ .if WriteDebug=0
+        ;если перемычка не будет снята, то AVR сбросится 
+       	ResetAVRSet
+ .endif
 	BIT 	Flags,0
 	BCND    MognoIzmerat,NTC
 	SPLK	#rPowerLow,DispErrMeas
@@ -118,7 +122,7 @@ NotVistrelShed
 	SPLK	#1,Standartmeas		;измерение внеплановое
 KEY10_1
 
-	SPLK 	#8h,MDSPL
+	SPLK 	#8h,_MDSPL
 	SPLK 	#SUPPLY_UP,Mode
 	SPLK	#0,StartCode		;код установки
 					;режима на "давление"
@@ -142,14 +146,14 @@ KEY10_1
 	RET
 KEY11
  .if Sertificarion=1
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	RET
  .else
-	SPLK 	#3h,MDSPL
+	SPLK 	#3h,_MDSPL
 	BeginADC
  .endif
 	RET
-KEY12   SPLK 	#3h,MDSPL
+KEY12   SPLK 	#3h,_MDSPL
 	LACC 	DPA0,0     ;Выключение PUMP,VALV1 и VALV2
 	AND  	#0FFE3h,0
 	SACL 	DPA0
@@ -159,26 +163,26 @@ KEY12   SPLK 	#3h,MDSPL
 	SPLK 	#rCancelByUser,ErrMeas
 	CALL 	WriteEnd
 	RET
-KEY13   SPLK  #0h,MDSPL
+KEY13   SPLK  #0h,_MDSPL
         mEnd_error_meas rCancelByUser
         RET
 
-KEY14   SPLK 	#0h,MDSPL
+KEY14   SPLK 	#0h,_MDSPL
 	LACC 	Jobs
 	AND   	#0FFFEh     ;кончаем баловаться
 	SACL 	Jobs
 	EndADC
 	PowerAnalogOff
 	RET
-KEY15   MAR	*,AR6
-	LAR	AR6,#iCNTERROR
+KEY15   MAR	*,AR7
+	LAR	AR7,#iCNTERROR
 	SPLK 	#0h,*
-	SPLK 	#0h,MDSPL
+	SPLK 	#0h,_MDSPL
 	RET
-KEY16   SPLK 	#0h,MDSPL
+KEY16   SPLK 	#0h,_MDSPL
 	mEnd_error_meas rCancelByUser
 	RET
-KEY17   SPLK 	#0h,MDSPL
+KEY17   SPLK 	#0h,_MDSPL
 	RET
 KEY18
  .if Only_Pusk=1

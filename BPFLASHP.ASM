@@ -1,4 +1,4 @@
-* $Id: BPFLASHP.ASM,v 1.5 2000-12-13 13:43:26 peter Exp $
+* $Id: BPFLASHP.ASM,v 1.6 2001-08-22 14:17:39 peter Exp $
 * Распределение Flash памяти данных давления.
 
 * Максимальное количество измерений  - 256.
@@ -63,21 +63,21 @@
 *****************************************************************************
 * очистка флеш
 *****************************************************************************
-FLCLR   LAR     AR1,#0D555h  ; 05555h,02AAAh,05555h,05555h,02AAAh,05555h
-        LAR     AR2,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  010h Erase
-        MAR     *,AR1
+FLCLR   LAR     AR2,#0D555h  ; 05555h,02AAAh,05555h,05555h,02AAAh,05555h
+        LAR     AR3,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  010h Erase
+        MAR     *,AR2
 
         LACC    DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
                         ;разрешение работы с флеш
         SACL    DPA0       ;запоминаем данные в памяти
         OUT     DPA0,PA0   ;и выводим в порт
-        SPLK    #0AAh,*,AR2   ;программируем флеш на стирание
-        SPLK    #055h,*,AR1
-        SPLK    #080h,*,AR1
-        SPLK    #0AAh,*,AR2
-        SPLK    #055h,*,AR1
-        SPLK    #010h,*,AR1
+        SPLK    #0AAh,*,AR3   ;программируем флеш на стирание
+        SPLK    #055h,*,AR2
+        SPLK    #080h,*,AR2
+        SPLK    #0AAh,*,AR3
+        SPLK    #055h,*,AR2
+        SPLK    #010h,*,AR2
         LACC    #07FFFh            ; T = 15 с.
 	SPLK    #0800h,TMP+1
 FLCLR1  SUB     #1
@@ -88,12 +88,12 @@ FLCLR1  SUB     #1
         BCND    FLCLR1,BIO
 *
 CLRCHK  LAR     AR0,#7FFFh
-        LAR     AR1,#8000h
+        LAR     AR2,#8000h
 CLRCON  LACC    *+,0,AR0           ;чтение данных с флеш
         AND     #0FFh              ;маскируем младшие 8 бит
         XOR     #0FFh              ;приводим к нулю
         BCND    ERRCLR,NEQ         ;если не равно нулю, то неудалось стереть
-        BANZ    CLRCON,*-,AR1      ;Branch on Auxiliary Register Not Zero
+        BANZ    CLRCON,*-,AR2      ;Branch on Auxiliary Register Not Zero
         LACC    DPA0
         ADD     #1,6       ;прибавляем 1 к "номеру странички"
         SACL    DPA0
@@ -112,9 +112,9 @@ ERRCLR  LACC    DPA0,0     ;читаем содержимое регистра данных порта
 * TMP - номер 64 кбайтной страницы
 ****************
 FlashPageClear
-        LAR     AR1,#0D555h  ; 05555h,02AAAh,05555h,05555h,02AAAh,SA (A20-16)
-        LAR     AR2,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  030h Sector Erase
-        MAR     *,AR1
+        LAR     AR2,#0D555h  ; 05555h,02AAAh,05555h,05555h,02AAAh,SA (A20-16)
+        LAR     AR3,#0AAAAh  ;   0AAh,  055h,  080h,  0AAh,  055h,  030h Sector Erase
+        MAR     *,AR2
 
         LACC    DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
@@ -124,12 +124,12 @@ FlashPageClear
         OUT     DPA0,PA0   ;и выводим в порт
         OR      #0020H      ;выключаем выборку флеш #CEF =1 (#CE)
         SACL    DPA0       ;запоминаем состояние порта в памяти
-        SPLK    #0AAh,*,AR2   ;программируем флеш на стирание
-        SPLK    #055h,*,AR1
-        SPLK    #080h,*,AR1
-        SPLK    #0AAh,*,AR2
-        SPLK    #055h,*,AR1
-        SPLK    #030h,*,AR1
+        SPLK    #0AAh,*,AR3   ;программируем флеш на стирание
+        SPLK    #055h,*,AR2
+        SPLK    #080h,*,AR2
+        SPLK    #0AAh,*,AR3
+        SPLK    #055h,*,AR2
+        SPLK    #030h,*,AR2
         LACC    #07FFFh            ; T = 15 с.
 	SPLK    #0800h,TMP+1
 FLCLR2  SUB     #1
@@ -147,7 +147,7 @@ ERRCLR1
 * TMP - номер 64 кбайтной страницы
 ****************
 FlashPageCheck
-        MAR     *,AR1
+        MAR     *,AR2
         LACC    DPA0,0     ;чтение регистра данных порта
         AND     #0001FH     ;сбрасываем номер страницы и #CEF =0 (#CE)
                         ;разрешение работы с флеш
@@ -158,12 +158,12 @@ FlashPageCheck
         SACL    DPA0       ;запоминаем состояние порта в памяти
 ;CLRCHK1
         LAR     AR0,#7FFFh
-        LAR     AR1,#8000h
+        LAR     AR2,#8000h
 CLRCON1 LACC *+,0,AR0           ;чтение данных с флеш
         AND     #0FFh              ;маскируем младшие 8 бит
         XOR     #0FFh              ;приводим к нулю
         BCND    ERRCheck,NEQ       ;если не равно нулю, то нечисто
-        BANZ    CLRCON1,*-,AR1      ;Branch on Auxiliary Register Not Zero
+        BANZ    CLRCON1,*-,AR2      ;Branch on Auxiliary Register Not Zero
         ;ошибок не было
 ERRCheck
         ; произошла ошибка
@@ -176,7 +176,7 @@ ERRCheck
 *       AFLLSB      0-14bit,15bit=1
 *       TMP    -  Входные данные
 *       Если пpи выходе из подпpогpаммы ACC=0 все Ok.
-* использует AR1,AR2,AR3
+* использует AR2,AR3,AR4
 *************************
 FLPROG  LACC 	DPA0         ; 05555h,02AAAh,05555h, PA
 	AND  	#001Fh       ;   0AAh,  055h,  0A0h, PD  Program
@@ -202,24 +202,24 @@ FLPROG  LACC 	DPA0         ; 05555h,02AAAh,05555h, PA
 	ADD  	#1
 	SACL 	FLADR+1
 FL_NoOver
-	LAR  	AR1,#0D555h
-	LAR  	AR2,#0AAAAh
-	LAR  	AR3,TMP+1      ; PA
-	MAR  	*,AR1
-	SPLK 	#0AAh,*,AR2
-	SPLK 	#055h,*,AR1
-	SPLK 	#0A0h,*,AR3
-	BLDD 	#TMP,*,AR1     ; PD из TMP во FLASH
+	LAR  	AR2,#0D555h
+	LAR  	AR3,#0AAAAh
+	LAR  	AR4,TMP+1      ; PA
+	MAR  	*,AR2
+	SPLK 	#0AAh,*,AR3
+	SPLK 	#055h,*,AR2
+	SPLK 	#0A0h,*,AR4
+	BLDD 	#TMP,*,AR2     ; PD из TMP во FLASH
 	LACC 	#0FFh
 FLPRG1  SUB  	#1
 	RPT  	#1
 	NOP
 	BCND 	ERRPRG,LEQ
 	BCND 	FLPRG1,BIO
-	SPLK 	#0AAh,*,AR2
-	SPLK 	#055h,*,AR1
-	SPLK 	#0F0h,*,AR3
-	BLDD 	*,#TMP+1,AR1   ; PD из FLASH в
+	SPLK 	#0AAh,*,AR3
+	SPLK 	#055h,*,AR2
+	SPLK 	#0F0h,*,AR4
+	BLDD 	*,#TMP+1,AR2   ; PD из FLASH в
 	OUT  	DPA0,PA0
 ;        SPLK 	#0,TMP+3
 	LACC 	TMP
@@ -238,8 +238,8 @@ ERRPRG  OR 	#0FFh
 *  адрес для чтения, из него выбрать адрес страницы
 *  ASFLMSB     15-20bit
 *  AFLLSB      0-14bit
-*	AR6 - куда загружать
-* процедура берет байты из флеш и загружает парами в слова AR6
+*	AR7 - куда загружать
+* процедура берет байты из флеш и загружает парами в слова AR7
 * то есть начальный адрес должен быть четным
 ******
 
@@ -247,7 +247,7 @@ ERRPRG  OR 	#0FFh
 
 
 ***********
-* чтение по адресу FLADR 2 kb данных в AR1
+* чтение по адресу FLADR 2 kb данных в AR2
 ***********
 Read2K
 
@@ -262,13 +262,13 @@ Read2K
 	LACC    FLADR
 	OR	#08000H
 	SACL	TMP
-	LAR  	AR6,TMP
+	LAR  	AR7,TMP
 	LAR	AR0,#07FFH
-	MAR	*,AR6
+	MAR	*,AR7
 Read2K_1
-	LACC	*+,0,AR1
+	LACC	*+,0,AR2
 	SACL	*+,0,AR0
-	BANZ    Read2K_1,*-,AR6
+	BANZ    Read2K_1,*-,AR7
 	OUT  	DPA0,PA0
 	RET
 
@@ -280,9 +280,9 @@ Read2K_1
 *       ACC    -  Выходные данные
 *************************
 FLREAD
-	MAR	*,AR7
-	POPD	*-
-	SAR     AR6,*-
+	MAR	*,AR1
+	POPD	*+
+	SAR     AR7,*+
 
 	LACC 	DPA0
 	AND  	#01Fh
@@ -295,10 +295,10 @@ FLREAD
 	LACC    FLADR
 	OR	#08000H
 	SACL	*
-	LAR  	AR6,*
-	MAR	*,AR6
+	LAR  	AR7,*
+	MAR	*,AR7
 
-	LACC	*,0,AR7
+	LACC	*,0,AR1
 	SACL	*
 
 	LACC 	FLADR
@@ -318,9 +318,9 @@ FLR_NoOver
 
 	OUT  	DPA0,PA0
 
-	MAR	*,AR7
-	MAR	*+,AR7
-	LAR     AR6,*+
+	MAR	*,AR1
+	MAR	*-,AR1
+	LAR     AR7,*-
 	PSHD	*
 
 	RET
