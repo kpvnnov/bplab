@@ -2,7 +2,7 @@
 ;/********************************************************************
 ;  Pressure_augment( PressureTop ) -
 ;  Увеличение давления до систолическое+30 мм.рт.ст.
-; $Id: PRESSAUG.ASM,v 1.8 2001-10-22 13:38:16 peter Exp $
+; $Id: PRESSAUG.ASM,v 1.9 2001-11-08 17:42:24 zykov Exp $
 ;***********************************************************************/
 ;int	AvrOfTwoDiff2Max
 ;int	TMPMaxNumber
@@ -41,10 +41,8 @@ Pressure_augment
 ;    {  /* маленькая скоpость наpастания давления ( система стpавливает)*/
 ;      mEnd_error_meas( rSMALL_SPEED_AUG_PR );
 
-	.if SIM == 0
 	mEnd_error_meas rSMALL_SPEED_AUG_PR
-	.endif
-	RET
+	B	Pulse_aug_analysis_end	
 
 ;    }
 ;  }
@@ -78,10 +76,8 @@ Pulse_aug_check_error_2:
 ;    {  /* Большая скоpость наpастания давления ( пеpежат шланг)*/
 ;      mEnd_error_meas( rBIG_SPEED_AUG_PR );
 
-	.if SIM == 0
 	mEnd_error_meas rBIG_SPEED_AUG_PR
-	.endif
-	RET
+	B	Pulse_aug_analysis_end		
 
 ;    }
 ;  }
