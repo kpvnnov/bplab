@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206.ASM,v 1.51 2002-04-24 14:03:09 peter Exp $
+* $Id: BP206.ASM,v 1.52 2002-08-21 08:44:22 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -128,7 +128,6 @@ AVRProcessor	.set 1
 ;	.copy   Bp206vec.asm
  .sect "signat"
 
-	.word	0FFFFh,0FFFFh
 
 * сигнатура
 * один байт  - размер сектора
@@ -392,6 +391,9 @@ ParamBit3 .set 0
 
 LengthSignat .set $-SIGNT
 *
+	.global CRC_FERRUM
+CRC_FERRUM:
+	.word	0FFFFh,0FFFFh
 
         .text
 
