@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASHS.ASM,v 1.9 2001-10-22 13:38:12 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.10 2002-04-18 14:30:40 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -169,6 +169,8 @@ Find_in_cache
 	AND     #03FH,16
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND     #07FH,16
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	AND     #0FFH,16
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -319,6 +321,8 @@ Read_flash_to_cache
 	AND	#03FH,16
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND	#07FH,16
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	AND	#0FFH,16
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -644,6 +648,8 @@ Write_page_1
 	AND	#003Fh		;маска для 2 мбайта
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND	#007Fh		;маска для 4 мбайта
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	AND	#00FFh		;маска для 8 мбайта
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif

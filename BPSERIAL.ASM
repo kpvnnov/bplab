@@ -1,6 +1,6 @@
 ;&D
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.32 2002-01-30 13:43:59 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.33 2002-04-18 14:30:40 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -1032,6 +1032,9 @@ CommAndBlood
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC Flags+2,6  ;читаем младший байт
 	ADD  Flags+3,14
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC Flags+2,7  ;читаем младший байт
+	ADD  Flags+3,15
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -1541,6 +1544,9 @@ OutBuffer2k
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC *+,6
 	ADD  *,14
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC *+,7
+	ADD  *,15
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif

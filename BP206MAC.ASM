@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206MAC.ASM,v 1.24 2001-11-14 17:20:51 peter Exp $
+* $Id: BP206MAC.ASM,v 1.25 2002-04-18 14:30:38 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -1026,6 +1026,8 @@ $4	SUB  	#1
  .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#003Fh,1
  .elseif Mem=40	;одна микросхема на 4 Mbyte
+	AND	#007Fh,1
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
 	AND	#007Fh,1
  .else
   .emsg _ERROR __ MISSING PARAMETER_

@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASH.ASM,v 1.21 2001-11-14 17:20:51 peter Exp $
+* $Id: BPFLASH.ASM,v 1.22 2002-04-18 14:30:39 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -38,6 +38,8 @@ NoMaxInfo:
 	SPLK 	#080h,TMP  ;измерения начинаются с адреса 0x001000h
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	SPLK 	#040h,TMP  ;измерения начинаются с адреса 0x001000h
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	SPLK 	#020h,TMP  ;измерения начинаются с адреса 0x001000h
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -57,6 +59,8 @@ FirstCompiled:
 	LACC 	IZFLLSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC 	IZFLLSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC 	IZFLLSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -66,6 +70,8 @@ FirstCompiled:
 	ADD  	IZFLMSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	ADD  	IZFLMSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	ADD  	IZFLMSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -76,6 +82,8 @@ FirstCompiled:
 	LACC 	IZFLLSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC 	IZFLLSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC 	IZFLLSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -86,6 +94,8 @@ FirstCompiled:
 	ADD  	IZFLMSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	ADD  	IZFLMSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	ADD  	IZFLMSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -98,6 +108,8 @@ NoDataWrited:
 	LACC 	IZFLLSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC 	IZFLLSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC 	IZFLLSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -109,6 +121,8 @@ NoDataWrited:
 	ADD  	IZFLMSB,11
  .elseif Mem=40
 	ADD  	IZFLMSB,10
+ .elseif Mem=44
+	ADD  	IZFLMSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -325,6 +339,8 @@ LastPlace
 	LACC 	TMP+1,5
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC 	TMP+1,6
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC 	TMP+1,7
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -376,6 +392,8 @@ AlreadyWrite
         LACC IZFLLSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
         LACC IZFLLSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+        LACC IZFLLSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -385,6 +403,8 @@ AlreadyWrite
         ADD  IZFLMSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
         ADD  IZFLMSB,10
+ .elseif Mem=44	;одна микросхема на 4 Mbyte
+        ADD  IZFLMSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -618,6 +638,8 @@ MakeSectoring
 	LACC IZFLLSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	LACC IZFLLSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	LACC IZFLLSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -627,6 +649,8 @@ MakeSectoring
 	ADD  IZFLMSB,11
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	ADD  IZFLMSB,10
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	ADD  IZFLMSB,9
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -666,6 +690,9 @@ MakeSectoring
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND	#03Fh
 	ADD	#040h
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	AND	#07Fh
+	ADD	#080h
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -676,6 +703,8 @@ MakeSectoring
 	AND	#0FFE0h
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND	#0FFC0h
+ .elseif Mem=44	;две микросхемы на 4 Mbyte
+	AND	#0FF80h
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif

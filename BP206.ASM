@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206.ASM,v 1.49 2001-11-23 15:37:36 peter Exp $
+* $Id: BP206.ASM,v 1.50 2002-04-18 14:30:36 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -214,6 +214,8 @@ SIGNT:
    .word   005h
  .elseif Mem=40	;одна микросхема на 4 Mbyte
    .word   006h
+ .elseif Mem=44 ;две микросхемы на 4 Mbyte
+   .word   007h
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
