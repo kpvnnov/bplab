@@ -1,0 +1,408 @@
+* $Id: BP206.ASM,v 1.41 2001-02-23 09:48:22 peter Exp $
+***********************************************************
+*          blood pressure                  05.10.99 09:53
+* determination of arterial pressure
+***********************************************************
+*  Ver 0.0.1 23.06.00
+***********************************************************
+*  Измерение артериального давления
+*
+***********************************************************
+
+******************
+* в сегмент программы включается таблица со значениями
+* давления в файле indac.asm
+* .if Emulator=1
+* Izmerenie
+*	.copy  indac.asm
+* .endif
+****************************************
+Emulator 	.set 0
+
+* проверка запрета прерываний
+CheckCRCINTM	.set 0
+***********************
+* в сериальном порту включается блок отладки, в котором
+* порт после принятия символа A начинает выдавать 58h
+* 1 вкл 0 выкл
+DebugSerial	.set 0
+
+
+
+*********************
+* запрещать  работу дисплея на время обмена по ком порту
+DisableDisplay	.set 1
+
+ .if DisableDisplay=1
+; ну хотя бы выводить на экран скорость обмена ?
+ShowSpeedASP	.set 1
+
+ .elseif DisableDisplay=0
+* gh
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+
+* показывать вторую точку при измерении давления вкл щедулер
+ShowSecondPoint .set 0
+
+
+***************
+* какая версия аппаратуры
+***************
+
+; 1 - без дешифратора выборки (ADC,DAC...)
+; 2 - с дешифратором выборки устройств
+; **** чтобы не путаться этот дефайнер вынесен в батники
+;*********VersionFerrum	.set	2
+
+
+
+
+
+
+
+
+
+
+
+
+*************************************************
+* метод программирования по последовательному порту
+*************************************************
+; 1 - процедуры включены
+; 0 - процедуры выключены
+
+SerialProg 	.set 1
+
+* .sect "Stack"
+*    .space  20h*16
+Stack		.usect "_Stack",20h,1
+
+
+
+* разные проверки дефайнеров
+*
+*
+ .if PsevdoEKG=1
+ .if ChannelEKG=1
+  .emsg _ERROR __ Wrong Parametr_
+ .endif
+ .endif
+
+ .if NewFerrum=1
+
+ .if VersionFerrum!=2		;с дешифратора
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+ .endif
+
+ .if VersionFerrum=1		;без дешифратора
+TypeFlash	.set 0 ; тип флеш
+AVRProcessor	.set 0
+* 0 паралельная
+* 1 последовательная
+
+ .elseif VersionFerrum=2        ;с дешифратором
+
+TypeFlash	.set 1 ; тип флеш
+AVRProcessor	.set 1
+* 0 паралельная
+* 1 последовательная
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+
+	.text
+	.copy   Bp206sec.asm
+	.copy   Bp206vec.asm
+	.copy   Bp206con.asm
+	.copy   Bp206bss.asm
+	.copy   Bp206def.asm
+	.copy   Bp206mac.asm
+ .if NewFerrum=1
+	.copy   bpavrprg.asm
+ .endif
+****************************************************************************************************
+*       Начальные установки
+****************************************************************************************************
+
+	.text
+	.copy   Bpinit.asm
+****************************************************************************************************
+*	Main
+****************************************************************************************************
+*
+Main_idle
+
+	NOP
+	IDLE
+	NOP
+***отладка
+ .if CheckCRCINTM=1
+	CLRC	INTM
+	NOP
+	NOP
+
+	NOP
+	SETC	INTM
+	NOP
+	NOP
+	LDP  	#0
+	SST  	#0,066h
+	BIT  	066h,6   ;проверка INTM
+			 ;INTM=0 - all interrupt enabled
+			 ;INTM=1 - all disabled
+	BCND 	INTDISABLED,TC  ;запрещены? INTM=1?
+
+	LDP	#4
+BeginBeepeng
+	SPLK	#500,TMP
+Beeping4khz_2
+	mDelay250mks
+	mBeepXOR
+
+	LACC	TMP
+	SUB	#1
+	SACL	TMP
+	BCND 	Beeping4khz_2,NEQ
+	SPLK	#250,TMP
+Beeping2khz_2
+	mDelay250mks
+	mDelay250mks
+	mBeepXOR
+
+	LACC	TMP
+	SUB	#1
+	SACL	TMP
+	BCND 	Beeping2khz_2,NEQ
+	B BeginBeepeng
+INTDISABLED
+	NOP
+*конец отладки проверка запрета прерываний
+
+	CLRC	INTM
+	NOP
+	NOP
+	NOP
+
+ .elseif CheckCRCINTM=0
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+
+
+
+	B	Main_idle
+
+Main
+	.copy   Bpmode.asm
+
+*       	Модули используемые в bpmode.asm
+		.copy	An_sp_up.asm		; Включение питания аналоговой схемы.
+		.copy	St_shift.asm		; Проверка начального смещения АЦП ( 1-й канал ).
+		.copy	Pr_a_t40.asm		; Увеличение давления до 40  мм.рт.ст.
+		.copy	Dac_chck.asm		; Проверка работы ЦАПа.
+		.copy	Pul_f_e.asm		; Оценка частоты пульса.
+		.copy	Pressaug.asm		; Увеличение давления до систолическое + N мм.рт.ст.
+		.copy	Pr_a_stp.asm		; Остановка увеличения давления.
+		.copy	Ch_pr_hs.asm		; Проверка превышения систолического давления.
+		.copy	Press_m.asm		; Измерение амплитуд пульсаций и уровня давления.
+		.copy	Pr_dimin.asm		; Понижение уровня давления на 8 мм.рт.ст.
+		.copy	Meas_fin.asm            ; Вывод результатов измерения на индикатор.
+		.copy	Anal_end.asm		; Анализ некотоpых ситуаций пpекpащающих измеpение.
+
+*       	Модули  вспомогательных программ
+		.copy   Max_anal.asm		; Анализ импульса максимума
+		.copy   Trend.asm		; Построение тренда
+		.copy   Division.asm		; Функция делениея
+		.copy   Procedur.asm		; Average, Average_2, Impulse_wigth.
+*
+
+****************************************************************************************************
+*	Обработка прерывания INT1 - мало напряжение батарей
+****************************************************************************************************
+
+	.copy   bpintu.asm
+
+****************************************************************************************************
+*	Обработка прерывания INT2 - прерывание от кнопки
+****************************************************************************************************
+
+	.copy   bpintkey.asm
+;		.copy   bpidle.asm   		; содержимое ( кроме IDLE ) перенести в bpintkey.asm
+
+****************************************************************************************************
+*	Обработка прерывания INTTIM - прерывание таймера
+****************************************************************************************************
+
+	.copy   bpinttim.asm
+
+*       	Модули используемые в bpinttim.asm
+		.copy   bpadcpro.asm		; Обмен с АЦП и ЦАП
+		.copy   adc_v_p5.asm		; Процесс обработки значений ADC - фильтрации и т.д.
+		.copy   bpdispl.asm		; Управление дисплеем
+
+****************************************************************************************************
+*	Обработка прерывания  - прерывание последовательного порта (UART)
+****************************************************************************************************
+
+	.copy 	bpserial.asm
+
+****************************************************************************************************
+*	Таблицы
+****************************************************************************************************
+
+	.copy 	bptable.asm
+ .if Emulator=1
+Izmerenie
+	.copy  indac.asm
+ .endif
+****************************************************************************************************
+
+
+ .if DebugStop=1
+ErrorStop
+	NOP
+	NOP
+	NOP
+	RET
+CheckError
+	SPLK	#0,TMP+1
+	LACC	SampleNumber
+	BCND	ErrorStop,LT
+	SUB	#1151
+	BCND	ErrorStop,GEQ
+
+	SPLK	#1,TMP+1
+	LACC	SampleNumberShift
+	BCND	ErrorStop,LT
+	SUB	#12000
+	BCND	ErrorStop,GEQ
+
+	SPLK	#2,TMP+1
+	LACC	MaxNumber
+	BCND	ErrorStop,LT
+	SUB	#32
+	BCND	ErrorStop,GEQ
+
+	SPLK	#3,TMP+1
+	LACC	MaxNumberShift
+	BCND	ErrorStop,LT
+	SUB	#256
+	BCND	ErrorStop,GEQ
+
+	SPLK	#4,TMP+1
+	LACC	MeasurementFlags
+	BCND	ErrorStop,LT
+	SUB	#1<<6
+	BCND	ErrorStop,GEQ
+
+	SPLK	#5,TMP+1
+	LACC	AnalysisStart
+	BCND	ErrorStop,LT
+	SUB	#1000
+	BCND	ErrorStop,GEQ
+
+	SPLK	#6,TMP+1
+	LACC	AnalysisInterval
+	BCND	ErrorStop,LT
+	SUB	#200
+	BCND	ErrorStop,GEQ
+
+	SPLK	#7,TMP+1
+	LACC	AveragePeriod
+	BCND	ErrorStop,LT
+	SUB	#150*16
+	BCND	ErrorStop,GEQ
+
+	SPLK	#8,TMP+1
+	LACC	AveragePeriodEvaluation
+	BCND	ErrorStop,LT
+	SUB	#200*4
+	BCND	ErrorStop,GEQ
+
+	SPLK	#9,TMP+1
+	LACC	SynchCount
+	BCND	ErrorStop,LT
+	SUB	#3
+	BCND	ErrorStop,GEQ
+
+	SPLK	#10,TMP+1
+
+	SPLK	#11,TMP+1
+	LACC	NextModeFlag
+	BCND	ErrorStop,LT
+	SUB	#3
+	BCND	ErrorStop,GEQ
+
+	SPLK	#12,TMP+1
+	LACC	StartMaxNumber
+	BCND	ErrorStop,LT
+	SUB	#32
+	BCND	ErrorStop,GEQ
+
+	SPLK	#13,TMP+1
+	LACC	StepNumber
+	BCND	ErrorStop,LT
+	SUB	#32
+	BCND	ErrorStop,GEQ
+
+	SPLK	#14,TMP+1
+
+	SPLK	#15,TMP+1
+	LACC	PressureTop
+	BCND	ErrorStop,LT
+	SUB	#4000h
+	BCND	ErrorStop,GEQ
+
+	SPLK	#16,TMP+1
+	LACC	MaxDiffSignal
+	BCND	ErrorStop,LT
+	SUB	#800h
+	BCND	ErrorStop,GEQ
+
+	SPLK	#18,TMP+1
+	LACC	Mode
+	BCND	ErrorStop,LT
+	SUB	#10
+	BCND	ErrorStop,GEQ
+
+	SPLK	#19,TMP+1
+	LACC	ModeCnt
+	BCND	ErrorStop,LT
+	SUB	#2000
+	BCND	ErrorStop,GEQ
+
+	SPLK	#20,TMP+1
+	LACC	SubroutMode
+	BCND	ErrorStop,LT
+	SUB	#10
+	BCND	ErrorStop,GEQ
+
+	RET
+ .endif
+
+ .if SerialProg=1
+*	.copy   Bp206fld.asm
+*	.copy  	c2xx_sla.asm
+
+ .endif
+****************************************************************************************************
+*	Модули управления Flash
+****************************************************************************************************
+
+ .if TypeFlash=0
+	.copy   bpflashp.asm
+ .else
+	.copy   bpflashs.asm
+ .endif
+*!!!!!!!модуль флэш должен быть последним
+* так как в нем находится блок программирования программной флеш
+* в котором организация переноса алгоритма записи из программной флеш
+* в область ОЗУ построена на концевом условии
+	.copy 	bpflash.asm
+

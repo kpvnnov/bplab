@@ -1,0 +1,127 @@
+* $Id: BPAVRPRG.MAC,v 1.6 2000-12-13 13:43:25 peter Exp $
+*
+* Установка сигнала CS у AVRSPI (#SS_AVR=0)
+*
+ .if VersionFerrum=1		;без дешифратора
+   .emsg _ERROR __ MISSING PARAMETER_
+ .elseif VersionFerrum=2        ;с дешифратором
+
+mOnAVRSPI .macro
+	LACC 	rDIOSR
+	AND  	#08H  		;сбрасываем в ноль #RSAVD
+	OR	#04H		;дешифратор
+	SACL 	rDIOSR
+	mOutDIOSR		;записываем выборку устройств в регистр вывода
+ .endm
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+*
+* Установка сигнала RESET у AVR (#RS=0)
+*
+ .if VersionFerrum=1		;без дешифратора
+   .emsg _ERROR __ MISSING PARAMETER_
+ .elseif VersionFerrum=2        ;с дешифратором
+
+ResetAVRSet .macro
+	LACC 	rDIOSR
+	AND  	#08H  		;сбрасываем в ноль #RSAVD
+	OR	#05H		;дешифратор
+	SACL 	rDIOSR
+	mOutDIOSR		;записываем выборку устройств в регистр вывода
+ .endm
+ .else
+  .emsg _ERROR __ MISSING PARAMETER_
+ .endif
+
+
+*
+* сброс сигнала RESET у AVR (#RS=1)
+*
+* .if VersionFerrum=1		;без дешифратора
+*   .emsg _ERROR __ MISSING PARAMETER_
+* .elseif VersionFerrum=2        ;с дешифратором
+*ResetAVRClear .macro
+*	LACC 	rDIOSR
+*	OR	#07H		;дешифратор
+*	SACL 	rDIOSR
+*	mOutDIOSR		;записываем выборку устройств в регистр вывода
+* .endm
+*
+* .else
+*  .emsg _ERROR __ MISSING PARAMETER_
+* .endif
+
+mWait6mks .macro
+	RPT	#12
+	NOP
+ .endm
+
+mWait1ms .macro
+ .newblock
+* формула для вычисления задержки в ms
+* (3686.4/2)/5 - это одна ms = 368.64 ~~ 369
+*
+	LACC 	#369
+$1
+	SUB 	#1          	;1
+	BCND 	$1,NEQ 		;4 - true
+ .newblock
+
+ .endm
+
+mWait10ms .macro
+ .newblock
+* формула для вычисления задержки в ms
+* (3686.4/2)/5 - это одна ms = 368.64 ~~ 369
+* 10ms=10*(3686.4/2)/5=3686.4 ~3687
+*
+	LACC 	#3687
+$1
+	SUB 	#1          	;1
+	BCND 	$1,NEQ 		;4 - true
+ .newblock
+
+ .endm
+
+mWait40ms .macro
+ .newblock
+* формула для вычисления задержки в ms
+* (3686.4/2)/5 - это одна ms = 368.64 ~~ 367
+* 40 ms =40*(3686.4/2)/5 = 14745.6 ~~14746
+* если пересчитывать большие задержки
+* то чтобы знак не распространился аккумулятор загружать со сдвигом
+	LACC 	#14746
+$1
+	SUB 	#1          	;+1
+	BCND 	$1,NEQ 		;+4
+ .newblock
+
+ .endm
+
+* посылка данных в SPI
+* использует AR7 !!!!
+SendSSP 	.macro code
+	SPLK 	code,*
+	OUT  	*,SDTR
+ .endm
+
+* чтение данных из SPI
+* использует AR7 !!!!
+ReadSSP		.macro
+	IN	*,SDTR
+ .endm
+
+mImp_SSPAVR	.macro
+	CLRC 	XF
+	NOP
+	NOP
+	NOP
+	NOP
+	SETC 	XF
+	NOP
+	NOP
+	NOP
+	NOP
+ .endm

@@ -1,0 +1,31 @@
+                         GENERAL DISCLAIMER
+                         ------------------
+  All software and related documentation is provided "AS IS" and without
+warranty or support of any kind and Texas Instruments expressly disclaims
+all other warranties, express or implied, including, but not limited to, the
+implied warranties of merchantability and fitness for a particular purpose.
+Under no circumstances shall Texas Instruments be liable for any incidental,
+special or consequential damages that result from the use or inability to
+use the software or related documentation, even if Texas Instruments has
+been advised of the liability.
+
+                      FTP AND BBS SOFTWARE
+                      --------------------
+- The Texas Instruments TMS320BBS and internet FTP site are provided as a
+  convenient location for obtaining DSP related materials which you are free
+  to download, use or evaluate.
+
+  FTP Site :    ftp://ftp.ti.com/mirrors/tms320bbs
+  TMS320BBS:    281-274-2323, No parity, 8 data bits, 1 (or more) stop bits
+                
+- Unless otherwise stated, software written and copyrighted by Texas
+  Instruments is distributed as "freeware".  You may use and modify this
+  software without any charge or restriction.  You may distribute to
+  others, as long as the original author is acknowledged.
+
+- Third party "demonstration and evaluation" programs that allow the limited use 
+  of a product can also be found on the BBS or FTP site.  In these cases  the 
+  software will be accompanied by a notice from the third party that becomes a 
+  legaly binding agreement between the user and the third party.  You may be 
+  required to register or license the use of their software.
+
