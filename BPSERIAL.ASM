@@ -1,6 +1,6 @@
 ;&D
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.30 2001-10-22 13:38:14 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.31 2001-12-24 15:32:38 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -442,6 +442,13 @@ CountRecNotOver
 * interrupt for the asynchronous serial port. To avoid double interrupts,
 * write a 1 to this bit in the interrupt service routine.
 
+	LACC 	WhatDoingReceve,0
+	BCND	ReceveWork_error,LT
+	SUB	#RecUserCode11
+	BCND	ReceveWork_0,LEQ
+ReceveWork_error:
+	SPLK	#0,WhatDoingReceve     ;?????????????????????
+ReceveWork_0:
 	LACC 	WhatDoingReceve,1	;вызываем процедуру
 					;в зависимости от режима
 	ADD  	#ReceveWork
@@ -549,6 +556,9 @@ RecUserCode9	.set 16
 ********************************
 RecUserCode10	.set 17
       B		ReceveUserCode10
+********************************
+RecUserCode11	.set 18
+      B		ReceveUserCode11
 
 CommandReceve
 	LAR  	AR2,#DATART   	;загружаем указатель на буфер приема-передачи
@@ -1623,7 +1633,7 @@ CommAndUserData
 	LACC 	*
         AND	#0FFh
         SACL	*
-	SUB  	#10     ;пока обрабатываем всего девять команд
+	SUB  	#11     ;пока обрабатываем всего одинадцать команд
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
 	LACC 	*,1        ;код команды Branch из двух слов состоит
 	BCND	ERRCOMM,EQ
@@ -1643,6 +1653,7 @@ UserCode:
 	B UserCode8	;считать аварийный код процессора
 	B UserCode9	;чтение версии прошивки TMS и другая служебная инфо
         B UserCode10    ;закрываем память программы AVR
+        B UserCode11    ;чтение версии прошивки AVR и другая служебная инфо
 ;если добавляем команды, то вверх несколько строчек в команде SUB #NN
 ;стоит ограничитель обрабатываемых комманд, его тоже подпарвить необходимо
 ;он равен числу обрабатываемых комманд
@@ -2187,6 +2198,36 @@ ReceveUserCode6:
  .endif 		;AVRProcessor
 	B SendBack
 
+UserCode11:
+ReceveUserCode11:	;он как бы и не нужен, но для проформы стоит
+
+	MAR	*,AR1
+	LAR  	AR2,#DATART+4  	;Считывание номера версии и даты AVR
+				;для передачи в компьютер
+
+	SAR	AR2,*+
+        .globl _load_avr_version
+	CALL	_load_avr_version
+	SBRK	1
+
+	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
+	DMOV 	CRC
+	LAR  	AR2,#DATART+4
+	LAR  	AR0,#07FFh
+	MAR	*,AR2
+	CALL 	CRCCALC
+	LACC 	CRC
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC,8
+	SACH 	*+
+	LACC 	CRC+1
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC+1,8
+	SACH 	*+
+	SPLK 	#0808h,CNTASPTR     ;в буфере 2048+4+4 символов
+	B 	SendBackC
 
 
 CODD	;считывание данных из AVR

@@ -1,4 +1,4 @@
-// $Id: bp_main.c,v 1.6 2001-11-14 17:20:54 peter Exp $
+// $Id: bp_main.c,v 1.7 2001-12-24 15:32:39 peter Exp $
 
 #include "global.h"
 
@@ -295,7 +295,20 @@ unsigned short load_avr_state(unsigned short* read_from_avr)
  } while ((--counter)!=0);
  return counter;
 }
-unsigned short send_avr_power_down()
+/**********************************************************/
+void load_avr_version(u16 * read_from_avr)
+{
+ int x;
+ read_from_avr[0]=0xDD00;	//команда состоит из 80 байт(40 слов)
+ send_command_avr(&read_from_avr[0],read_from_avr,40);//читает два слова из массива
+ for (x=0;x<40;x++){
+  read_from_avr[79-x*2]=read_from_avr[39-x+1]>>8;
+  read_from_avr[78-x*2]=read_from_avr[39-x];
+  }
+}
+
+/**********************************************************/
+u16 send_avr_power_down()
 {
  portSSPCR=SSPS;		//SSP start
  portSDTR;          		//команда лишнего чтения(!??)
