@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.16 2001-03-20 16:07:20 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.17 2001-03-26 14:26:09 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -48,13 +48,17 @@ NoPowerDown
 NoAdc:
 	BIT 	Jobs,15-BeepLittle_Flag     	;пищать
 	BCND 	NoBeep,NTC
-;	SPLK 	#10,CNTBEEP
+ .if AVRProcessor=1
 	mBeepEnd
 	MAR	*,AR1
 	LAR	AR1,#AVRProg
 	SPLK	#1,*+
 	SPLK	#0BB01h,*		;SetBuzzer
 	CALL	SendCommandAVR
+ .else
+	SPLK 	#10,CNTBEEP
+ .endif
+
 NoBeep
 
 **************************
@@ -62,12 +66,14 @@ NoBeep
 **************************
 	BIT  	Jobs,15-BeepLong_Flag
 	BCND 	NootLongBeeping,NTC
+ .if AVRProcessor=1
 	mBeepLongEnd
 	MAR	*,AR1
 	LAR	AR1,#AVRProg
 	SPLK	#1,*+
 	SPLK	#0BB07h,*		;SetBuzzer
 	CALL	SendCommandAVR
+ .endif
 NootLongBeeping
 * окончание блока длинного писка
 ************************************

@@ -1,4 +1,4 @@
-* $Id: BPINIT.ASM,v 1.16 2001-03-20 16:07:20 peter Exp $
+* $Id: BPINIT.ASM,v 1.17 2001-03-26 14:26:09 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -276,7 +276,10 @@ INIT
 	CALL	InitScheduler
 
 	mCheckBabyLevel
+
+ .if AVRProcessor=1
         mSendBabyModeToAVR
+ .endif
 
 ;//сбрасываем еще раз флаги
 	SPLK 	#001Fh,TMP 	;0015H->[TMP]

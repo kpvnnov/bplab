@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.19 2001-02-26 11:46:59 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.20 2001-03-26 14:26:09 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -796,7 +796,10 @@ NEXTWD  BLDD 	*+,#TMP
 
 	CALL	InitScheduler
         mCheckBabyLevel
+
+ .if AVRProcessor=1
         mSendBabyModeToAVR
+ .endif
 
 	MAR  	*,AR1
 	LAR  	AR1,#DATART+2
