@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206BSS.ASM,v 1.40 2002-01-30 13:43:58 peter Exp $
+* $Id: BP206BSS.ASM,v 1.41 2002-04-23 11:12:13 peter Exp $
 ;распределение памяти данных процессора
 ;блок B2 0060h-007Fh используется под стек
 *************************************
@@ -135,6 +135,8 @@ Preset1		.usect "bss2",3,1	;начальное давление канала
  .endif
 _OUTF		.usect "bss2",1		;Выход ФНЧ
 	.global _OUTF
+_OUTF_EKG	.usect "bss2",1		;Выход ФНЧ
+	.global _OUTF_EKG
 CurrPressure    .usect "bss2",1,1	;текущее давление
 LastCurrPressure    .usect "bss2",1,1	;текущее давление задержанное на dT
 PressureForDisplay  .usect "bss2",2,1	;Значение давление для дисплея

@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASHS.ASM,v 1.10 2002-04-18 14:30:40 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.11 2002-04-23 11:12:15 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -394,7 +394,7 @@ PageCache	.usect "flbuf",NumCache,1       ;адреса кешируемых страниц
 PageWrite	.usect "flbuf",NumCache,1       ;количество записей в страницу
 FlashData   	.usect "flbuf",256*NumCache,1	;кеш страниц
 
-LengthFifo	.set 32		;должно быть кратно степени двойки
+LengthFifo	.set 256		;должно быть кратно степени двойки
 FifoData	.usect "flbuf",LengthFifo	;данные в очереди фифошки
 FifoAddr	.usect "flbuf",2*LengthFifo     ;адреса данных
 FifoHeadTail	.usect "flbuf",2		;адрес "головы" и "хвоста"
@@ -605,7 +605,14 @@ Write_p_1
 	mImp_ssp
 
 	;включить выборку флеш
+	LACC	TMPCASHE,10
+	AND	#080H
+        BCND	Second_Flash,NEQ
 	mOnFlash0
+        B	Flash_0_ON
+Second_Flash:
+	mOnFlash1
+Flash_0_ON:
 	mOutDIOSR
 
 	SPLK	#0,*
@@ -649,7 +656,7 @@ Write_page_1
  .elseif Mem=40	;одна микросхема на 4 Mbyte
 	AND	#007Fh		;маска для 4 мбайта
  .elseif Mem=44	;две микросхемы на 4 Mbyte
-	AND	#00FFh		;маска для 8 мбайта
+	AND	#007Fh		;маска для 8 мбайта
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -671,7 +678,7 @@ Write_page_1
 	OUT  	*,SDTR     	;2.второе слово для передачи
 				;([page_lsb][adress])
 	CALL 	CLKXF           ;последнее слово(N=255)
-	;выключить выборку флеш
+	;выключи7ть выборку флеш
 	mOffPeriph
 	mOutDIOSR
 

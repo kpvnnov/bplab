@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206MAC.ASM,v 1.25 2002-04-18 14:30:38 peter Exp $
+* $Id: BP206MAC.ASM,v 1.26 2002-04-23 11:12:13 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -931,6 +931,12 @@ mOnFlash0	.macro
 	OR	#02h		;устанавливаем в ноль #CSF0
 	SACL 	_rDIOSR
  .endm
+mOnFlash1	.macro
+	LACC 	_rDIOSR
+	AND  	#08H
+	OR	#03h		;устанавливаем в ноль #CSF0
+	SACL 	_rDIOSR
+ .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
@@ -1052,7 +1058,13 @@ $3
 
 
 	;включить выборку флеш
-	mOnFlash0
+	LACC    _FLADR+1,1
+        AND	#080H
+        BCND	$5,NEQ
+        mOnFlash0
+        B	$6
+$5:	mOnFlash1
+$6:
 	mOutDIOSR
 
 
