@@ -1,6 +1,6 @@
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.18 2001-08-22 14:17:38 peter Exp $
+* $Id: BPDISPL.ASM,v 1.19 2001-09-26 12:29:12 peter Exp $
 *****************************************************************************
 	.globl	_compute
 
@@ -150,10 +150,14 @@ MDSPL3
 	SUB  	Preset0
 	B	ChannelSelected
 SecondChannel:
- .if Sertificarion=0
+ .if Sertificarion==0
 	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
  .else
-	LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
+  .if (WriteDebug!=0) 	;в отладочной версии показываем аварийный датчик
+	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+  .else 		;иначе показываем основное давление
+        LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
+  .endif
  .endif
 	LACC	*
 	ADD  	#4000h,1
