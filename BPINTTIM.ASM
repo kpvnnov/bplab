@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.17 2001-03-26 14:26:09 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.18 2001-03-26 15:02:27 zykov Exp $
 ****************************************************************************
 
 INTTIM
@@ -48,8 +48,8 @@ NoPowerDown
 NoAdc:
 	BIT 	Jobs,15-BeepLittle_Flag     	;пищать
 	BCND 	NoBeep,NTC
- .if AVRProcessor=1
 	mBeepEnd
+ .if AVRProcessor=1
 	MAR	*,AR1
 	LAR	AR1,#AVRProg
 	SPLK	#1,*+
