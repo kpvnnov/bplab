@@ -1,5 +1,5 @@
 ****************************************************************
-* $Id: ADC_V_P5.ASM,v 1.3 2001-02-15 14:10:38 peter Exp $
+* $Id: ADC_V_P5.ASM,v 1.4 2001-06-26 11:20:54 zykov Exp $
 *  Процесс обработки значений ADC -
 *
 *  void ADC_value_processing(){
@@ -219,7 +219,7 @@ ADC_v_first_impulse:
 
 	LACC    AnalysisInterval,0
 	SUB     #MIN_INTERVAL_TO_VERGE
-      	SACH	MaxSampleNumber,0
+      	SACL	MaxSampleNumber,0
 	B	ADC_v_impulse_plase_finish
 
 ;          }
