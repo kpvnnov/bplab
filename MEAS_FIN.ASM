@@ -1,4 +1,4 @@
-* $Id: MEAS_FIN.ASM,v 1.6 2001-02-23 09:48:24 peter Exp $
+* $Id: MEAS_FIN.ASM,v 1.7 2001-03-20 16:14:02 peter Exp $
 Measurment_finish
 	MAR  	*,AR1
  .if OnProtectInterval30s=1
@@ -235,7 +235,6 @@ Sheduler_err_38
 Sheduler_err_43
 Sheduler_err_44
 Sheduler_err_45
-Sheduler_err_46
 Sheduler_err_47
 Sheduler_err_48
 Sheduler_err_49
@@ -263,6 +262,7 @@ Sheduler_err_21
 Sheduler_err_25
 Sheduler_err_37
 Sheduler_err_41
+Sheduler_err_46
 
 	B	CheckForcedMeas
 
