@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 *       Вектора прерываний
-* $Id: BP206VEC.ASM,v 1.14 2001-10-22 13:38:11 peter Exp $
+* $Id: BP206VEC.ASM,v 1.15 2001-11-11 19:24:57 peter Exp $
 *****************************************************************************
             .mmregs               ; Include standard register mnemonics.
             .global INIT,
@@ -20,7 +20,8 @@
         B    INIT      ; Eh              10  Reserved
         B    INIT      ; 10h             11  Reserved
         B    INIT      ; 12h             12  Reserved
-        B    INIT      ; 14h             13  Reserved
+        .globl CurrentRevision
+        B    CurrentRevision      ; 14h             13  Reserved
         B    INIT      ; 16h             14  Reserved
         B    INIT      ; 18h             15  Reserved
         B    INIT      ; 1Ah             16  Reserved
