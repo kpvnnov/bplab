@@ -1,4 +1,4 @@
-* $Id: PR_A_T40.ASM,v 1.13 2001-04-23 08:41:26 peter Exp $
+* $Id: PR_A_T40.ASM,v 1.14 2001-06-13 07:30:36 peter Exp $
 Pressure_augment_40
 
 	LACC    SubroutMode,1
@@ -23,11 +23,11 @@ Pr_aug_40_case1
 	RETC 	GT
 	mMotor_on
 *	SPLK	#0,Motor
-	SPLK    #1800,Motor+1	;18 секунд качаем в полную силу
+	SPLK    #2000,Motor+1	;20 секунд качаем в полную силу
 
 	mNext_sub_mode
 	mValve_hold
-TimeToPumps .set 1800
+TimeToPumps .set 2300
 	SPLK 	#TimeToPumps,ModeCnt
 
 
@@ -49,7 +49,7 @@ Pr_aug_40_case2_1
 	SUB  	PressPulseFrEv
 	BCND 	Pr_aug_40_1,LEQ
 	LACC	ModeCnt
-	SUB	#(TimeToPumps-100)	;1 секунда
+	SUB	#(TimeToPumps-50)	;0.5 секунда
 	BCND	Pr_aug_40_trubka,GEQ	;если слишком быстро накачали
  .if Sertificarion=1
 	SPLK    #PRESSURE_AUGMENT,Mode
