@@ -1,4 +1,4 @@
-* $Id: ANAL_END.ASM,v 1.7 2001-03-20 16:07:18 peter Exp $
+* $Id: ANAL_END.ASM,v 1.8 2001-04-11 10:03:39 peter Exp $
 ;Analysis_of_end()
  .if WriteDebug!=0
 
@@ -69,7 +69,11 @@ Anal_end_anal_time:
 ;   if ( Mode == PRESSURE_MEASUREMENT && CurrPressure < PRESS_30 )
 * если проводим измерение и очень низкий уровень давления
 	LACC	Mode
+ .if Sertificarion=1
+	SUB	#PRESSURE_MEASUREMENT_MANUAL
+ .else
 	SUB	#PRESSURE_MEASUREMENT
+ .endif
 	BCND	Anal_end_anal_meas,NEQ
 
 	LACL	CurrPressure

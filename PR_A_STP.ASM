@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: PR_A_STP.ASM,v 1.4 2001-02-15 14:10:40 peter Exp $
+; $Id: PR_A_STP.ASM,v 1.5 2001-04-11 10:03:40 peter Exp $
 ;* 	Pressure_augment_stop() - Процесс остановки нагнетания давления
 ;*	При переключении в этот режим необходимо задать:
 ;*  	1. Время до выключения клапана (ModeCnt = VALVE_WHITE_TIME)!
@@ -118,7 +118,11 @@ Pr_a_stp_case3
 ;     /*  Подготовка к следующему режиму */
 ;     Mode = CHECK_HIGHER_SISTOL_PRESSURE;
 
+ .if Sertificarion=1
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+ .else
         SPLK    #CHECK_HIGHER_SISTOL_PRESSURE,Mode
+ .endif
 
 ;     SampleNumberShift = SampleNumberShift + SampleNumber+1;
 

@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: PR_DIMIN.ASM,v 1.4 2001-02-15 14:10:40 peter Exp $
+; $Id: PR_DIMIN.ASM,v 1.5 2001-04-11 10:03:40 peter Exp $
 ;*       Pressure_diminution() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
 ;*       1. выключить клапан !
@@ -88,7 +88,13 @@ Pr_dimin_case2
 ;            /*      Подготовка к следующему режиму */
 ;            Mode = PRESSURE_MEASUREMENT;
 
+ .if Sertificarion=1
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+ .else
         SPLK    #PRESSURE_MEASUREMENT,Mode
+ .endif
+
+
 
 ;            SampleNumberShift = SampleNumberShift + SampleNumber+1;
 

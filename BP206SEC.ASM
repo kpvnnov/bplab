@@ -1,4 +1,4 @@
-* $Id: BP206SEC.ASM,v 1.11 2001-03-20 16:07:19 peter Exp $
+* $Id: BP206SEC.ASM,v 1.12 2001-04-11 10:03:40 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -151,6 +151,7 @@ MAX_DURATION            .set    150
 
 TIME_OF_MAX_PRESSURE  	.set	32
 ONE_SECOND              .set    100
+TWO_SECOND              .set    200
 TEN_SECOND              .set    1000
 TWO_MINUTES		.set	11500
 
@@ -179,8 +180,17 @@ PRESSURE_MEASUREMENT            .set    8
 PRESSURE_DIMINUTION             .set    9
 MEASUREMENT_FINISH              .set	10
  .if WriteDebug=0
+  .if Sertificarion=1
+PRESSURE_MEASUREMENT_MANUAL	.set	11
+  .endif
+
  .elseif WriteDebug<3
+  .if Sertificarion=1
+PRESSURE_MEASUREMENT_MANUAL	.set	11
+START_DEBUG_WRITE		.set	12
+  .else
 START_DEBUG_WRITE		.set	11
+  .endif
  .endif
 	.else
 PULSE_FREQUENCY_EVALUATION      .set    0

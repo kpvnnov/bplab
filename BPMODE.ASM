@@ -1,6 +1,6 @@
 *****************************************************************************
 * режимы прибора (измерение давления, вывод ошибки на экран и т.д.)
-* $Id: BPMODE.ASM,v 1.10 2001-03-20 16:07:20 peter Exp $
+* $Id: BPMODE.ASM,v 1.11 2001-04-11 10:03:40 peter Exp $
 *****************************************************************************
 
 	SETC    SXM
@@ -82,18 +82,23 @@ Mode_branch
 	CALL	Measurment_finish
 	B       End_mode
 
+ .if Sertificarion=1
+***************************
+* пустое стояние на ступеньке 2-3 секунды
+***************************
+	CALL    Pressure_measurement_Manual
+	B       End_mode
+ .endif
+
  .if WriteDebug=0
  .elseif WriteDebug<3
-	CALL	pStart_Debug_Write
-	LACC	SampleNumber
-	ADD	SampleNumberShift
-*	ADD	TimeNakachka
-	SUB     #TWO_MINUTES
-	BCND	End_Debug_mode,LT
-	mEnd_error_meas rTIME_MORE_2_MINUTES
-	B	End_Debug_mode
-
+****************************
+* запись отладочная во флеш
+****************************
+        CALL	DebugWriting
+        B	End_Debug_mode
  .endif
+
 
 End_mode
 	CALL	Analysis_of_end
@@ -130,4 +135,18 @@ End_next_sample_number:
 **
 	RET
 
+ .if WriteDebug=0
+ .elseif WriteDebug<3
+DebugWriting:
+	CALL	pStart_Debug_Write
+	LACC	SampleNumber
+	ADD	SampleNumberShift
+*	ADD	TimeNakachka
+	SUB     #TWO_MINUTES
+	BCND	End_Debug_mode_ret,LT
+	mEnd_error_meas rTIME_MORE_2_MINUTES
+End_Debug_mode_ret:
+	RET
+
+ .endif
 

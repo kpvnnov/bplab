@@ -1,5 +1,5 @@
 ;***********************************************************************
-; $Id: pr_dim1.asm,v 1.2 2001-03-20 16:07:21 peter Exp $
+; $Id: pr_dim1.asm,v 1.3 2001-04-11 10:03:40 peter Exp $
 ;*       Pressure_diminution_1() - Процесс подготовки данных после
 ;*	 понижения давления на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
@@ -88,8 +88,11 @@ Dim1_prediction_2:
 ;       /*      Подготовка к следующему режиму  */
 
 ;       Mode = PRESSURE_MEASUREMENT;
-
+ .if Sertificarion=1
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+ .else
         SPLK    #PRESSURE_MEASUREMENT,Mode
+ .endif
 
 ;       AnalysisStart = SampleNumber - 4 - PredictionInterval + AnalysisInterval + TIME_OUT;
 

@@ -1,4 +1,4 @@
-* $Id: MEAS_FIN.ASM,v 1.7 2001-03-20 16:14:02 peter Exp $
+* $Id: MEAS_FIN.ASM,v 1.8 2001-04-11 10:03:40 peter Exp $
 Measurment_finish
 	MAR  	*,AR1
  .if OnProtectInterval30s=1
@@ -263,8 +263,11 @@ Sheduler_err_25
 Sheduler_err_37
 Sheduler_err_41
 Sheduler_err_46
-
+ .if Sertificarion=1
+	B	StandartNextMeas
+ .else
 	B	CheckForcedMeas
+ .endif
 
 *rNOT_SISTOL_PRESSURE_ARTEFACT	 .set 040
 * при измерении был артефакт на систоле
@@ -276,13 +279,22 @@ Sheduler_err_42
 	LACC	PrevPressureLevel
 	ADD	#PRESS_30
 	SACL	PrevPressureLevel
+ .if Sertificarion=1
+	B	StandartNextMeas
+ .else
 	B	CheckForcedMeas
+ .endif
+
 * Не удалось определить систолу
 Sheduler_err_39
 	LACC	PrevPressureLevel
 	ADD	#PRESS_30
 	SACL	PrevPressureLevel
+ .if Sertificarion=1
+	B	StandartNextMeas
+ .else
 	B	CheckForcedMeas
+ .endif
 Sheduler_err_17
 Sheduler_err_3
 	mOff_Interval
