@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.15 2001-02-23 09:48:22 peter Exp $
+* $Id: BP206MAC.ASM,v 1.16 2001-03-20 16:07:19 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -763,8 +763,8 @@ mADCPowerDown	.macro
 	mOffPeriph
 	mOutDIOSR
 
-	IN   	Temp,SDTR     ;команда лишнего чтения
-	IN   	Temp,SDTR     ;команда лишнего чтения
+	IN   	TMP,SDTR     ;команда лишнего чтения
+	IN   	TMP,SDTR     ;команда лишнего чтения
 
 	SPLK 	#SSPR,TMP    ;RESET SSP
 	OUT  	TMP,SSPCR
@@ -1593,3 +1593,38 @@ WriteEKG    .macro code
 	CALL 	FLPROG
  .endif
  .endm
+
+**************************************************************************
+; Алгоритм стравливания "Pressure_diminition_2" требует инициализации
+; следующих переменных:
+**************************************************************************
+; перед измерением.
+; DimMode = 0;
+; DimModeSampleCounter = 0;
+; MeasurementFlags = (MeasurementFlags )|( 1<<DIM_PRESSURE_FLAG  );
+
+mDim_pressure_init	.macro
+
+	LACC	#0
+	SACL	DimMode
+	SACL    DimModeSampleCounter
+	LACC	MeasurementFlags,0
+	OR	#(1<<DIM_PRESSURE_FLAG)
+	SACL	MeasurementFlags,0
+
+	mValve_off
+
+	.endm
+
+; после включения питания.
+; Tclosing = 8;
+; Tedge = 4;
+; Perror = 0;
+
+mDim_pressure_supply_up_init	.macro
+
+	;SPLK	#8,Tclosing
+	;SPLK	#4,Tedge
+	SPLK	#0,Perror
+	.endm
+**************************************************************************

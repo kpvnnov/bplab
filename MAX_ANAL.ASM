@@ -1,6 +1,6 @@
 ***********************************************************************
 * 	MaximumAnalysis()  - Анализ предпологаемого импульса
-* $Id: MAX_ANAL.ASM,v 1.4 2001-02-15 14:10:40 peter Exp $
+* $Id: MAX_ANAL.ASM,v 1.5 2001-03-20 16:07:21 peter Exp $
 ***********************************************************************/
 ;Maximum_analysis()
 
@@ -112,11 +112,11 @@ Max_an_case1
         BCND    Max_an_Not_Period_1,GEQ
 
 ;    {
-;      if ( TempAmplitudeDiff < 0.3*Diff2Max[MaxNumber])
+;      if ( TempAmplitudeDiff < 0.35*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
 	LT	*,AR1
-	MPY	#CONST_0_3
+	MPY	#CONST_0_35		;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal,GEQ
 
@@ -129,13 +129,13 @@ Max_an_case1
 
         CALL    Trend_measurement_1
 
-;        if ( abs( Max[1]-Max[0]) < 0.2 Max[1])
+;        if ( abs( Max[1]-Max[0]) < 0.249 Max[1])
 
         MAR     *,AR1
         LAR     AR1,#Max+1
 	LACC    *,14,AR1
 	LT      *-,AR1
-	MPY     #CONST_0_2
+	MPY     #CONST_0_249
 	SUB     *,14,AR1
 	ABS
 	SPAC
@@ -150,7 +150,7 @@ Max_an_case1
         MAR     *0+,AR3
         LAR     AR3,#Max
 
-;      	   AverageAmplitude[StepNumber] = ( Max[0] + Max[1])/2;
+;      	   AverageAmplitude[StepNumber] = ( Max[0] + Max[1] )/2;
 
         LACC    *+,15,AR3
         ADD     *,15,AR1
@@ -233,7 +233,7 @@ Max_an_ThreeImpulseFlag
 
 	LACC	TempAmplitudeDiff,13
 	LT	*,AR1
-	MPY	#CONST_0_3
+	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal_2,GEQ
 
@@ -286,7 +286,7 @@ Max_an_default
 
 	LACC	TempAmplitudeDiff,13
 	LT	*,AR1
-	MPY	#CONST_0_3
+	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Max_an_TempAmpl_not_equal_Def,GEQ
 
@@ -299,23 +299,23 @@ Max_an_default
 
         CALL    Trend_measurement_2
 
-;      if (( abs( Max[2]-Max[1]) < 0.2 Max[2])&&
-;      	   ( abs( Max[1]-Max[0]) < 0.2 Max[1]))
+;      if (( abs( Max[2]-Max[1]) < 0.35 Max[2])&&
+;      	   ( abs( Max[1]-Max[0]) < 0.35 Max[1]))
 
         MAR     *,AR1
 	LAR	AR1,#Max+2
-	LACC    *,14,AR1
+	LACC    *,13,AR1         ;14
 	LT      *-,AR1
-	MPY     #CONST_0_2
-	SUB     *,14,AR1
+	MPY     #CONST_0_35       ;CONST_0_2
+	SUB     *,13,AR1         ;14
 	ABS
 	SPAC
         BCND    Max_an_Max_not_equal_Def,GEQ
 
-	LACC    *,14,AR1
+	LACC    *,13,AR1         ;14
 	LT      *-,AR1
-	MPY     #CONST_0_2
-	SUB     *,14,AR1
+	MPY     #CONST_0_35       ;CONST_0_2
+	SUB     *,13,AR1         ;14
 	ABS
 	SPAC
         BCND    Max_an_Max_not_equal_Def,GEQ
@@ -330,28 +330,34 @@ Max_an_default
         MAR     *0+,AR3
         LAR     AR3,#Max
 
-;        AverageAmplitude[StepNumber] = ( Max[0] + Max[1])/2;
-;     	 AverageAmplitude[StepNumber] = ( AverageAmplitude[StepNumber] + Max[2])/2;
+;        AverageAmplitude[StepNumber] = ( Max[0] + Max[1] + Max[2] ) * 0.33;
 
         LACC    *+,14,AR3
         ADD     *+,14,AR3
-        ADD     *,15,AR1
+        ADD     *,14,AR1
         SACH    *,0,AR1
+	LT	*,AR1
+	MPY	#CONST_0_33
+	PAC
+	SACH	*,5,AR1
 
 ;     	 AvrPress[StepNumber] = ( MaxAvrPress[0] + MinAvrPress[0] +
 ;                              MaxAvrPress[1] + MinAvrPress[1] +
 ;                              MaxAvrPress[2] + MinAvrPress[2])*0.1667;
 
         LAR     AR1,#MaxAvrPress
-        LACC    *+,12,AR1
-        ADD     *+,12,AR1
-        ADD     *,12,AR1
+        LACC    *+,13,AR1
+        ADD     *+,13,AR1
+        ADD     *,13,AR1
         LAR     AR1,#MinAvrPress
-        ADD     *+,12,AR1
-        ADD     *+,14,AR1
-        ADD     *,15,AR2
-        SACH    *,0,AR1
-
+        ADD     *+,13,AR1
+        ADD     *+,13,AR1
+        ADD     *,13,AR2
+        SACH    *,0,AR2
+	LT	*,AR2
+	MPY	#CONST_0_33
+	PAC
+	SACH	*,5,AR1
 ;
 ;     	 NextModeFlag = 1;
 
@@ -382,6 +388,12 @@ Max_an_TempAmpl_not_equal_Def:
 ;    else
 ;    {
 ;     StartMaxNumber = StartMaxNumber + 2;
+
+        LACC    StartMaxNumber,0
+        ADD     #2
+        SACL    StartMaxNumber
+        B       Max_an_End_Switch
+
 ;    }
 ;   }
 
@@ -395,6 +407,31 @@ Max_an_Not_Period_Def
         ADD     #2
         SACL    StartMaxNumber
 
+;    if ((( SampleNumber - AnalysisStart ) > 5*AnalysisInterval )&&
+;         ( MaxNumber < 2 ))
+
+	LACC	SampleNumber,0
+	SUB	AnalysisStart,0
+	SUB	AnalysisInterval,2
+	SUB	AnalysisInterval,0
+	BCND	Max_an_End_Switch,LEQ
+	LACC	MaxNumber,0
+	SUB	#2
+	BCND	Max_an_End_Switch,GEQ
+
+;    {
+;	AnalysisInterval = AnalysisInterval - AnalysisInterval/16;
+;	AveragePeriodEvaluation = AveragePeriodEvaluation -
+;				  AveragePeriodEvaluation/16;
+
+	LACC	AnalysisInterval,16
+	SUB	AnalysisInterval,12
+	SACH	AnalysisInterval,0
+	LACC    AveragePeriodEvaluation,16
+	SUB     AveragePeriodEvaluation,12
+	SACH    AveragePeriodEvaluation,0
+
+;    }
 ;   }
 ;   break;
 ; }

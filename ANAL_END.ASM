@@ -1,4 +1,4 @@
-* $Id: ANAL_END.ASM,v 1.6 2000-12-15 13:22:47 peter Exp $
+* $Id: ANAL_END.ASM,v 1.7 2001-03-20 16:07:18 peter Exp $
 ;Analysis_of_end()
  .if WriteDebug!=0
 
@@ -31,14 +31,12 @@ Analysis_of_end:
  .endif
 
 ;   {
-
-	mValve_off
-	mMotor_off
-	SPLK 	#PRESSURE_DIMINUTION,Mode
-
 ;     NewPressure = PRESS_275_MILL_OF_MERC;
 
 	SPLK	#PRESS_275_MILL_OF_MER,NewPressure
+	SPLK 	#PRESSURE_DIMINUTION,Mode
+	mMotor_off
+	mDim_pressure_init
 
 ;     MaxNumberShift = MaxNumber;
 
@@ -79,7 +77,7 @@ Anal_end_anal_time:
 	BCND	Anal_end_anal_meas,GT
 
 ;   {
-	mEnd_error_meas rMEASURMENT_ON_LOW	
+	mEnd_error_meas rMEASURMENT_ON_LOW
 	RET
 ;   }
 
@@ -273,16 +271,13 @@ Anal_end_PRESSURE_AUGMENT_STOP:     	; /*!!!!!! èàôÄíú èàôÄíú...*/
 Anal_end_CHECK_HIGHER_SISTOL_PR:
 Anal_end_PRESSURE_MEASUREMENT:
 
-	SPLK #PRESSURE_DIMINUTION,Mode
-	mValve_off
+;          	NewPressure = NewPressure - EIGHT_MILL_OF_MERC;
 
-;          	NewPressure = Signal[TIME_OUT] - EIGHT_MILL_OF_MERC;
-
-	MAR	*,AR1
-	LAR     AR1,#Signal+TIME_OUT
-	LACC	*
-	SUB     #EIGHT_MILL_OF_MERC
-	SACL	NewPressure
+	;LACC	NewPressure
+	;SUB    #EIGHT_MILL_OF_MERC
+	;SACL	NewPressure
+	SPLK 	#PRESSURE_DIMINUTION,Mode
+	mDim_pressure_init
 
 ;	   	SubroutMode = 0;
 ;          	MaxNumber = 0;

@@ -52,7 +52,7 @@ Mode_branch
         CALL    Pressure_measurement
         B       End_mode
 
-        CALL    Pressure_diminution
+        CALL    Pressure_diminution_1
         B       End_mode
 
 End_mode

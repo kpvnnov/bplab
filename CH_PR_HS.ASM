@@ -1,7 +1,7 @@
 ***********************************************************************
 *       Check_higher_sistol_pressure() - Проверка превышения
 *                                        систолического давлени
-* $Id: CH_PR_HS.ASM,v 1.5 2001-02-15 14:10:39 peter Exp $
+* $Id: CH_PR_HS.ASM,v 1.6 2001-03-20 16:07:20 peter Exp $
 ***********************************************************************
 Check_higher_sistol_pressure:
 ;{
@@ -130,11 +130,11 @@ Ch_Pr_Not_Synchro
         BCND    Ch_Pr_Not_Period,GEQ
 
 ;        {
-;	  if ( TempAmplitudeDiff < 0.3*Diff2Max[MaxNumber])
+;	  if ( TempAmplitudeDiff < 0.499*Diff2Max[MaxNumber])
 
 	LACC	TempAmplitudeDiff,13
 	LT	*,AR1
-	MPY	#CONST_0_3
+	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Ch_Pr_TempAmpl_not_equal,GEQ
 
@@ -187,7 +187,7 @@ Ch_Pr_Not_S_default
 
 	LACC	TempAmplitudeDiff,13
 	LT	*,AR1
-	MPY	#CONST_0_3
+	MPY	#CONST_0_499			;#CONST_0_3
 	SPAC
         BCND    Ch_Pr_TempAmpl_not_equal_2,GEQ
 
@@ -204,24 +204,22 @@ Ch_Pr_Not_S_default
 
         CALL    Trend_measurement_2
 
-;	    if (( abs( Max[2]-Max[1]) < 0.2 Max[2])&&
+;	    if (( abs( Max[2]-Max[1]) < 0.35 Max[2])&&
+; 	        ( abs( Max[1]-Max[0]) < 0.35 Max[1]))
 
         MAR     *,AR1
 	LAR	AR1,#Max+2
-	LACC	*,14
+	LACC	*,13                    ;14
 	LT	*-
-	MPY	#CONST_0_2
-	SUB	*,14
+	MPY	#CONST_0_35              ;CONST_0_2
+	SUB	*,13                    ;14
 	ABS
 	SPAC
 	BCND	Ch_Pr_Max_not_equal,GEQ
-
-; 	        ( abs( Max[1]-Max[0]) < 0.2 Max[1]))
-
-	LACC	*,14
+	LACC	*,13                    ;14
 	LT	*-
-	MPY	#CONST_0_2
-	SUB	*,14
+	MPY	#CONST_0_35              ;CONST_0_2
+	SUB	*,13                    ;14
 	SPAC
 	BCND	Ch_Pr_Max_not_equal,GEQ
 
@@ -235,27 +233,34 @@ Ch_Pr_Not_S_default
         MAR     *0+,AR3
         LAR     AR3,#Max
 
-;             AverageAmplitude[StepNumber] = ( Max[0] + Max[1])/2;
-;             AverageAmplitude[StepNumber] = ( AverageAmplitude[StepNumber] + Max[2])/2;
+;             AverageAmplitude[StepNumber] = ( Max[0] + Max[1] + Max[2])*0.33;
 
         LACC    *+,14,AR3
         ADD     *+,14,AR3
-        ADD     *,15,AR1
+        ADD     *,14,AR1
         SACH    *,0,AR1
+	LT	*,AR1
+	MPY	#CONST_0_33
+	PAC
+	SACH	*,5,AR1
 
 ;             AvrPress[StepNumber] = ( MaxAvrPress[0] + MinAvrPress[0] +
 ;                                      MaxAvrPress[1] + MinAvrPress[1] +
 ;                                      MaxAvrPress[2] + MinAvrPress[2])*0.1667;
 
         LAR     AR1,#MaxAvrPress
-        LACC    *+,12,AR1
-        ADD     *+,12,AR1
-        ADD     *,12,AR1
+        LACC    *+,13,AR1
+        ADD     *+,13,AR1
+        ADD     *,13,AR1
         LAR     AR1,#MinAvrPress
-        ADD     *+,12,AR1
-        ADD     *+,14,AR1
-        ADD     *,15,AR2
-        SACH    *,0,AR1
+        ADD     *+,13,AR1
+        ADD     *+,13,AR1
+        ADD     *,13,AR2
+        SACH    *,0,AR2
+	LT	*,AR2
+	MPY	#CONST_0_33
+	PAC
+	SACH	*,5,AR1
 
 ;             /* Подготовка к следующему режиму */
 ;             NextModeFlag = 1;
@@ -286,6 +291,12 @@ Ch_Pr_TempAmpl_not_equal_2
 ;         else
 ;         {
 ;          StartMaxNumber = StartMaxNumber + 2;
+
+        LACC    StartMaxNumber
+        ADD     #2
+        SACL    StartMaxNumber
+        B       Ch_Pr_Next_MaxNumber
+
 ;         }
 
 Ch_Pr_Not_Period_2
@@ -297,6 +308,30 @@ Ch_Pr_Not_Period_2
         LACC    StartMaxNumber
         ADD     #2
         SACL    StartMaxNumber
+
+;    if ((( SampleNumber - AnalysisStart ) > 5*AnalysisInterval )&&
+;         ( MaxNumber < 2 ))
+
+	LACC	SampleNumber,0
+	SUB	AnalysisStart,0
+	SUB	AnalysisInterval,2
+	SUB	AnalysisInterval,0
+	BCND	Ch_Pr_Next_MaxNumber,LEQ
+	LACC	MaxNumber,0
+	SUB	#2
+	BCND	Ch_Pr_Next_MaxNumber,GEQ
+
+;    {
+;	AnalysisInterval = AnalysisInterval - AnalysisInterval/16;
+;	AveragePeriodEvaluation = AveragePeriodEvaluation -
+;				  AveragePeriodEvaluation/16;
+
+	LACC	AnalysisInterval,16
+	SUB	AnalysisInterval,12
+	SACH	AnalysisInterval,0
+	LACC    AveragePeriodEvaluation,16
+	SUB     AveragePeriodEvaluation,12
+	SACH    AveragePeriodEvaluation,0
 
 ;        }
 ;        break;
@@ -373,13 +408,13 @@ Ch_Pr_Not_S_Small_Impulse
 ;   }
 ;   else
 ;   {
-;     if ((( SampleNumber - AnalysisStart ) > 5*AnalysisInterval )&&
+;     if ((( SampleNumber - AnalysisStart ) > 6*AnalysisInterval )&&
 ;          ( MaxNumber < 2 ))
 
 	LACC	SampleNumber,0
 	SUB	AnalysisStart,0
 	SUB	AnalysisInterval,2
-	SUB	AnalysisInterval,0
+	SUB	AnalysisInterval,1
 	BCND	Ch_Pr_Max_Fl_more1,LEQ
 	LACC	MaxNumber,0
 	SUB	#2
@@ -475,20 +510,13 @@ Start_diminution_pressure:
 
 ;{
 ;	Mode = PRESSURE_DIMINUTION;
+;	NewPressure = NewPressure - EIGHT_MILL_OF_MERC;
 
         SPLK #PRESSURE_DIMINUTION,Mode
-
-;	Valve_off();
-
-	mValve_off
-
-;	NewPressure = Signal[TIME_OUT] - EIGHT_MILL_OF_MERC;
-
-	MAR	*,AR1
-        LAR     AR1,#Signal+TIME_OUT
-	LACC	*
-        SUB     #EIGHT_MILL_OF_MERC
-	SACL	NewPressure
+	;LACC	NewPressure
+        ;SUB     #EIGHT_MILL_OF_MERC
+	;SACL	NewPressure
+	mDim_pressure_init
 
 ;	SubroutMode = 0;
 

@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.15 2001-02-23 09:48:23 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.16 2001-03-20 16:07:20 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -40,7 +40,12 @@ NoPowerDown
 	BIT 	Jobs,8
 	BCND 	NoAdc,NTC
 	CALL 	ADCPRO
-NoAdc
+;	if (((MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == ( 1<<DIM_PRESSURE_FLAG ));
+;          { Pressure_diminition_2(); }
+	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BCND 	NoAdc,NTC
+	CALL	Pressure_diminition_2
+NoAdc:
 	BIT 	Jobs,15-BeepLittle_Flag     	;пищать
 	BCND 	NoBeep,NTC
 ;	SPLK 	#10,CNTBEEP

@@ -1,6 +1,6 @@
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.5 2001-02-15 14:10:40 peter Exp $
+* $Id: PRESS_M.ASM,v 1.6 2001-03-20 16:07:21 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
 
@@ -103,20 +103,13 @@ Press_m_next_mode
 ;      {
 ;       /*      Подготовка к следующему режиму */
 ;       Mode = PRESSURE_DIMINUTION;
+;          NewPressure = NewPressure - EIGHT_MILL_OF_MERC;
 
         SPLK    #PRESSURE_DIMINUTION,Mode
-
-;   	   Valve_off();
-
-	mValve_off
-
-;          NewPressure = Signal[TIME_OUT] - EIGHT_MILL_OF_MERC;
-
-	MAR	*,AR1
-        LAR     AR1,#Signal+TIME_OUT
-	LACC	*
-        SUB     #EIGHT_MILL_OF_MERC
-	SACL	NewPressure
+	;LACC	NewPressure
+        ;SUB     #EIGHT_MILL_OF_MERC
+	;SACL	NewPressure
+	mDim_pressure_init
 
 ;	   SubroutMode = 0;
 
@@ -172,19 +165,20 @@ Press_m_SmallMax
 ;  }
 ;   else
 ;   {
-;     if ((( SampleNumber - AnalysisStart ) > 5*AnalysisInterval )&&
+;     if ((( SampleNumber - AnalysisStart ) > 6*AnalysisInterval )&&
 ;          ( MaxNumber < 2 ))
 
 	LACC	SampleNumber,0
-	SUB	AnalysisStart,0
+        SUB	AnalysisStart,0
 	SUB	AnalysisInterval,2
-	SUB	AnalysisInterval,0
+	SUB	AnalysisInterval,1
 	RETC	LEQ
 	LACC	MaxNumber,0
 	SUB	#2
-	RETC	LT
+	RETC	GEQ
 
 ;     {
+;
 ;       Press_m_next_mode();
 
 	B	Press_m_next_mode
@@ -210,13 +204,15 @@ Press_m_End
 ;***********************************************************************
 
 WIN_BL_5		.word   01A1h, 03248h, 07FFFh, 03248h, 01A1h
+;WIN_BL_5		.word   01A1h, 03248h, 07FFFh, 03248h, 01A1h
 
 TempAverageAmplitude 	.equ  	Signal + 32
 NewAverageAmplitude   	.equ  	Signal
 Flag			.equ	TMP+5
 NewMaxAverageAmplitude	.equ  	TMP+5
 StepAveragePressure     .equ  	TMP+6
-Temp			.equ	TMP+6
+;Temp			.equ	TMP+6
+
 ;Determinution_s_a_d()
 
 Determination_s_a_d
@@ -259,8 +255,8 @@ Deter_for_i_0:
 
 ;      {
 ;	  Temp = AverageAmplitude[k+1];
-;         AverageAmplitude[k+1] = AverageAmplitude[k+1];
-;         AverageAmplitude[k+1] = Temp;
+;         AverageAmplitude[k+1] = AverageAmplitude[k];
+;         AverageAmplitude[k] = Temp;
 
 	MAR	*+,AR2
 	LACC	*-,0,AR2
@@ -425,28 +421,28 @@ Deter_sistol
         SUB     *+,0,AR1
         SACL    TMP
 
-                ; 2^5*( NewAverageAmplitude[i] -
+                ; 2^9*( NewAverageAmplitude[i] -
 		;       THRESHOLD_OF_SISTOL*NewMaxAverageAmplitude )
 
         LACC    *,12,AR2
         SPAC
 	SACH	TMP+1,4
-	LACC	TMP+1,5
+	LACC	TMP+1,9
 
-                ; 2^5*()/()
+                ; 2^9*()/()
 
         RPT     #15
         SUBC    TMP
         SACL    TMP
         LT      TMP
 
-                ;2^4*( AvrPress[i-1] - AvrPress[i])
+                ;2^0*( AvrPress[i-1] - AvrPress[i])
 
-        LACC    *+,4,AR2
-        SUB     *,4,AR2
+        LACC    *+,0,AR2
+        SUB     *,0,AR2
         SACL    TMP
 
-                ;2^4*()*2^5*()/()
+                ;2^0*()*2^9*()/()
 
         MPY     TMP
         PAC     ;2^9*()*()/()
@@ -613,28 +609,28 @@ Deter_diastol_2
         SUB     *-,0,AR1
         SACL    TMP
 
-                ; 2^5*( NewAverageAmplitude[i] -
+                ; 2^9*( NewAverageAmplitude[i] -
 		; THRESHOLD_OF_DIASTOL*NewMaxAverageAmplitude )
 
         LACC    *,12,AR2
         SPAC
 	SACH	TMP+1,4
-	LACC	TMP+1,5
+	LACC	TMP+1,9
 
-                ; 2^5*()/()
+                ; 2^9*()/()
 
         RPT     #15
         SUBC    TMP
         SACL    TMP
         LT      TMP
 
-                ;2^4*( AvrPress[i] - AvrPress[i+1])
+                ;2^0*( AvrPress[i] - AvrPress[i+1])
 
-        LACC    *+,4,AR2
-        SUB     *-,4,AR2
+        LACC    *+,0,AR2
+        SUB     *-,0,AR2
         SACL    TMP
 
-                ;2^4*()*2^5*()/()
+                ;2^0*()*2^9*()/()
 
         MPY     TMP                     ;2^9*()*()/()
 

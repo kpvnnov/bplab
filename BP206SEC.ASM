@@ -1,4 +1,4 @@
-* $Id: BP206SEC.ASM,v 1.10 2001-02-15 14:10:39 peter Exp $
+* $Id: BP206SEC.ASM,v 1.11 2001-03-20 16:07:19 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -25,6 +25,7 @@ SYNCHRO_FLAG		.equ	2
 FIRST_MEAS_FLAG         .equ	3
 THREE_IMPULSE_FLAG      .equ	4
 PRESS_MORE_SYSTOL_FLAG  .equ	5
+DIM_PRESSURE_FLAG       .equ	6
 ;DiffMaxFlag             .usect "bss1",1
 ;FirstImpulseFlag
 ;SynchroFlag             .usect "bss1",1
@@ -63,6 +64,18 @@ DTrend                  .usect "bss1",6
 MaxAvrPress             .usect "bss1",3
 MinAvrPress             .usect "bss1",3
 
+DimModeSampleCounter  	.usect "bss1",1
+DimMode               	.usect "bss1",1
+Pline0                	.usect "bss1",1
+Pline1                	.usect "bss1",1
+Perror                	.usect "bss1",1
+;Tclosing              	.usect "bss1",1
+;Tedge                 	.usect "bss1",1
+Tdimstart             	.usect "bss1",1
+Preturn             	.usect "bss1",1
+Pclose             	.usect "bss1",1
+
+
 Diff2Max                .usect "MNArray0",32
 Diff2MaxAdress          .usect "MNArray0",32
 Diff2MaxAdressFinish    .usect "MNArray",256
@@ -80,8 +93,10 @@ DIFF_BASIS_OF_PR_AUG_2		.set	30
 DIFF_BASIS              	.set    12
 
 CONST_0_2                       .set    00CCDh   ;4  - shift 2
+CONST_0_249                     .set    00FFFh   ;4  - shift 2
 CONST_0_3                       .set    0099Ah   ;8  - shift 3
-CONST_0_33                      .set    00A8Fh   ;8  - shift 3
+CONST_0_33                      .set    00AAAh   ;8  - shift 3
+CONST_0_35                      .set    00B33h   ;8  - shift 3
 CONST_0_375                     .set    00C00h   ;8  - shift 3
 CONST_0_4                       .set    00CCDh   ;8  - shift 3
 CONST_0_499                     .set    00FFFh   ;8  - shift 3
@@ -118,7 +133,7 @@ ZERO_ZERO_FIVE_MM_PER_SAMPLE 	.equ 	B0_1mm*20    ;0,01мм.pт.ст/отсчет
 ONE_MM_PER_SAMPLE               .equ    B0_5mm*30*2  ;1,00мм.pт.ст/отсчет
 
 RESERVE_MILL_OF_MERC    	.equ    B8mm
-EIGHT_MILL_OF_MERC		.equ    B10mm
+EIGHT_MILL_OF_MERC		.equ    B8mm
 
 ;#define Diskret 100
 ;//для 200 Гц
