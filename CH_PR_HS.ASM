@@ -153,7 +153,6 @@ Next_augment_pressure:
 ;  Completion_of_mode();
 ;  AnalysisStart = TIME_OF_MAX_PRESSURE + 0,5*AnalysisInterval;
 ;  AugmentPressureNumber++;
-;  AvrPress[StepNumber] = 0;
 ;  mZeroToAverageAmplitude();
 ;  Finish_Meas_Address();
 ;}

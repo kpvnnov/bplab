@@ -1,7 +1,7 @@
 ;&D
 ***********************************************************************
 *       Average
-* $Id: PROCEDUR.ASM,v 1.9 2001-11-14 17:34:21 peter Exp $
+* $Id: PROCEDUR.ASM,v 1.10 2001-11-28 14:26:51 peter Exp $
 ***********************************************************************
 Average
 
@@ -494,8 +494,10 @@ Finish_Meas_Address:
 	SUB	#MAX_STEP_NUMBER,0
 	BCND	Step_number_error_isnt,LT
     	mEnd_error_meas	rSTEP_NUMBER_IS_BIG
+	B	Finish_Meas_Address_quit
 Step_number_error_isnt:
-
+	mZeroToAverageAmplitude
+Finish_Meas_Address_quit:
 	MAR	*,AR1
 	MAR	*-,AR1
 	LAR	AR0,*-,AR1
