@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.23 2001-05-22 12:42:50 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.24 2001-05-29 12:05:56 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -797,7 +797,10 @@ NEXTWD  BLDD 	*+,#TMP
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
 	BeepLong
+ .endif
 	mSetWatchToInit
 
 	CALL	InitScheduler
@@ -1021,8 +1024,10 @@ CommAndBlood
 	SACL FLADR
 	LAR	AR1,#DATART+4
 	CALL	Read2K
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
 	Beep
-
+ .endif
 
 	SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV CRC
@@ -1138,7 +1143,10 @@ NextPage1
 	SACL TMP+1
 	B NextPage1
 EndOkClear1
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
 	Beep
+ .endif
 *******
 * сбрасываем кэш во флеш
 *******
@@ -1544,11 +1552,14 @@ NEXTWD1 BLDD 	*+,#TMP
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
+	Beep
+ .endif
 	MAR  *,AR1
-        LAR  AR1,#DATART+2
+	LAR  AR1,#DATART+2
 	SPLK #000h,*
 *	SPLK #0FFh,*
-	Beep
 	DMOV *
         B SendBack
 
@@ -1917,7 +1928,10 @@ OutBufferUserCode5
 
 	SACL 	*
 	DMOV 	*
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
 	Beep
+ .endif
  .else
 ReceveUserCode5:
  .endif 		;AVRProcessor
@@ -2179,7 +2193,10 @@ CommAndAVR
 	BCND	OUTFF,NEQ
 *	LACC	#10
 *	CALL	Sound
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
 	Beep
+ .endif
 
 	SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV CRC
