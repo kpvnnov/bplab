@@ -1,4 +1,4 @@
-* $Id: PR_A_T40.ASM,v 1.12 2001-02-26 11:47:00 peter Exp $
+* $Id: PR_A_T40.ASM,v 1.13 2001-04-23 08:41:26 peter Exp $
 Pressure_augment_40
 
 	LACC    SubroutMode,1
@@ -183,7 +183,7 @@ Pr_aug_40_case5_2:
 
 	SPLK	#32,AveragePeriod
 
-	SPLK    #150,AnalysisInterval
+	SPLK    #32,AnalysisInterval
         SPLK	#MAX_THRESHOLD_40MM,LastDiff2Max
 
 	LACC    AnalysisInterval
