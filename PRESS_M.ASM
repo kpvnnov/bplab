@@ -1,6 +1,6 @@
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.8 2001-08-22 14:17:43 peter Exp $
+* $Id: PRESS_M.ASM,v 1.9 2001-09-24 11:24:47 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
 
@@ -195,13 +195,22 @@ Press_m_End
 ;}
         RET
 
- .if Sertificarion=1
+ .if (Sertificarion==1)
+  .if (WriteDebug!=0)
+* стоим на ступеньке десять секунд
+Pressure_measurement_Manual:
+	LACC	SampleNumber
+	SUB     #TEN_SECOND
+	RETC	LT
+	B	Press_m_next_mode
+  .else
 * стоим на ступеньке две секунды
 Pressure_measurement_Manual:
 	LACC	SampleNumber
 	SUB     #TWO_SECOND
 	RETC	LT
 	B	Press_m_next_mode
+  .endif
  .endif
 
 ;***********************************************************************

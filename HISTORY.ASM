@@ -1,5 +1,5 @@
 * =[ history ]========================================================
-* $Id: HISTORY.ASM,v 1.82 2001-09-13 09:50:56 peter Exp $
+* $Id: HISTORY.ASM,v 1.83 2001-09-24 11:24:46 peter Exp $
 *  ! и √ - испpавлена ошибка
 *       - небольшое изменение
 *      ■ - новая возможность
@@ -678,7 +678,7 @@
 *
 * =[ 01-05-26 v0-1-9 ]================================================
 * объявляю переменную
-CurrentRevision: .string "$Revision: 1.82 $ $Date: 2001-09-13 09:50:56 $",0
+CurrentRevision: .string "$Revision: 1.83 $ $Date: 2001-09-24 11:24:46 $",0
 * а все остальные строчки будут комментариями ;-)
 * по Usercode8 высылается dump 2048 байта в котором нультерминатор
 * строка CurrentRevision
@@ -915,3 +915,24 @@ CurrentRevision: .string "$Revision: 1.82 $ $Date: 2001-09-13 09:50:56 $",0
 *       AND	#0FFh
 *       SACL	*
 *	SUB  	#10     ;пока обрабатываем всего девять команд
+* =[ 01-09-24 v4-17 ]================================================
+* В "сертификационном" режиме при отладочной прошивке стоим
+* на ступеньке десть секунд
+*
+* .if (Sertificarion==1)
+*  .if (WriteDebug!=0)
+* стоим на ступеньке десять секунд
+*Pressure_measurement_Manual:
+*	LACC	SampleNumber
+*	SUB     #TEN_SECOND
+*	RETC	LT
+*	B	Press_m_next_mode
+*  .else
+* стоим на ступеньке две секунды
+*Pressure_measurement_Manual:
+*	LACC	SampleNumber
+*	SUB     #TWO_SECOND
+*	RETC	LT
+*	B	Press_m_next_mode
+*  .endif
+* .endif
