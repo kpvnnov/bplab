@@ -1,4 +1,4 @@
-* $Id: BPFLASH.ASM,v 1.15 2001-08-22 14:17:39 peter Exp $
+* $Id: BPFLASH.ASM,v 1.16 2001-10-08 09:20:16 peter Exp $
 ****отладка
 WriteEnd
 ;необходимо произвести подсчет количества измерения в таблице
@@ -481,23 +481,40 @@ NotNormalWrite1
         SACL IZFLLSB
         SACH IZFLMSB
  .elseif ModeOutput=1
+
         BIT Jobs,11
         BCND NormailWrite2,NTC
         LACC Jobs
         AND  #0FFEFH
         SACL Jobs      ;сбрасываем бит записи в канал значения ЦАП
-;        WriteParams 12 ;пишем с первого канала после фильтра (один байт)
+NormailWrite2:
+ .if WriteDebug!=0
+
+	SETC	SXM
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+6;AIN6 (PR0)
+        LACC	*		;//выход прямой первого датчика давления
+
+	SUB	Preset0
+	ADD	#4000h,1
+
+	SACL 	TMP
+	CALL 	FLPROG
+
+	MAR	*,AR2
+	LAR	AR2,#_ResultADC+6;AIN6 (PR0)
+        LACC	*,8		;старшая часть
+
+	SUB	Preset0,8
+	ADD	#4000h,9
+	SACH 	TMP
+	CALL 	FLPROG
+
+ .else
         WriteParams 32 ;пишем с усиленного канала с фильтра (два байта)
-;	WriteParams 21 ;пишем со второго канала с АЦП (два байта)
-;	WriteParams 00 ;пишем 0 (индикатор, что ЦАП подстроился)
-	B NotNormailWrite2
+ .endif
 
-NormailWrite2
-;        WriteParams 12 ;пишем с первого канала после фильтра (один байт)
-	WriteParams 32 ;пишем с усиленного канала с фильтра (два байта)
-;        WriteParams 21 ;пишем со второго канала с АЦП (два байта)
 
-NotNormailWrite2
  .if PsevdoEKG=1
 	CALL	puttable
  .endif
