@@ -2,7 +2,7 @@
 ;/********************************************************************
 ;  Pressure_augment( PressureTop ) -
 ;  Увеличение давления до систолическое+30 мм.рт.ст.
-; $Id: PRESSAUG.ASM,v 1.11 2001-11-14 17:33:35 peter Exp $
+; $Id: PRESSAUG.ASM,v 1.12 2001-11-23 15:37:39 peter Exp $
 ;***********************************************************************/
 ;int	AvrOfTwoDiff2Max
 ;int	TMPMaxNumber
@@ -398,13 +398,17 @@ Pulse_aug_SmallMax:
 	SUB	#ONE_SECOND*7
 	SACL	_AnalysisStart,0
 
-;        if ( AnalysisStart < 0 )
+;        if ( AnalysisStart < AnalysisInterval + DIFF_BASIS*2 )
 ;        {
-;          AnalysisStart = 0;
+;          AnalysisStart = AnalysisInterval + DIFF_BASIS*2;
 ;        }
 
+	SUB     _AnalysisInterval
+	SUB	#DIFF_BASIS*2
 	BCND	Pulse_aug_MaxNotCentre,GEQ
-	SPLK	#0,_AnalysisStart
+	LACC    _AnalysisInterval
+	ADD     #DIFF_BASIS*2
+	SACL    _AnalysisStart
 
 ;      }
 

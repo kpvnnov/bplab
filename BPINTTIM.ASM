@@ -1,7 +1,7 @@
 ;&D
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.29 2001-11-14 17:20:51 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.30 2001-11-23 15:37:38 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -242,11 +242,24 @@ ToNextRegim
 	SPLK	#33,Motor+1
 NotPumping
 
+ .if DebugStop=1
+
+	.global	_check_range
+	call	_check_range,*,AR1
+ .if WARNINGLDP=1
+	LDP	#4
+ .endif
+	BCND	ok_range,EQ
+	LAR  	AR2,#TimeOfBeginMeas
+	MAR	*,AR2
+        SACL	*
+	mEnd_error_meas rCHECK_RANGE_ERROR
+ok_range:
+ .endif
 
 	LAR	AR2,#iCNTCLK
 	MAR	*,AR2
 
-*	BIT  	CNTCLK,15  		;каждое второе прерывание
 	BIT  	*,15  		;каждое второе прерывание
 	BCND 	CallValueProcessing,TC
 

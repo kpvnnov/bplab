@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPINIT.ASM,v 1.24 2001-11-14 17:20:51 peter Exp $
+* $Id: BPINIT.ASM,v 1.25 2001-11-23 15:37:37 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -210,6 +210,12 @@ INIT
 ;        SPLK 	#0,ERRORS              ;никаких ошибок пока небыло
 ;        SPLK 	#0,MODEPR              ;пока ничего не делаем
 	SPLK 	#0FFh,_rDIOSR		;запоминаем состояние IOSR
+ .if DebugStop=1
+        SPLK	#PRESS_20,_Pclose
+	SPLK	#TEN_SECOND,_TempPeriod
+        SPLK	#MAX_DURATION*4,_AveragePeriod
+        SPLK	#MAX_DURATION*4,_AveragePeriodEvaluation
+ .endif
 	mOffPeriph                      ;выключаем всю периферию
 	mDim_pressure_supply_up_init    ;подготовка переменных для Pressure_diminition
 

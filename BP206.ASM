@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206.ASM,v 1.48 2001-11-14 17:20:50 peter Exp $
+* $Id: BP206.ASM,v 1.49 2001-11-23 15:37:36 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -482,121 +482,6 @@ Izmerenie
 ****************************************************************************************************
 
 
- .if DebugStop=1
-ErrorStop
-	NOP
-	NOP
-	NOP
-	RET
-CheckError
-	SPLK	#0,TMP+1
-	LACC	_SampleNumber
-	BCND	ErrorStop,LT
-	SUB	#1151
-	BCND	ErrorStop,GEQ
-
-	SPLK	#1,TMP+1
-	LACC	_SampleNumberShift
-	BCND	ErrorStop,LT
-	SUB	#12000
-	BCND	ErrorStop,GEQ
-
-	SPLK	#2,TMP+1
-	LACC	_MaxNumber
-	BCND	ErrorStop,LT
-	SUB	#32
-	BCND	ErrorStop,GEQ
-
-	SPLK	#3,TMP+1
-	LACC	_MaxNumberShift
-	BCND	ErrorStop,LT
-	SUB	#256
-	BCND	ErrorStop,GEQ
-
-	SPLK	#4,TMP+1
-	LACC	_MeasurementFlags
-	BCND	ErrorStop,LT
-	SUB	#1<<6
-	BCND	ErrorStop,GEQ
-
-	SPLK	#5,TMP+1
-	LACC	_AnalysisStart
-	BCND	ErrorStop,LT
-	SUB	#1000
-	BCND	ErrorStop,GEQ
-
-	SPLK	#6,TMP+1
-	LACC	_AnalysisInterval
-	BCND	ErrorStop,LT
-	SUB	#200
-	BCND	ErrorStop,GEQ
-
-	SPLK	#7,TMP+1
-	LACC	_AveragePeriod
-	BCND	ErrorStop,LT
-	SUB	#150*16
-	BCND	ErrorStop,GEQ
-
-	SPLK	#8,TMP+1
-	LACC	_AveragePeriodEvaluation
-	BCND	ErrorStop,LT
-	SUB	#200*4
-	BCND	ErrorStop,GEQ
-
-	SPLK	#10,TMP+1
-
-	SPLK	#11,TMP+1
-	LACC	NextModeFlag
-	BCND	ErrorStop,LT
-	SUB	#3
-	BCND	ErrorStop,GEQ
-
-	SPLK	#12,TMP+1
-	LACC	StartMaxNumber
-	BCND	ErrorStop,LT
-	SUB	#32
-	BCND	ErrorStop,GEQ
-
-	SPLK	#13,TMP+1
-	LACC	_StepNumber
-	BCND	ErrorStop,LT
-	SUB	#MAX_STEP_NUMBER
-	BCND	ErrorStop,GEQ
-
-	SPLK	#14,TMP+1
-
-	SPLK	#15,TMP+1
-	LACC	PressureTop
-	BCND	ErrorStop,LT
-	SUB	#4000h
-	BCND	ErrorStop,GEQ
-
-	SPLK	#16,TMP+1
-	LACC	MaxDiffSignal
-	BCND	ErrorStop,LT
-	SUB	#800h
-	BCND	ErrorStop,GEQ
-
-	SPLK	#18,TMP+1
-	LACC	_Mode
-	BCND	ErrorStop,LT
-	SUB	#10
-	BCND	ErrorStop,GEQ
-
-	SPLK	#19,TMP+1
-	LACC	_ModeCnt
-	BCND	ErrorStop,LT
-	SUB	#2000
-	BCND	ErrorStop,GEQ
-
-	SPLK	#20,TMP+1
-	LACC	_SubroutMode
-	BCND	ErrorStop,LT
-	SUB	#10
-	BCND	ErrorStop,GEQ
-
-	RET
- .endif
 
  .if SerialProg=1
 *	.copy   Bp206fld.asm

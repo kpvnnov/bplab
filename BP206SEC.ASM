@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206SEC.ASM,v 1.16 2001-11-14 17:33:33 peter Exp $
+* $Id: BP206SEC.ASM,v 1.17 2001-11-23 15:37:37 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -125,8 +125,8 @@ FinishMeasAddress        .usect "StepNum",MAX_STEP_NUMBER
 AvrPress                .usect "StepNum",MAX_STEP_NUMBER
 AverageAmplitude        .usect "StepNum",MAX_STEP_NUMBER
 
-DIFF_BASIS_OF_PR_AUG_1		.set   200
-DIFF_BASIS_OF_PR_AUG_2		.set	30
+DIFF_BASIS_OF_PR_AUG_1		.set   800
+DIFF_BASIS_OF_PR_AUG_2		.set    30
 DIFF_BASIS              	.set    12
 
 CONST_0_2                       .set    00CCDh   ;4  - shift 2
@@ -166,8 +166,8 @@ MAX_THRESHOLD_40MM      	.set    B4mm*3       ;//4 мм.рт.ст.
 MIN_THRESHOLD_SISTOL    	.equ    B0_1mm*3
 MAX_THRESHOLD_SISTOL    	.equ    B10mm*3
 
-ZERO_ZERO_FIVE_MM_PER_SAMPLE 	.equ 	B0_1mm*20    ;0,01мм.pт.ст/отсчет
-ONE_MM_PER_SAMPLE               .equ    B0_5mm*30*3  ;1,00мм.pт.ст/отсчет
+ZERO_ZERO_FIVE_MM_PER_SAMPLE 	.equ 	B0_1mm*DIFF_BASIS_OF_PR_AUG_1/10    ;0,01мм.pт.ст/отсчет
+ONE_MM_PER_SAMPLE               .equ    B0_5mm*DIFF_BASIS_OF_PR_AUG_2*6  ;3,00мм.pт.ст/отсчет
 
 RESERVE_MILL_OF_MERC    	.equ    B8mm
 EIGHT_MILL_OF_MERC		.equ    B8mm

@@ -1,6 +1,6 @@
 /***************************************************************************/
 /*                  Измерение арториального давления        14.03.97 12:22 */
-/* $Id: BP206.CMD,v 1.11 2001-10-22 13:38:11 peter Exp $ */
+/* $Id: BP206.CMD,v 1.12 2001-11-23 15:37:37 peter Exp $ */
 /***************************************************************************/
 /* */
 /* -m Bp206.map */
@@ -55,6 +55,7 @@ SECTIONS
   ARY       : load > CODE PAGE 0 , run > SPROG PAGE 0
 
   .text:   {} > CODE, PAGE 0   /*Program Memory*/
+  .const:  {} > CODE, PAGE 0
 
   flash:    	load > B5    	PAGE 1  /*Data Memory*/
   bss2:         load > B00    	PAGE 1  /*Data Memory*/

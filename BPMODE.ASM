@@ -1,15 +1,11 @@
 ;&D
 *****************************************************************************
 * режимы прибора (измерение давления, вывод ошибки на экран и т.д.)
-* $Id: BPMODE.ASM,v 1.13 2001-11-14 17:20:52 peter Exp $
+* $Id: BPMODE.ASM,v 1.14 2001-11-23 15:37:38 peter Exp $
 *****************************************************************************
 
 	SETC    SXM
         SPM     #0
- .if DebugStop=1
-	SPLK	#0,TMP
-	CALL	CheckError
- .endif
 	LACC    _Mode,2
 	ADD     #Mode_branch
 	BACC
@@ -113,10 +109,6 @@ Mode_branch
 
 End_mode
 
- .if DebugStop=1
-	SPLK	#1,TMP
-	CALL	CheckError
- .endif
 **отладка
 *	SUB	#1152
 *	BCND	NoOverFlow,LT

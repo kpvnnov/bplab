@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPAVRPRG.ASM,v 1.15 2001-10-22 13:38:11 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.16 2001-11-23 15:37:37 peter Exp $
  .copy bpavrprg.mac
 
 	.globl	_clk_xf_avr
@@ -699,3 +699,66 @@ NextWordSPIAVR
 	mOffPeriph
 	mOutDIOSR
 	B	QPrgAVROK
+
+
+;>>>> 	void prg2mem(unsigned *target,unsigned * source, unsigned count)
+******************************************************
+* FUNCTION DEF : _prg2mem
+******************************************************
+	.global _prg2mem
+_prg2mem:
+LF2	.set	1
+	SAR	AR0,*+
+	SAR	AR1,*
+	LAR	AR0,*+
+;	<save register vars>
+	SAR	AR6,*+,AR2
+*
+* AR5	assigned to parameter target
+* AR6	assigned to parameter source
+*
+	LARK	AR2,-3+LF2
+	MAR	*0+
+        ;сейчас загружаем target
+	LAR	AR5,*-			;AR5(AR2) - address in data
+        ;сейчас загружаем  source
+	LACL	*-                      ;ACC = address in program
+        ;сейчас загружаем  count
+; ACC (count)
+        LAR	AR3,*,AR3		;AR3 = length of section
+        BANZ	cloop,*-,AR5
+        B	EPI0_2
+
+cloop:
+	TBLR	*+,AR3			; copy from program to data
+	ADDK	1			; increment program address
+	BANZ	cloop,*-,AR5		; check for zero and decrement
+
+EPI0_2:
+	MAR	* ,AR1
+;	<restore register vars>
+	MAR	*-
+	LAR	AR6,*
+	SBRK	2
+	LAR	AR0,* 
+	RET
+
+
+;        .if	.tms32025 | .tms3202xx
+*	.global _prg2mem
+;_prg2mem:
+;	LARP	AR3
+;	LRLK	AR3,#__const_length	; AR3 = length of section
+;	BANZ	cont,*-,AR2		; Check for zero and decrement
+;	B	quit			; if (zero) quit
+;cont:
+;	LRLK	AR2,#__const_run	; AR2 = const address in data
+;	LALK	#__const_load		; ACC = const address in program
+;cloop:
+;	TBLR	*+,AR3			; copy from program to data
+;	ADDK	1			; increment program address
+;	BANZ	cloop,*-,AR2		; check for zero and decrement
+;quit:
+;	LARP	AR1			; restore ARP to SP
+;	RET				; return
+;	.endif ; .tms32025 | .tms3202xx	

@@ -1,40 +1,40 @@
 enum error_range{
- eSampleNumber=1,		//1
- eSampleNumberShift,    	//2
- eMaxNumber,            	//3
- eMaxNumberShift,               //4
- eAnalysisStart,                //5
- eAnalysisInterval,             //6
- eAveragePeriod,                //7
- eAveragePeriodEvaluation,      //8
- eTempPeriod,                   //9
- eTempAmplitudeDiff,            //10
- ePulseCounter,                 //11
- eMeasurementFlags,             //12
- eStartMaxNumber,               //13
- eStepNumber,                   //14
- eSistolPressureAmplitude,      //15
- eAugmentPressureNumber,        //16
- eMode,                         //17
- eModeCnt,                      //18
- eSubroutMode,                  //19
- eDimModeSampleCounter,         //20
- eDimMode,                      //21
- eTdimstart,                    //22
- ePreturn,                      //23
- ePclose,                       //24
- eCodeError,                    //25
- eMax2DiffAdress_0,             //26
- eMax2DiffAdress_1,             //27
- eMax2DiffAdress_2,             //28
- eDuration_0,                   //29
- eDuration_1,                   //30
- eDuration_2,                   //31
+ eSampleNumber=1,		//1   0x01
+ eSampleNumberShift,    	//2   0x02
+ eMaxNumber,            	//3   0x03
+ eMaxNumberShift,               //4   0x04
+ eAnalysisStart,                //5   0x05
+ eAnalysisInterval,             //6   0x06
+ eAveragePeriod,                //7   0x07
+ eAveragePeriodEvaluation,      //8   0x08
+ eTempPeriod,                   //9   0x09
+ eTempAmplitudeDiff,            //10  0x0A
+ ePulseCounter,                 //11  0x0B
+ eMeasurementFlags,             //12  0x0C
+ eStartMaxNumber,               //13  0x0D
+ eStepNumber,                   //14  0x0E
+ eSistolPressureAmplitude,      //15  0x0F
+ eAugmentPressureNumber,        //16  0x10
+ eMode,                         //17  0x11
+ eModeCnt,                      //18  0x12
+ eSubroutMode,                  //19  0x13
+ eDimModeSampleCounter,         //20  0x14
+ eDimMode,                      //21  0x15
+ eTdimstart,                    //22  0x16
+ ePreturn,                      //23  0x17
+ eCodeError,                    //24  0x18
+ eMax2DiffAdress_0,             //25  0x19
+ eMax2DiffAdress_1,             //26  0x1A
+ eMax2DiffAdress_2,             //27  0x1B
+ eDuration_0,                   //28  0x1C
+ eDuration_1,                   //29  0x1D
+ eDuration_2,                   //30  0x1E
 
- eTempPeriodDiff,               //32
- ePressureTop,                  //33
- eNewPressure,                  //34
- ePerror                        //35
+ eTempPeriodDiff,               //31  0x1F
+ ePressureTop,                  //32  0x20
+ eNewPressure,                  //33  0x21
+ ePerror,                       //34  0x22
+ ePclose                        //35  0x23
 };
 
 
@@ -107,7 +107,7 @@ extern unsigned int AugmentPressureNumber;
 extern unsigned int Mode,ModeCnt,SubroutMode,DimModeSampleCounter,DimMode;
 extern unsigned int Tdimstart;
 extern unsigned int Preturn;
-extern unsigned int Pclose;
+extern int Pclose;
 extern unsigned int CodeError;
 extern unsigned int Max2DiffAdress[];
 extern unsigned int Duration[];
@@ -116,12 +116,8 @@ extern int TempPeriodDiff;
 extern int PressureTop,NewPressure;
 extern int Perror;
 
-unsigned check_range()
-{
-// * Список переменных и их возможные диапазоны значений
-unsigned short code_error=0;
 
-unsigned varib_down[]={0,	// 1 SampleNumber            >=0, <=TEN_SECOND
+const unsigned varib_down_const[]={0,	// 1 SampleNumber            >=0, <=TEN_SECOND
 	0,			// 2 SampleNumberShift       >=0, <=TWO_MINUTES
 	0,			// 3 MaxNumber               >=0, <=32
 	0,			// 4 MaxNumberShift          >=0, <=325
@@ -132,59 +128,119 @@ unsigned varib_down[]={0,	// 1 SampleNumber            >=0, <=TEN_SECOND
 	MIN_DURATION/2,		// 9 TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
 	0,			// 10 TempAmplitudeDiff       >=0, <=B10mm*15
 	0,			// 11 PulseCounter            >=0, <=150
-	0			// 12 MeasurementFlags        >0, < 1024
+	0,			// 12 MeasurementFlags        >0, < 1024
+	0,			// 13 StartMaxNumber          >0, <= 32
+	0,			// 14 StepNumber              >0, MAX_STEP_NUMBER
+	B0_1mm,			// 15 SistolPressureAmplitude >=B0_1mm, <=B4mm
+	0,			// 16 AugmentPressureNumber   >=0, <=3
+	0,			// 17 Mode                    >=0, <=14
+	0,			// 18 ModeCnt			>=0, <=15000 or <=code
+	0,			// 19 SubroutMode		>=0, <=5
+	0,			// 20 DimModeSampleCounter    >=0, <=ONE_SECOND*4
+	0,			// 21 DimMode                 >=0, <=5
+	0,			// 22 Tdimstart               >=0, <=ONE_SECOND*4
+	0,			// 23 Preturn                 >=0, <=PRESS_80
+	0,			// 24 CodeError               >=0, <=1
+	0,			// 25 Max2DiffAdress[0]       >=0, <=TWO_MINUTES
+	0,			// 26 Max2DiffAdress[1]       >=0, <=TWO_MINUTES
+	0,			// 27 Max2DiffAdress[2]       >=0, <=TWO_MINUTES
+	0,			// 28 Duration[0]             >=0, <=TEN_SECOND
+	0,			// 29 Duration[1]             >=0, <=TEN_SECOND
+	0			// 30 Duration[2]             >=0, <=TEN_SECOND
+
 	};
-unsigned varib_up[]={TEN_SECOND,// 1 SampleNumber            >=0, <=TEN_SECOND
-	TWO_MINUTES,		// 2 SampleNumberShift       >=0, <=TWO_MINUTES
-	32,			// 3 MaxNumber               >=0, <=32
-	325,			// 4 MaxNumberShift          >=0, <=325
-	TEN_SECOND,		// 5 AnalysisStart           >=0, <=TEN_SECOND
-	MAX_ANALYSIS_INTERVAL,	// 6 AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
-	MAX_DURATION*16,	// 7 AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
-	MAX_DURATION*4,		// 8 AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
-	TEN_SECOND,		// 9 TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
+
+const unsigned varib_up_const[]={TEN_SECOND+1,// 1  SampleNumber            >=0, <=TEN_SECOND+1
+	TWO_MINUTES,		// 2  SampleNumberShift       >=0, <=TWO_MINUTES
+	32,			// 3  MaxNumber               >=0, <=32
+	325,			// 4  MaxNumberShift          >=0, <=325
+	TEN_SECOND,		// 5  AnalysisStart           >=0, <=TEN_SECOND
+	MAX_ANALYSIS_INTERVAL,	// 6  AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
+	MAX_DURATION*16,	// 7  AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
+	MAX_DURATION*4,		// 8  AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
+	TEN_SECOND,		// 9  TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
 	B10mm*15,		// 10 TempAmplitudeDiff       >=0, <=B10mm*15
 	150,			// 11 PulseCounter            >=0, <=150
-	1024			// 12 MeasurementFlags        >0, < 1024
+	1024,			// 12 MeasurementFlags        >0, < 1024
+	32,			// 13 StartMaxNumber          >0, <= 32
+	MAX_STEP_NUMBER,	// 14 StepNumber              >0, MAX_STEP_NUMBER
+	B4mm,			// 15 SistolPressureAmplitude >=B0_1mm, <=B4mm
+	3,			// 16 AugmentPressureNumber   >=0, <=3
+	14,			// 17 Mode                    >=0, <=14
+	15000,			// 18 ModeCnt			>=0, <=15000 or <=code
+	5,			// 19 SubroutMode		>=0, <=5
+	ONE_SECOND*4,		// 20 DimModeSampleCounter    >=0, <=ONE_SECOND*4
+	5,			// 21 DimMode                 >=0, <=5
+	ONE_SECOND*4,		// 22 Tdimstart               >=0, <=ONE_SECOND*4
+	PRESS_80,		// 23 Preturn                 >=0, <=PRESS_80
+	1,			// 24 CodeError               >=0, <=1
+	TWO_MINUTES,		// 25 Max2DiffAdress[0]       >=0, <=TWO_MINUTES
+	TWO_MINUTES,		// 26 Max2DiffAdress[1]       >=0, <=TWO_MINUTES
+	TWO_MINUTES,		// 27 Max2DiffAdress[2]       >=0, <=TWO_MINUTES
+	TEN_SECOND,		// 28 Duration[0]             >=0, <=TEN_SECOND
+	TEN_SECOND,		// 29 Duration[1]             >=0, <=TEN_SECOND
+	TEN_SECOND		// 30 Duration[2]             >=0, <=TEN_SECOND
 
 	};
 
-unsigned *varibs[]={&SampleNumber,
-	&SampleNumberShift,
-	&MaxNumber,
-	&MaxNumberShift,
-	&AnalysisStart,
-	&AnalysisInterval,
-	&AveragePeriod,
-	&AveragePeriodEvaluation,
-	&TempPeriod,
-	&TempAmplitudeDiff,
-	&PulseCounter,
-	&MeasurementFlags
-	};
+
+const unsigned * const varibs_const[]={&SampleNumber,	//1
+	&SampleNumberShift,             //2
+	&MaxNumber,                     //3
+	&MaxNumberShift,                //4
+	&AnalysisStart,                 //5
+	&AnalysisInterval,              //6
+	&AveragePeriod,                 //7
+	&AveragePeriodEvaluation,       //8
+	&TempPeriod,                    //9
+	&TempAmplitudeDiff,             //10
+	&PulseCounter,                  //11
+	&MeasurementFlags,              //12
+ 	&StartMaxNumber,          	//13
+	&StepNumber,              	//14
+ 	&SistolPressureAmplitude, 	//15
+ 	&AugmentPressureNumber,   	//16
+ 	&Mode,                    	//17
+ 	&ModeCnt,			//18
+ 	&SubroutMode,		 	//19
+ 	&DimModeSampleCounter,    	//20
+ 	&DimMode,                 	//21
+ 	&Tdimstart,               	//22
+ 	&Preturn,                 	//23
+ 	&CodeError,               	//24
+ 	&Max2DiffAdress[0],       	//25
+ 	&Max2DiffAdress[1],       	//26
+ 	&Max2DiffAdress[2],       	//27
+ 	&Duration[0],             	//28
+ 	&Duration[1],             	//29
+ 	&Duration[2]             	//30
+
+	} ;
+
+void prg2mem(void *target,void * source, unsigned count);
+
+unsigned check_range()
+{
+// * Список переменных и их возможные диапазоны значений
+unsigned short code_error=0;
+
+
+
+unsigned varib_up[31];
+unsigned varib_down[31];
+unsigned * varibs[31];
 int x;
- for (x=0;x<11;x++)
+prg2mem((void *)varib_up,(void *)varib_up_const,31);
+prg2mem((void *)varib_down,(void *)varib_down_const,31);
+prg2mem((void *)varibs,(void *)varibs_const,31);
+ for (x=0;x<30;x++)
   if ( (*varibs[x]<varib_down[x])||
        (*varibs[x]>varib_up[x])
      )
-  code_error=x;
+  code_error=x+1;
 
 
 
-
-
- if (MeasurementFlags>1024)
-  code_error=eMeasurementFlags;
-
-
-// StartMaxNumber          >0, <= 32
- if (StartMaxNumber>32)
-  code_error=eStartMaxNumber;
-
-
-// StepNumber              >0, MAX_STEP_NUMBER
- if (StepNumber>MAX_STEP_NUMBER)
-  code_error=eStepNumber;
 
 // HigherCount               Можно удалить.
 
@@ -197,81 +253,12 @@ int x;
 // SistolPressure		>=#LPRESS_60, <=LPRESS_280
 // AveragePressure         >=#LPRESS_30, <=LPRESS_260
 // DiastolPressure		>=#LPRESS_30, <=LPRESS_240
-// SistolPressureAmplitude >=B0_1mm, <=B4mm
- if ( (SistolPressureAmplitude<B0_1mm)||(SistolPressureAmplitude>(B4mm)) )
-  code_error=eSistolPressureAmplitude;
 
 
-// AugmentPressureNumber   >=0, <=3
- if (AugmentPressureNumber>3)
-  code_error=eAugmentPressureNumber;
 
 // ArtefactCount           Пока не используетс
 
-// Mode                    >=0, <=14
- if (Mode>14)
-  code_error=eMode;
 
-// ModeCnt			>=0, <=15000 or <=code
- if (ModeCnt>15000)
-  code_error=eModeCnt;
-
-// SubroutMode		>=0, <=5
- if (SubroutMode>5)
-  code_error=eSubroutMode;
-
-
-// DimModeSampleCounter    >=0, <=ONE_SECOND*4
- if (DimModeSampleCounter>(ONE_SECOND*4))
-  code_error=eDimModeSampleCounter;
-
-
-// DimMode                 >=0, <=5
- if (DimMode>5)
-  code_error=eDimMode;
-
-
-// Tdimstart               >=0, <=ONE_SECOND*4
- if (Tdimstart>(ONE_SECOND*4))
-  code_error=eTdimstart;
-
-// Preturn                 >=0, <=PRESS_80
- if (Preturn>PRESS_80)
-  code_error=ePreturn;
-
-// Pclose                  >=#PRESS_20, <=PRESS_280
- if ( (Pclose<PRESS_20)||(Pclose>PRESS_280) )
-  code_error=ePclose;
-
-
-// CodeError               >=0, <=1
- if (CodeError>2)
-  code_error=eCodeError;
-
-
-// Max2DiffAdress[0]       >=0, <=TWO_MINUTES
- if (Max2DiffAdress[0]>TWO_MINUTES)
-  code_error=eMax2DiffAdress_0;
-
-// Max2DiffAdress[1]       >=0, <=TWO_MINUTES
- if (Max2DiffAdress[1]>TWO_MINUTES)
-  code_error=eMax2DiffAdress_1;
-
-// Max2DiffAdress[2]       >=0, <=TWO_MINUTES
- if (Max2DiffAdress[2]>TWO_MINUTES)
-  code_error=eMax2DiffAdress_2;
-
-// Duration[0]             >=0, <=TEN_SECOND
- if (Duration[0]>TEN_SECOND)
-  code_error=eDuration_0;
-
-// Duration[1]             >=0, <=TEN_SECOND
- if (Duration[1]>TEN_SECOND)
-  code_error=eDuration_1;
-
-// Duration[2]             >=0, <=TEN_SECOND
- if (Duration[2]>TEN_SECOND)
-  code_error=eDuration_2;
 
 
 // * Остальное МОЖНО не проверять НА ДИАПАЗОН ЗНАЧЕНИЙ.
@@ -314,7 +301,11 @@ AverageAmplitude        .usect "StepNum",MAX_STEP_NUMBER
  if (abs(Perror)>PRESS_80)
   code_error=ePerror;
 
- if (code_error) return code_error;
- else return 0;
+//Pclose                  >=#LPRESS_20, <=LPRESS_280
+ if ( (Pclose<LPRESS_20)||(Pclose>(LPRESS_280)) )
+  code_error=ePclose;
+
+ return code_error;
 
 }
+
