@@ -1,4 +1,4 @@
-* $Id: BPINIT.ASM,v 1.18 2001-04-09 14:37:30 peter Exp $
+* $Id: BPINIT.ASM,v 1.19 2001-05-28 10:06:26 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -320,5 +320,9 @@ INIT
 
  .endif
 
+ .if Sertificarion=1
+
+	SPLK	#rSertification,DispErrMeas
+ .endif
 
 	CLRC 	INTM 		;разрешение прерываний

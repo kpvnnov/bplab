@@ -1,6 +1,6 @@
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.14 2001-02-26 11:46:59 peter Exp $
+* $Id: BPDISPL.ASM,v 1.15 2001-05-28 10:06:25 peter Exp $
 *****************************************************************************
 
 MDSPLV  B 	MDSPL0    ;вывод времени на дисплей
@@ -119,9 +119,13 @@ MDSPL3
 	ADD  	#4000h,1
 	AND	#0ffffh
 	SUB  	Preset0
-        B	ChannelSelected
-SecondChannel
+	B	ChannelSelected
+SecondChannel:
+ .if Sertificarion=0
 	LAR	AR5,#ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+ .else
+	LAR	AR5,#ResultADC+6;AIN6 (PR0) значение на выходе датчика
+ .endif
 	LACC	*
 	ADD  	#4000h,1
 	AND	#0ffffh
@@ -235,6 +239,10 @@ MDSPL5  		; вывод ошибки на экран
         AND	#0FFh
         XOR	#081H
         BCND	LowBattery,EQ
+	LACC	ZERROR
+	AND	#0FFh
+	XOR	#rSertification
+	BCND	SertificationMode,EQ
 
 	SPLK 	#15,*+			; E
 
@@ -249,7 +257,15 @@ MDSPL5  		; вывод ошибки на экран
 	SACL 	*+
 
 	RET
-LowBattery
+SertificationMode:
+	SPLK 	#00Ah,*+		; ' '
+	SPLK 	#00Eh,*+		; P
+	SPLK 	#00Eh,*+		; P
+	SPLK 	#00Eh,*			; P
+	RET
+
+
+LowBattery:
 	SPLK 	#00Ah,*+		; ' '
 	SPLK 	#013h,*+		; L
 	SPLK 	#013h,*+		; L
@@ -384,6 +400,9 @@ MDSPL8_0			;вывод давления до которого накачиваем
 	SPLK 	#10,*
 	RET
 
+
+ .if Sertificarion=0
+
 MDSPL8_1			; 111 - запись давления на входе
 	MAR  	*,AR6      	;modify auxiliary register
 	LAR	AR6,#iSYMBL
@@ -391,10 +410,39 @@ MDSPL8_1			; 111 - запись давления на входе
 	SPLK 	#10,*+
 	SPLK 	#1,*+
 	SPLK 	#1,*+
-        LACC	StartCode+1
-        ADD	#1
+	LACC	StartCode+1
+	ADD	#1
 	SACL 	*+
 	RET
+ .else
+MDSPL8_1			; 111 - запись давления на входе
+	MAR  	*,AR6      	;modify auxiliary register
+	LAR	AR6,#iSYMBL
+
+	LACC    StartCode+1
+	SUB	#1
+	BCND	Error_111,GT
+	LACC    StartCode+1,1
+	ADD  	#StartCode111,0
+	BACC
+
+StartCode111:
+	B	CodeDebugRegim1
+	B	CodeDebugRegim2
+CodeDebugRegim1:
+Error_111:
+	SPLK 	#10,*+
+	SPLK 	#2,*+
+	SPLK 	#2,*+
+	SPLK 	#2,*+
+	RET
+CodeDebugRegim2:
+	SPLK 	#10,*+
+	SPLK 	#3,*+
+	SPLK 	#3,*+
+	SPLK 	#3,*+
+	RET
+ .endif
 
 MDSPL8_2			;OH
 	MAR  	*,AR6      	;modify auxiliary register
@@ -467,7 +515,7 @@ MODIFSB
 	OR   	TMP+3
 	SACL 	*
 	RET
-*                                                      GFEDCBA
+*                                                         GFEDCBA
 DSIM0   .word   003Fh   ; 0 Описание символа 0           00111111    A
 DSIM1   .word   0006h   ; 1 Описание символа 1           00000110  F   B
 DSIM2   .word   005Bh   ; 2 Описание символа 2           01011011    G
@@ -482,7 +530,7 @@ DSIM    .word   0000h   ; A Описание символа "Пустота"   00000000
 DSIM23  .word   0001h   ; B Описание символа (верх.тире) 00000001
 DSIM22  .word   0040h   ; C Описание символа (сред.тире) 01000000
 DSIM21  .word   0008h   ; D Описание символа (нижн.тире) 00001000
-DSIMP   .word   0067h   ; E Описание символа P           01100111
+DSIMP   .word   0073h   ; E Описание символа P           01110011
 DSIME   .word   0079h   ; F Описание символа E           01111001
 DSIMO   .word   003Fh   ;10 Описание символа O           00111111
 DSIMN   .word   0076h   ;11 Описание символа E           01110110

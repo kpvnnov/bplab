@@ -1,4 +1,4 @@
-* $Id: AN_SP_UP.ASM,v 1.13 2001-02-23 09:48:21 peter Exp $
+* $Id: AN_SP_UP.ASM,v 1.14 2001-05-28 10:06:25 peter Exp $
 Level_zero
 	LACC    SubroutMode,1
 	ADD     #LevelZero_branch
@@ -199,6 +199,11 @@ Write_branch3
 	Beep
 *	SPLK 	#iCURRENT_PRESSURE,MDSPL 	;переходим на уровень давления
 	SPLK 	#3,MDSPL 	;переходим на уровень давления
+	LACC	StartCode+1
+	BCND	largeTime,NEQ
+	SPLK 	#10500,ModeCnt
+	RET
+largeTime:
 	SPLK 	#15000,ModeCnt
 	RET
 
