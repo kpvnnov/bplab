@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASH.ASM,v 1.22 2002-04-18 14:30:39 peter Exp $
+* $Id: BPFLASH.ASM,v 1.23 2002-04-23 17:31:00 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -386,6 +386,7 @@ AlreadyWrite
 	LACC IZFLLSB
         ADD  IZFLMSB,16
 	SACH 	_FLADR+1,1  ;запоминаем старшую часть адреса
+	AND   	#07FFFh
 	SACL 	_FLADR    ;запоминаем младшую часть адреса
 
  .if Mem=20	;одна микросхема на 2 Mbyte

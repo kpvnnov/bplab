@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASHS.ASM,v 1.11 2002-04-23 11:12:15 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.12 2002-04-23 17:31:00 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -70,8 +70,8 @@ SleepSpokoino:
 	LACC 	_FLADR
 	AND	#07FFFh
 	ADD  	#1
-	SACL 	_FLADR
 	AND  	#07FFFh
+	SACL 	_FLADR
 	BCND 	FLPR_NoOver,NEQ
 	SACL	_FLADR
 	LACC 	_FLADR+1
@@ -137,8 +137,8 @@ FLR_found_in_cache
 	LACC 	_FLADR
 	AND	#07FFFh
 	ADD  	#1
-	SACL 	_FLADR
 	AND  	#07FFFh
+	SACL 	_FLADR
 	BCND 	FLR_NoOver,NEQ
 	SACL	_FLADR
 	LACC 	_FLADR+1
@@ -165,15 +165,7 @@ Find_in_cache
 
 	LAR	AR7,#PageCache
 	LACC	_FLADR,7
- .if Mem=20	;одна микросхема на 2 Mbyte
 	AND     #03FH,16
- .elseif Mem=40	;одна микросхема на 4 Mbyte
-	AND     #07FH,16
- .elseif Mem=44	;две микросхемы на 4 Mbyte
-	AND     #0FFH,16
- .else
-  .emsg _ERROR __ MISSING PARAMETER_
- .endif
 	SACH	*
 	LACC	_FLADR+1,6
 	OR	*,AR7
@@ -317,15 +309,7 @@ Read_flash_to_cache
 	MAR	*,AR7
 
 	LACC	_FLADR,7
- .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#03FH,16
- .elseif Mem=40	;одна микросхема на 4 Mbyte
-	AND	#07FH,16
- .elseif Mem=44	;две микросхемы на 4 Mbyte
-	AND	#0FFH,16
- .else
-  .emsg _ERROR __ MISSING PARAMETER_
- .endif
 	SACH	*
 	LACC	_FLADR+1,6
 	OR	*
@@ -549,12 +533,16 @@ IncAddrFifo:
 ******
 Read_page
 	LACC 	#07FFFh
-Read_p_1
+Read_p_3:
+	BCND 	Read_p_1,BIO
+	B	Read_p_2
+Read_p_1:
 	SUB  	#1
 	RPT  	#10
 	NOP
 	RETC	LEQ
-	BCND 	Read_p_1,BIO
+        B	Read_p_3
+Read_p_2:
 	mRead_512b
 
 *******
