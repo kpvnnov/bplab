@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.25 2001-08-22 14:17:41 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.26 2001-08-27 13:02:33 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -546,6 +546,9 @@ RecUserCode8	.set 15
 ********************************
 RecUserCode9	.set 16
       B		ReceveUserCode9
+********************************
+RecUserCode10	.set 17
+      B		ReceveUserCode10
 
 CommandReceve
 	LAR  	AR2,#DATART   	;загружаем указатель на буфер приема-передачи
@@ -1618,7 +1621,7 @@ CommAndUserData
 	;в DATART+2(мл) и DATART+3(ст) находится номер команды
 	LAR  AR2,#DATART+2
 	LACC 	*
-	SUB  	#9         ;пока обрабатываем всего девять команд
+	SUB  	#10     ;пока обрабатываем всего девять команд
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
 	LACC 	*,1        ;код команды Branch из двух слов состоит
 	BCND	ERRCOMM,EQ
@@ -1637,6 +1640,7 @@ UserCode:
 	B UserCode7	;запустить тестовый режим часов
 	B UserCode8	;считать аварийный код процессора
 	B UserCode9	;чтение версии прошивки TMS и другая служебная инфо
+        B UserCode10    ;закрываем память программы AVR
 ;если добавляем команды, то вверх несколько строчек в команде SUB #NN
 ;стоит ограничитель обрабатываемых комманд, его тоже подпарвить необходимо
 ;он равен числу обрабатываемых комманд
@@ -1872,7 +1876,7 @@ OutBufferUserCode4
 *	B SendBack
 	B	PassFail
 
-PassFail
+PassFail:
 	MAR  	*,AR2
 	LAR  	AR2,#MayModify
 	SPLK	#0,*
@@ -2127,6 +2131,59 @@ RevisionReaded:
 	SACH 	*+
 	SPLK 	#0808h,CNTASPTR     ;в буфере 2048+4+4 символов
 	B 	SendBackC
+
+UserCode10
+ .if AVRProcessor=1		;с AVR
+	SPLK #RecUserCode10,WhatDoingReceve
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
+	B RETASPINT ;возрат из прерывания
+ReceveUserCode10:
+	LAR  AR2,PosTransmit
+	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
+	SACL *+              ;сдвигаем буфер на единичку
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
+
+	LACC PosTransmit
+	SUB  #DATART
+	SUB  #4+4      ;четыре код комманды + CRC
+	BCND OutBufferUserCode10,GEQ ;остаток от вычитания больше или равен 0
+	;принимаем пока следующий байт (еще не все приняли)
+	B RETASPINT ;возрат из прерывания
+
+OutBufferUserCode10:
+	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
+	DMOV CRC
+*        LAR  AR2,#DATART+4
+*        LAR  AR0,#2047     ;2048 байт данных
+*        CLRC SXM
+*        CALL CRCCALC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
+	LACC *+
+	ADD  *+,8
+	XOR  CRC
+	BCND OUTFF,NEQ
+	LACC *+
+	ADD  *+,8
+	XOR  CRC+1
+	BCND OUTFF,NEQ
+
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
+	LACC	*
+	XOR	#MagicPass
+	BCND	PassFail,NEQ
+	CALL    CloseAVRMem
+
+	MAR	*,AR2
+	LAR  	AR2,#DATART+2
+
+	SACL 	*
+	DMOV 	*
+ .else
+ReceveUserCode6:
+ .endif 		;AVRProcessor
+	B SendBack
 
 
 

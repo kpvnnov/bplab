@@ -1,4 +1,4 @@
-* $Id: BPAVRPRG.ASM,v 1.12 2001-08-22 14:17:38 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.13 2001-08-27 13:02:32 peter Exp $
  .copy bpavrprg.mac
 
 CLKXFAVR
@@ -585,6 +585,58 @@ EnterToSync2
 	CALL 	CLKXFAVR
 				;передаем два последних  байта
 				;Chip Erase
+	ReadSSP
+	mWait40ms
+	B	QPrgAVROK
+* закрываем программную памяти AVR
+CloseAVRMem:
+	MAR     *,AR1
+	POPD	*+
+	SAR     AR7,*+
+	SAR     AR6,*+
+	CLRC	SXM
+	ResetAVRSet
+	SETC 	XF	; CLK = 0
+
+
+	MAR	*,AR1
+	SPLK 	#SSPS,*		;SSP start
+	OUT  	*,SSPCR		;Synchronous Serial Port Control Register
+
+	IN   	*,SDTR     	;команда лишнего чтения(!??)
+				;для стабильности(надежности) работы с SSP
+
+	CALL	AVRSinc
+
+	BCND	EnterToSync4,EQ
+	B	QPrgAVR		;будем использовать стандартный выход
+EnterToSync4:
+*┌─────────────────┬─────────────┬──────────┬──────────┬──────────┐
+*│Write Lock Bits  │   1010 1100 │ 1111 1Ll1│xxxx xxxx │xxxx xxxx │
+*└─────────────────┴─────────────┴──────────┴──────────┴──────────┘
+* L - 1
+* l - 2
+* Set bits 1, 2 ='0' to program Lock bits.
+
+        MAR	*,AR1
+	SendSSP	#0ACF9h
+	SendSSP	#00000h
+
+*
+	CALL 	CLKXFAVR           ;передаем два первых байта
+				;Write Lock Bits
+	ReadSSP
+	CALL 	CLKXFAVR           ;передаем два последних незначащих байта
+				;Write Lock Bits
+	ReadSSP
+*
+
+	CALL 	CLKXFAVR           ;передаем два первых байта
+				;Write Lock Bits
+	ReadSSP
+	CALL 	CLKXFAVR
+				;передаем два последних  байта
+				;Write Lock Bits
 	ReadSSP
 	mWait40ms
 	B	QPrgAVROK
