@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001-11-08 21:21:06 peter Exp $
+# $Id: Makefile,v 1.5 2001-11-12 15:26:42 peter Exp $
 
 AC=asmtms\dspa.exe
 CC=asmtms\dspcl.exe
@@ -20,7 +20,7 @@ INPROGRAM=flashprg\sclr4.obj flashprg\sera4.obj flashprg\sflw4.obj flashprg\spgm
 
 all: bp_noekg bp_debug bpnekgs bpnekgsd bp_ekg bpekgd bp_ekg_s bpekgsd
 
-bp_noekg: bp206vec.asm bp_noekg.asm bp_main.c $(INPROGRAM)
+bp_noekg: bp206vec.asm bp_noekg.asm bp_main.c $(INPROGRAM) ch_range.obj
  $(AC) bp206vec.asm $(ASMOPT) $(BPNOEKG)
  $(AC) bp_noekg.asm $(ASMOPT) $(BPNOEKG)
  $(CC) bp_main $(CCOPT)  -z bp_noekg.obj -o bp_noekg.out -m bp_noekg.map -l lib\rts2xx.lib bp206.cmd
@@ -80,6 +80,9 @@ flashprg\spgm4.obj: flashprg\spgm4.asm
 
 flashprg\sutils4.obj: flashprg\sutils4.asm
   $(AC) flashprg\sutils4.asm $(ASMOPT)
+
+ch_range.obj: ch_range.c 
+ $(CC) ch_range $(CCOPT) -k
 
 # можно добавить ключ -k - keep .asm file
 main: bp_main.c
