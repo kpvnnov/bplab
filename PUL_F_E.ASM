@@ -1,5 +1,5 @@
 ;&D
-* $Id: PUL_F_E.ASM,v 1.9 2001-10-22 13:38:17 peter Exp $
+* $Id: PUL_F_E.ASM,v 1.10 2001-10-24 12:05:46 zykov Exp $
 ;/***********************************************************
 ;*   Measurement_initialization
 ;***********************************************************/
@@ -212,9 +212,9 @@ Pulse_2_comparison_end:
 	SACL	FlagsWord,0
 Pulse_3_comparison_end:
 
-;       if (( Diff2MaxAdress[MaxNumber]-2*Diff2MaxAdress[MaxNumber-1]+
-;             Diff2MaxAdress[MaxNumber-2])<
-;           ( Diff2MaxAdress[MaxNumber]-Diff2MaxAdress[MaxNumber-2])*0.33/2)
+;       if (abs(( Diff2MaxAdress[MaxNumber]-2*Diff2MaxAdress[MaxNumber-1]+
+;                 Diff2MaxAdress[MaxNumber-2]))<
+;               ( Diff2MaxAdress[MaxNumber]-Diff2MaxAdress[MaxNumber-2])*0.33/2)
 ;       {
 ;         FlagsWord = FlagsWord |(1<<INTERVALE_COMPARISON);
 ;       }
@@ -230,6 +230,7 @@ Pulse_3_comparison_end:
 	LACC    *-,14,AR2         	; в сдвиге учтено *0.33/2
 	SUB	*-,15,AR2               ; в сдвиге учтено *0.33/2
 	ADD     *,14,AR2                ; в сдвиге учтено *0.33/2
+	ABS
 	SPAC
 	LT  	*+,AR2                  ; Diff2MaxAdress[MaxNumber-2]
 	MPY	#CONST_0_33
