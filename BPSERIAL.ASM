@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.21 2001-04-26 16:11:01 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.22 2001-05-22 11:21:42 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -540,6 +540,9 @@ RecUserCode6	.set 13
 ********************************
 RecUserCode7	.set 14
       B		ReceveUserCode7
+********************************
+RecUserCode8	.set 15
+      B		ReceveUserCode8
 
 CommandReceve
 	LAR  	AR1,#DATART   	;загружаем указатель на буфер приема-передачи
@@ -1016,20 +1019,7 @@ CommAndBlood
 	LAR	AR1,#DATART+4
 	CALL	Read2K
 	Beep
-*        LACC DPA0
-*        AND  #01Fh
-*        ADD  AFLMSB,6
-*        SACL DPA0
-*        OUT  DPA0,PA0
-*	OR   #20h
-*        SACL DPA0
 
-*        LAR  AR1,AFLLSB
-*	SPLK #07ffh,TMP
-*	RPT  TMP
-*        BLDD *+,#DATART+4
-
-*        OUT  DPA0,PA0
 
 	SPLK #0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV CRC
@@ -1614,14 +1604,14 @@ CommAndUserData
 	;в DATART+2(мл) и DATART+3(ст) находится номер команды
 	LAR  AR1,#DATART+2
 	LACC 	*
-	SUB  	#7         ;пока обрабатываем всего семь  команды
+	SUB  	#8         ;пока обрабатываем всего восемь команды
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
 	LACC 	*,1        ;код команды Branch из двух слов состоит
 	BCND	ERRCOMM,EQ
 	SUB	#1,1
 	ADD  	#UserCode
 	BACC
-UserCode
+UserCode:
 	B UserCode1     ;Проконтролировать Flash давления
 	B UserCode2     ;Проконтролировать Flash ЭКГ
 	B UserCode3	;Разрешить модификацию памяти прибора
@@ -1631,6 +1621,7 @@ UserCode
 			;данных в память программ AVR
 	B UserCode6	;стереть данные в памяти программ AVR
 	B UserCode7	;запустить тестовый режим часов
+	B UserCode8	;считать аварийный код процессора
 ;если добавляем команды, то вверх несколько строчек в команде SUB #NN
 ;стоит ограничитель обрабатываемых комманд, его тоже подпарвить необходимо
 ;он равен числу обрабатываемых комманд
@@ -2035,6 +2026,43 @@ ReceveUserCode7:
 
  .endif 		;Sertificarion включение режима тестового времени
 	B SendBack
+
+UserCode8:
+ReceveUserCode8:	;он как бы и не нужен, но для проформы стоит
+ .if AVRProcessor=1
+	MAR	*,AR1
+	LAR	AR1,#AVRProg
+	SPLK	#1,*+
+	SPLK	#04401h,*		;Read Fatal Measurement Error
+	CALL	SendCommandAVR
+ .else
+ .endif
+
+	MAR	*,AR1
+	LAR	AR1,#AVRProg+2
+	LACC	*
+	LAR	AR1,#DATART+4
+	SACL	*
+
+	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
+	DMOV 	CRC
+	LAR  	AR1,#DATART+4
+	LAR  	AR0,#07FFh
+	MAR	*,AR1
+	CALL 	CRCCALC
+	LACC 	CRC
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC,8
+	SACH 	*+
+	LACC 	CRC+1
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC+1,8
+	SACH 	*+
+	SPLK 	#0808h,CNTASPTR     ;в буфере 2048+4+4 символов
+	B 	SendBackC
+
 
 
 CODD	;считывание данных из AVR

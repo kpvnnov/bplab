@@ -1,4 +1,4 @@
-* $Id: BPAVRPRG.ASM,v 1.10 2000-12-13 13:43:25 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.11 2001-05-22 11:21:42 peter Exp $
  .copy bpavrprg.mac
 
 CLKXFAVR
@@ -622,6 +622,7 @@ NextWordSPIAVR
 	CALL	CLKAVRSPI
 	ReadSSP
 	LACC	*,0,AR6
+	XOR	#0FFFFh
 	SACL	*+,0,AR5
 	LACC	*
 	SUB	#1
