@@ -1,4 +1,4 @@
-* $Id: AN_SP_UP.ASM,v 1.16 2001-08-22 14:17:35 peter Exp $
+* $Id: AN_SP_UP.ASM,v 1.17 2001-10-08 08:29:13 peter Exp $
 Level_zero
 	LACC    SubroutMode,1
 	ADD     #LevelZero_branch
@@ -41,7 +41,7 @@ LevelZero0
 
 	SPLK 	#6h,_MDSPL 	;переходим на номер измерения
  .if WriteDebug=0
-	mWait 1			;лишние три секунды нам ни к чему
+	mWait 1			;лишнее время ждать ни к чему
  .else
 	mWait3sek		;3 секунды высвечиваем номер измерения
  .endif
@@ -62,9 +62,8 @@ LevelZero1			;высвечиваем номер измерения
 	mDec_counter		;CNTMOD--
 	RETC 	GT
 	mNext_sub_mode
-*	mWait3sek		;3 секунды высвечиваем уровень давления
  .if WriteDebug=0
-	mWait 1			;лишние 0.64 секунды нам ни к чему
+	mWait   250		; 2.5 секунды с включенным аналоговым питанием
  .else
 	SPLK 	#64,ModeCnt	;
  .endif

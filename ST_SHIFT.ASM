@@ -1,4 +1,4 @@
-* $Id: ST_SHIFT.ASM,v 1.6 2001-08-22 14:17:44 peter Exp $
+* $Id: ST_SHIFT.ASM,v 1.7 2001-10-08 08:29:14 peter Exp $
 Start_shift
 	LACC    SubroutMode,1
 	ADD     #Start_shift_branch
@@ -10,11 +10,14 @@ Start_shift_branch
 	B	Start_shift2
 	B	Start_shift3
 Start_shift1
-	MAR  	*,AR2
-	LAR  	AR2,#LastMeas
+;AVR тоже надо смещение высчитывать
+;поэтому "убыстрение" за счет памяти предыдущего смещения
+;убираем
+*	MAR  	*,AR2
+*	LAR  	AR2,#LastMeas
 	;в течении трех минут смещение действительно
-	LACC	*
-	BCND	Start_shift_without,NEQ	;поэтому считать его не будем
+*	LACC	*
+*	BCND	Start_shift_without,NEQ	;поэтому считать его не будем
 
 	mNext_sub_mode
 	SPLK 	#3h,_MDSPL 	;переходим на уровень давления
@@ -25,7 +28,7 @@ Start_shift1
  .endif
 	RET
 
-Start_shift1_1
+Start_shift1_1:
 	mDec_counter		;CNTMOD--
 	RETC 	GT
 	mNext_sub_mode
@@ -37,7 +40,7 @@ Start_shift1_1
 	SPLK 	#64,ModeCnt  ;пусть фильтр выровняется
 	RET
 
-Start_shift2
+Start_shift2:
 	mDec_counter		;CNTMOD--
 	RETC 	GT
 
@@ -47,7 +50,7 @@ Start_shift2
 	SPLK 	#256,ModeCnt	;усреднение значения с канала
 	RET
 
-Start_shift3
+Start_shift3:
 	CLRC 	SXM
 
 	MAR	*,AR6
@@ -68,7 +71,7 @@ Start_shift3
 *	PresetZero+1 ;preset
 	LACC 	Preset0+1
 	SACL	Preset0
-Start_shift_without
+*Start_shift_without
 	MAR  	*,AR2
 	LAR  	AR2,#LastMeas
 	;в течении трех минут смещение действительно
