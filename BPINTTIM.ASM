@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.26 2001-10-17 15:50:51 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.27 2001-10-17 16:03:01 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -551,64 +551,18 @@ CLKSERT001
         BCND	Already_UART_ended,EQ
         SUB	#1
         SACL	*
+	B	Uart_decremented
+        ;на время, пока общаемся с UART
+        ;надо поменьше отвлекаться в таймерном прерывании на мелочи
+
 Already_UART_ended:
-************************
- .if Sertificarion=1
-* если сертификационная версия, то проверяем, необходимо ли включать
-* режим хода тестовых
-	MAR	*,AR7
-	LAR	AR7,#TestTime+4
-	LACC	*
-	BCND	NoTestTime,EQ
-	SUB	#1
-	BCND	BeginTestTime,EQ
-	SUB	#6		;пять секунды задержка включения тестового режима
-	BCND	WaitThreeSecond,LEQ
-	SUB	#1
-	BCND	WaitEndOfTestTimeReg,EQ
-;непонятный тестовый режим
-	SPLK	#0,*
-	B	NoTestTime
-BeginTestTime
-;	Beep
-	B	WaitThreeSecond_1
-WaitThreeSecond
-	BCND	WaitThreeSecond_1,NEQ
-	Beep
-WaitThreeSecond_1
-	LACC	*
-	ADD	#1
-	SACL	*
-	LAR	AR7,#TestTime
-	LACC	#0
-	SACL	*+
-	SACL	*+
-	SACL	*+
-	SACL	*+
-	SPLK	#1,_MDSPL	;вывод времени на дисплей с секундами
-	B	NoTestTime
-WaitEndOfTestTimeReg
-	LAR	AR7,#TestTime+3
-	LACC	*-
-	SUB	#1
-	BCND    NoTestTime,NEQ
-	LACC	*-
-	SUB	#5
-	BCND	NoTestTime,NEQ
-	LACC	*-
-	BCND	NoTestTime,NEQ
-	LACC	*-
-	BCND	NoTestTime,NEQ
-	Beep
-	LAR	AR7,#TestTime+4
-	SPLK	#0,*
-	B	NoTestTime
-
-NoTestTime
- .endif 	;Sertificarion
-
 
  .if WriteDebug==0
+
+; в этом блоке следим за AVR_TIME до конца измерения
+; если AVR надумает "завершить" измерение раньше нас
+; и таким образом заблокировать прибор, то мы попытаемся опередить его
+
 
 * отладка
 ;       MAR	* ,AR1
@@ -669,6 +623,66 @@ NetIdet:
 NoWarningStop:
 
  .endif
+
+Uart_decremented:
+
+
+************************
+ .if Sertificarion=1
+* если сертификационная версия, то проверяем, необходимо ли включать
+* режим хода тестовых
+	MAR	*,AR7
+	LAR	AR7,#TestTime+4
+	LACC	*
+	BCND	NoTestTime,EQ
+	SUB	#1
+	BCND	BeginTestTime,EQ
+	SUB	#6		;пять секунды задержка включения тестового режима
+	BCND	WaitThreeSecond,LEQ
+	SUB	#1
+	BCND	WaitEndOfTestTimeReg,EQ
+;непонятный тестовый режим
+	SPLK	#0,*
+	B	NoTestTime
+BeginTestTime
+;	Beep
+	B	WaitThreeSecond_1
+WaitThreeSecond
+	BCND	WaitThreeSecond_1,NEQ
+	Beep
+WaitThreeSecond_1
+	LACC	*
+	ADD	#1
+	SACL	*
+	LAR	AR7,#TestTime
+	LACC	#0
+	SACL	*+
+	SACL	*+
+	SACL	*+
+	SACL	*+
+	SPLK	#1,_MDSPL	;вывод времени на дисплей с секундами
+	B	NoTestTime
+WaitEndOfTestTimeReg
+	LAR	AR7,#TestTime+3
+	LACC	*-
+	SUB	#1
+	BCND    NoTestTime,NEQ
+	LACC	*-
+	SUB	#5
+	BCND	NoTestTime,NEQ
+	LACC	*-
+	BCND	NoTestTime,NEQ
+	LACC	*-
+	BCND	NoTestTime,NEQ
+	Beep
+	LAR	AR7,#TestTime+4
+	SPLK	#0,*
+	B	NoTestTime
+
+NoTestTime
+ .endif 	;Sertificarion
+
+
 
 
 ENDTIME
