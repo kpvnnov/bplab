@@ -1,4 +1,4 @@
-* $Id: BP206DEF.ASM,v 1.17 2001-08-23 14:23:41 peter Exp $
+* $Id: BP206DEF.ASM,v 1.18 2001-08-23 14:27:31 peter Exp $
 MAX_PRESS 	.set 08000h
 
 PRESS_280 	.set 0E000h
@@ -15,7 +15,7 @@ PRESS_140 	.set 07000h
 PRESS_130 	.set 06800h
 PRESS_120 	.set 06000h
 PRESS_100 	.set 05000h
-PRESS_95  	.set 04‘00h
+PRESS_95  	.set 04C00h
 PRESS_90  	.set 04800h
 PRESS_80  	.set 04000h
 PRESS_60  	.set 03000h
