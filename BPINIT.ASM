@@ -1,4 +1,4 @@
-* $Id: BPINIT.ASM,v 1.17 2001-03-26 14:26:09 peter Exp $
+* $Id: BPINIT.ASM,v 1.18 2001-04-09 14:37:30 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -244,6 +244,7 @@ INIT
 
  .elseif VersionFerrum=2        ;с дешифратором
 	CALL	InitFifoAndCache
+        MAR	*,AR1
 	LAR	AR1,#PageCache
 	SPLK	#0FFFFh,*
  .else
