@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2002-04-23 11:12:16 peter Exp $
+# $Id: Makefile,v 1.10 2002-04-24 14:03:12 peter Exp $
 
 AC=asmtms\dspa.exe
 CC=asmtms\dspcl.exe
@@ -163,14 +163,13 @@ bp_ekg40.obj
 #стандартная версия
 #с экг каналом и одной флешкой на 4 Mb
 
-ekg44: bp_ekg44.obj $(INPROGRAM) $(MODULS) bp_ekg44.cmd ch_range.obj
+ekg44: bp_ekg44.obj $(INPROGRAM) $(MODULS) bp_ekg44.cmd
  $(LNK) bp_ekg44.cmd
 
 bp_ekg44.cmd: bp206.cmd
   copy &&|
 $(MODULS)
 bp_ekg44.obj
-ch_range.obj
 -o bp_ekg44.out
 -m bp_ekg44.map
 -l lib\rts2xx.lib
@@ -246,14 +245,13 @@ bpekgsd.obj
 #с экг каналом
 #с отладочным режимом
 
-ekgsd44: ekgsd44.obj $(INPROGRAM) $(MODULS) ekgsd44.cmd ch_range.obj
+ekgsd44: ekgsd44.obj $(INPROGRAM) $(MODULS) ekgsd44.cmd
  $(LNK) ekgsd44.cmd
 
 ekgsd44.cmd: bp206.cmd
   copy &&|
 $(MODULS)
 ekgsd44.obj
-ch_range.obj
 -o ekgsd44.out
 -m ekgsd44.map
 -l lib\rts2xx.lib

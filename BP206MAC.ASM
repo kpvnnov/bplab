@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206MAC.ASM,v 1.26 2002-04-23 11:12:13 peter Exp $
+* $Id: BP206MAC.ASM,v 1.27 2002-04-24 14:03:10 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -1609,9 +1609,12 @@ WriteEKG    .macro code
  .if code=1
 
 	SETC	SXM
-	LAR     AR7,#_ResultADC+0       ;Адреса PL3
-	MAR     *,AR7
-	LACC	*
+
+*	LAR     AR7,#_ResultADC+0       ;Адреса PL3
+*	MAR     *,AR7
+*	LACC	*
+	LACC	_OUTF_EKG1,0
+
 	ADD     #4000h,1
 ;	AND     #0FFFFh
 
@@ -1619,28 +1622,34 @@ WriteEKG    .macro code
 	SACL 	TMP
 	CALL 	FLPROG
 
-	LAR  AR7,#_ResultADC+0      ;Адреса  PL3
-	MAR  *,AR7
+*	LAR  AR7,#_ResultADC+0      ;Адреса  PL3
+*	MAR  *,AR7
 
-	LACC 	*,8
+*	LACC 	*,8
+	LACC	_OUTF_EKG1,8
+
 	ADD     #4000h,1+8
 	SACH 	TMP
 	CALL 	FLPROG
  .elseif code =2
 	SETC	SXM
-	LAR  AR7,#_ResultADC+2       ;Адреса PL3
-	MAR  *,AR7
+*	LAR  AR7,#_ResultADC+2       ;Адреса PL3
+*	MAR  *,AR7
 
-	LACC 	*
+*	LACC 	*
+	LACC	_OUTF_EKG2,0
+
 	ADD     #4000h,1
 
 	SACL 	TMP
 	CALL 	FLPROG
 
-	LAR  AR7,#_ResultADC+2      ;Адреса  PL3
-	MAR  *,AR7
+*	LAR  AR7,#_ResultADC+2      ;Адреса  PL3
+*	MAR  *,AR7
 
-	LACC 	*,8
+*	LACC 	*,8
+	LACC	_OUTF_EKG2,8
+
 	ADD     #4000h,1+8
 	SACH 	TMP
 	CALL 	FLPROG

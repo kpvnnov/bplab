@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 *       Обработка ADC
-* $Id: BPADCPRO.ASM,v 1.13 2002-04-18 14:30:39 peter Exp $
+* $Id: BPADCPRO.ASM,v 1.14 2002-04-24 14:03:11 peter Exp $
 ****************************************************************************
 *       Вся шкала АЦП(0-4,8В) соответствует 320 мм.рт.ст.
 *       320*1.6=512; 512*(1-1/4-1/8)=512*0.625=320
@@ -25,21 +25,30 @@ CF30:   .word	348,  1007,428,-1205,-2159,389,6235,11335
 Const1  .word   07B32h  ;(32768*k1/(1+k1))
 Const2  .word   004FEh 	; 1/k1=(3.9/100)*32768
 
-;КИХ фильтр 28 порядка, для канала ЭКГ. 15.04.2002.
-CF_EKG:	.word  -209, -133,  254, 481,   -9, -709
-	.word  -376,  960, 1292,-701,-2722, -579
-	.word  6319,12754,12754,6319, -579,-2722
-	.word  -701, 1292,  960,-376, -709,   -9
-	.word   481,  254, -133,-209
+ .if ChannelEKG==1
+EKG_PORYADOK	.set 32
+
+EKG_MASSIV1 .usect "ekg",EKG_PORYADOK
+EKG_MASSIV2 .usect "ekg",EKG_PORYADOK
+
+;Коэффициенты ФНЧ (Remez) 32-го порядка
+CF_EKG:
+	.word   -18,  -186, -305,  -112,  325, 403
+	.word  -219,  -793, -229,  1084, 1147,-951
+	.word -2722,  -339, 6412, 12529,12529,6412
+	.word  -339, -2722, -951,  1147, 1084,-229
+	.word  -793,  -219,  403,   325, -112,-305
+	.word  -186,   -18
+
+
 FILTER_EKG:
 	MAC  	CF_EKG,*-            ;КИХ-фильтр 28-го порядка
 	LACC 	#0
-	RPT  	#14
+	RPT  	#(EKG_PORYADOK-2)
 	MACD 	CF_EKG+1,*-
 	APAC
-	SACH 	_OUTF_EKG,0
 	RET
-
+ .endif
 ;	.globl	_clk_xf
 * выдача тактовой частоты для SSP
 CLKXF:
@@ -217,7 +226,25 @@ NotWriteFromDAC
 	LAR  	AR6,#SR30+15    ;Адреса конца сдвиг.рег.ФНЧ
 	CALL 	FILTER          ;FILTER
 
+ .if ChannelEKG==1
+        MAR	*,AR6
+	LAR	AR6,#_ResultADC+1;AIN1(PL1)
+        LACC	*
+	LAR  	AR6,#EKG_MASSIV1	;Адреса начала сдвиг.рег.ФНЧ
+	SACL 	*
+	LAR  	AR6,#EKG_MASSIV2+EKG_PORYADOK-1    ;Адреса конца сдвиг.рег.ФНЧ
+	CALL 	FILTER_EKG          ;FILTER
+       	SACH 	_OUTF_EKG1,0
 
+        MAR	*,AR6
+	LAR	AR6,#_ResultADC+3;AIN3(PL3)
+        LACC	*
+	LAR  	AR6,#EKG_MASSIV2	;Адреса начала сдвиг.рег.ФНЧ
+	SACL 	*
+	LAR  	AR6,#EKG_MASSIV2+EKG_PORYADOK-1    ;Адреса конца сдвиг.рег.ФНЧ
+	CALL 	FILTER_EKG          ;FILTER
+       	SACH 	_OUTF_EKG2,0
+ .endif
 ***********************************************
 * вычисляем давление с учетом смещения
 	SETC 	SXM
