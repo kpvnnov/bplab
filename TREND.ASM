@@ -1,6 +1,6 @@
 ;&D
 ***********************************************************************
-* $Id: TREND.ASM,v 1.5 2001-10-22 13:38:18 peter Exp $
+* $Id: TREND.ASM,v 1.6 2001-11-14 17:20:54 peter Exp $
 *       Trend_measurement_1() - Процесс измерения Trend-a
 *                               и амплитуд пульсаций.
 *
@@ -39,12 +39,12 @@ FinishAdress    .equ    TMP+5
 Trend_measurement_1
 
         MAR     *,AR2
-        LAR     AR2,#Max2DiffAdress
-        LAR     AR4,#Duration+1         ; в AR4 &Duration[1]
+        LAR     AR2,#_Max2DiffAdress
+        LAR     AR4,#_Duration+1         ; в AR4 &Duration[1]
 
 ;   Duration[1] = SampleNumber - Max2DiffAdress[0];
 
-        LACC    SampleNumber
+        LACC    _SampleNumber
         SUB     *,0,AR4
         SACL    *-,0,AR2                ; в AR4 &Duration[0]
 
@@ -71,7 +71,7 @@ Trend_measurement_1
         SACL    *-,0,AR5                ; в AR3 &DTrend_H[0]
 
 	LAR	AR0,#Signal
-        LAR     AR5,#Max2DiffAdress
+        LAR     AR5,#_Max2DiffAdress
 	LAR	AR2,*+,AR2
 	MAR	*0+,AR2
 
@@ -222,12 +222,12 @@ FinishAdress    .equ    TMP+5
 Trend_measurement_2
 
         MAR     *,AR2
-        LAR     AR2,#Max2DiffAdress
-        LAR     AR4,#Duration+2         ; в AR4 &Duration[2]
+        LAR     AR2,#_Max2DiffAdress
+        LAR     AR4,#_Duration+2         ; в AR4 &Duration[2]
 
 ;   Duration[2] = SampleNumber - Max2DiffAdress[0];
 
-        LACC    SampleNumber
+        LACC    _SampleNumber
         SUB     *,0,AR4
         SACL    *-,0,AR2                ; в AR4 &Duration[1]
 
@@ -260,7 +260,7 @@ Trend_measurement_2
         SACL    *-,0,AR6                ; в AR3 &DTrend_H[1]
 
 	LAR	AR0,#Signal
-        LAR     AR6,#Max2DiffAdress
+        LAR     AR6,#_Max2DiffAdress
 	LAR	AR2,*+,AR2
 	MAR	*0+,AR2
 

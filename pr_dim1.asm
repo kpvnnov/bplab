@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: pr_dim1.asm,v 1.5 2001-10-22 13:38:19 peter Exp $
+; $Id: pr_dim1.asm,v 1.6 2001-11-14 17:20:54 peter Exp $
 ;*       Pressure_diminution_1() - Процесс подготовки данных после
 ;*	 понижения давления на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
@@ -16,10 +16,10 @@ Pressure_diminution_1:
 ;    if (((( MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == 0 )&&
 ;       ( SampleNumber > PREDICTION_INTERVAL ))
 
-	LACC	SampleNumber
+	LACC	_SampleNumber
 	SUB	#PREDICTION_INTERVAL
 	BCND	Press_dim_1_end,LEQ
-	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BIT	_MeasurementFlags,15-DIM_PRESSURE_FLAG
 	BCND	Press_dim_1_end,TC
 
 ;    {
@@ -29,7 +29,7 @@ Pressure_diminution_1:
 ;  	         (Signal[SampleNumber-3] - Signal[SampleNumber-7]))/16;
 
         MAR     *,AR2
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
         LAR     AR2,#Signal
         MAR     *0+,AR2
 	LACC	*-,12,AR2
@@ -67,7 +67,7 @@ Dim1_prediction_2:
 ;    DiffSignal[0] = (int)(Temp0>>14);
 
 	MAR	*,AR2
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
         LAR     AR2,#Signal
 	MAR	*0+,AR3                 ; AR2 = & Signal[SampleNumber]
         LAR     AR3,#Signal-DIFF_BASIS
@@ -102,34 +102,34 @@ Dim1_prediction_2:
 ;       /*      Подготовка к следующему режиму  */
 ;       Mode = PRESSURE_MEASUREMENT;
  .if Sertificarion=1
-        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,_Mode
  .else
-        SPLK    #PRESSURE_MEASUREMENT,Mode
+        SPLK    #PRESSURE_MEASUREMENT,_Mode
  .endif
 
 ;       AnalysisStart = SampleNumber - PREDICTION_INTERVAL
 ;		         + DIFF_BASIS*4/3 + AnalysisInterval;
 
-	LACC	SampleNumber,16
+	LACC	_SampleNumber,16
 	SUB	#(PREDICTION_INTERVAL-DIFF_BASIS*4/3)*2,15
-        ADD     AnalysisInterval,16
-        SACH    AnalysisStart,0
+        ADD     _AnalysisInterval,16
+        SACH    _AnalysisStart,0
 
 ;	StartMeasAdress[StepNumber] = SampleNumberShift + SampleNumber;
 
 	MAR	*,AR3
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR3,#StartMeasAdress
 	MAR	*0+,AR3
-	LACC	SampleNumberShift
-	ADD	SampleNumber,0
+	LACC	_SampleNumberShift
+	ADD	_SampleNumber,0
 	SACL	*,0,AR2
 
 ;      MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG);
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR	#(1<<FIRST_IMPULSE_FLAG)
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 
 ;    }
 
@@ -139,7 +139,7 @@ Press_dim_1_end:
 ;    }
 ;    if ( SampleNumber > 2*ONE_SECOND )
 
-	LACC	SampleNumber,0
+	LACC	_SampleNumber,0
 	SUB	#ONE_SECOND*2
 	BCND	Press_dim_1_check_anal_end,LT
 
@@ -154,9 +154,9 @@ Press_dim_1_check_anal_end:
 ;    SampleNumber++;
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 
 ;}
 ;    return

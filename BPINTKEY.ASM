@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.20 2001-10-22 13:38:13 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.21 2001-11-14 17:20:51 peter Exp $
 *****************************************************************************
 *
 
@@ -139,14 +139,14 @@ NotVistrelShed
 KEY10_1
 
 	SPLK 	#8h,_MDSPL
-	SPLK 	#SUPPLY_UP,Mode
+	SPLK 	#SUPPLY_UP,_Mode
 	SPLK	#0,StartCode		;код установки
 					;режима на "давление"
 	LACC	PrevPressureLevel	; "запомненное" давление
 					; назначаем текущим
 	SACL	CurrPressureLevel
 
-	SPLK	#0,SubroutMode		;для первоначального case
+	SPLK	#0,_SubroutMode		;для первоначального case
 	SPLK	#0,TimeNakachka		;время накачки до 40 mm
  .if Only_Pusk=1
 	mWait	1 		;1_100 секунды высвечиваем уровень давления

@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206.ASM,v 1.47 2001-10-22 13:38:10 peter Exp $
+* $Id: BP206.ASM,v 1.48 2001-11-14 17:20:50 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -490,55 +490,55 @@ ErrorStop
 	RET
 CheckError
 	SPLK	#0,TMP+1
-	LACC	SampleNumber
+	LACC	_SampleNumber
 	BCND	ErrorStop,LT
 	SUB	#1151
 	BCND	ErrorStop,GEQ
 
 	SPLK	#1,TMP+1
-	LACC	SampleNumberShift
+	LACC	_SampleNumberShift
 	BCND	ErrorStop,LT
 	SUB	#12000
 	BCND	ErrorStop,GEQ
 
 	SPLK	#2,TMP+1
-	LACC	MaxNumber
+	LACC	_MaxNumber
 	BCND	ErrorStop,LT
 	SUB	#32
 	BCND	ErrorStop,GEQ
 
 	SPLK	#3,TMP+1
-	LACC	MaxNumberShift
+	LACC	_MaxNumberShift
 	BCND	ErrorStop,LT
 	SUB	#256
 	BCND	ErrorStop,GEQ
 
 	SPLK	#4,TMP+1
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	BCND	ErrorStop,LT
 	SUB	#1<<6
 	BCND	ErrorStop,GEQ
 
 	SPLK	#5,TMP+1
-	LACC	AnalysisStart
+	LACC	_AnalysisStart
 	BCND	ErrorStop,LT
 	SUB	#1000
 	BCND	ErrorStop,GEQ
 
 	SPLK	#6,TMP+1
-	LACC	AnalysisInterval
+	LACC	_AnalysisInterval
 	BCND	ErrorStop,LT
 	SUB	#200
 	BCND	ErrorStop,GEQ
 
 	SPLK	#7,TMP+1
-	LACC	AveragePeriod
+	LACC	_AveragePeriod
 	BCND	ErrorStop,LT
 	SUB	#150*16
 	BCND	ErrorStop,GEQ
 
 	SPLK	#8,TMP+1
-	LACC	AveragePeriodEvaluation
+	LACC	_AveragePeriodEvaluation
 	BCND	ErrorStop,LT
 	SUB	#200*4
 	BCND	ErrorStop,GEQ
@@ -558,7 +558,7 @@ CheckError
 	BCND	ErrorStop,GEQ
 
 	SPLK	#13,TMP+1
-	LACC	StepNumber
+	LACC	_StepNumber
 	BCND	ErrorStop,LT
 	SUB	#MAX_STEP_NUMBER
 	BCND	ErrorStop,GEQ
@@ -578,19 +578,19 @@ CheckError
 	BCND	ErrorStop,GEQ
 
 	SPLK	#18,TMP+1
-	LACC	Mode
+	LACC	_Mode
 	BCND	ErrorStop,LT
 	SUB	#10
 	BCND	ErrorStop,GEQ
 
 	SPLK	#19,TMP+1
-	LACC	ModeCnt
+	LACC	_ModeCnt
 	BCND	ErrorStop,LT
 	SUB	#2000
 	BCND	ErrorStop,GEQ
 
 	SPLK	#20,TMP+1
-	LACC	SubroutMode
+	LACC	_SubroutMode
 	BCND	ErrorStop,LT
 	SUB	#10
 	BCND	ErrorStop,GEQ

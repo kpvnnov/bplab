@@ -1,12 +1,12 @@
 ;&D
-* $Id: PR_A_T40.ASM,v 1.15 2001-10-22 13:38:17 peter Exp $
+* $Id: PR_A_T40.ASM,v 1.16 2001-11-14 17:20:53 peter Exp $
 Pressure_augment_40:
 
 	MAR	*,AR1
 	POPD    *+,AR1
 	SAR	AR0,*+,AR2
 
-	LACC    SubroutMode,1
+	LACC    _SubroutMode,1
 	ADD     #Pr_aug_40_branch
 	BACC
 
@@ -33,7 +33,7 @@ Pr_aug_40_case1:
 	SACL	LastCurrPressure
 	SPLK    #2300,Motor+1	;23 секунд качаем в полную силу
 TIME_TO_PUMPS .set 2300
-	SPLK 	#TIME_TO_PUMPS,ModeCnt
+	SPLK 	#TIME_TO_PUMPS,_ModeCnt
 	mNext_sub_mode
 	B       Pr_aug_40_quit
 
@@ -42,11 +42,11 @@ Pr_aug_40_case2:
 				   ;PRESS_OVER+PRESS_PRESET мм.рт.ст.
 	SUB  	#PRESS_OVER+PRESS_PRESET+PRESS_40
 	BCND 	Pr_aug_40_case2_1,LEQ
-	LACC	ModeCnt
+	LACC	_ModeCnt
 	SUB	#TIME_TO_PUMPS-20
 	BCND    Pr_aug_40_trubka,GEQ
  .if Sertificarion=1
-	SPLK    #PRESSURE_AUGMENT,Mode
+	SPLK    #PRESSURE_AUGMENT,_Mode
 	CALL	Completion_of_mode
         LACC	#B0_5mm
 	SACL	MaxAverageAmplitude
@@ -62,7 +62,7 @@ Pr_aug_40_case2:
 
 Pr_aug_40_case2_1:
 
-	LACC	ModeCnt
+	LACC	_ModeCnt
 	AND	#0Fh
 	BCND	Pr_aug_40_case2_2,NEQ
 	LACL	CurrPressure
@@ -121,7 +121,7 @@ Pr_aug_40_case5:
 	mDec_counter		;CNTMOD--
 	BCND       Pr_aug_40_quit,GT
 	mValve_hold
-	SPLK 	#DAC_WORKING_CHECK,Mode
+	SPLK 	#DAC_WORKING_CHECK,_Mode
 	mClear_subrout_mode_err_meas
 	B       Pr_aug_40_quit
 
@@ -144,7 +144,7 @@ Pressure_augment_80:
 	POPD    *+,AR1
 	SAR	AR0,*+,AR2
 
-	LACC    SubroutMode,1
+	LACC    _SubroutMode,1
 	ADD     #Pr_aug_80_branch
 	BACC
 
@@ -171,7 +171,7 @@ Pr_aug_80_case1:
 	SACL	LastCurrPressure
 	SPLK    #1800,Motor+1	;18 секунд качаем в полную силу
 TIME_TO_PUMPS_80 .set 1800
-	SPLK 	#TIME_TO_PUMPS_80,ModeCnt
+	SPLK 	#TIME_TO_PUMPS_80,_ModeCnt
 	mNext_sub_mode
 	B       Pr_aug_80_quit
 
@@ -180,7 +180,7 @@ Pr_aug_80_case2:
 				   ;PRESS_OVER+PRESS_PRESET мм.рт.ст.
 	SUB  	#PRESS_OVER+PRESS_PRESET+PRESS_80
 	BCND 	Pr_aug_80_case2_1,LEQ
-	LACC	ModeCnt
+	LACC	_ModeCnt
 	SUB	#TIME_TO_PUMPS_80-20
 	BCND    Pr_aug_80_trubka,GEQ
 	mMotor_off
@@ -188,7 +188,7 @@ Pr_aug_80_case2:
 	B       Pr_aug_80_quit
 
 Pr_aug_80_case2_1:
-	LACC	ModeCnt
+	LACC	_ModeCnt
 	AND	#0Fh
 	BCND	Pr_aug_80_case2_2,NEQ
 	LACL	CurrPressure
@@ -248,29 +248,29 @@ Pr_aug_80_case5:
 	BCND       Pr_aug_80_quit,GT
 	mValve_hold
 
-	SPLK 	#PULSE_FREQ_EVALUATION_80,Mode
+	SPLK 	#PULSE_FREQ_EVALUATION_80,_Mode
 	CALL	Completion_of_mode
 
 ;     AnalysisInterval = 40;
 ;     AnalysisStart = AnalysisInterval + DIFF_BASIS*2;
 
-	SPLK    #40,AnalysisInterval
+	SPLK    #40,_AnalysisInterval
 
-	LACC    AnalysisInterval
+	LACC    _AnalysisInterval
 	ADD     #DIFF_BASIS*2
-	SACL    AnalysisStart
+	SACL    _AnalysisStart
 	B       Pr_aug_80_quit
 
 Pr_aug_80_quit:
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 	SUB     #TEN_SECOND
 	BCND    Pr_aug_80_quit_2,LT
-	LACC    SampleNumberShift
-	ADD     SampleNumber
-	SACL    SampleNumberShift
-	SPLK    #0,SampleNumber
+	LACC    _SampleNumberShift
+	ADD     _SampleNumber
+	SACL    _SampleNumberShift
+	SPLK    #0,_SampleNumber
 Pr_aug_80_quit_2:
 	MAR	*,AR1
 	MAR	*-,AR1

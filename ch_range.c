@@ -2,38 +2,39 @@ enum error_range{
  eSampleNumber=1,		//1
  eSampleNumberShift,    	//2
  eMaxNumber,            	//3
- eMaxNumberShift,
- eAnalysisStart,
- eAnalysisInterval,
- eAveragePeriod,
- eAveragePeriodEvaluation,
- eTempPeriod,
- eTempPeriodDiff,
- eTempAmplitudeDiff,
- ePulseCounter,
- eMeasurementFlags,
- eStartMaxNumber,
- eStepNumber,
- ePressureTop,
- eNewPressure,
- eSistolPressureAmplitude,
- eAugmentPressureNumber,
- eMode,
- eModeCnt,
- eSubroutMode,
- eDimModeSampleCounter,
- eDimMode,
- ePerror,
- eTdimstart,
- ePreturn,
- ePclose,
- eCodeError,
- eMax2DiffAdress_0,
- eMax2DiffAdress_1,
- eMax2DiffAdress_2,
- eDuration_0,
- eDuration_1,
- eDuration_2
+ eMaxNumberShift,               //4
+ eAnalysisStart,                //5
+ eAnalysisInterval,             //6
+ eAveragePeriod,                //7
+ eAveragePeriodEvaluation,      //8
+ eTempPeriod,                   //9
+ eTempAmplitudeDiff,            //10
+ ePulseCounter,                 //11
+ eMeasurementFlags,             //12
+ eStartMaxNumber,               //13
+ eStepNumber,                   //14
+ eSistolPressureAmplitude,      //15
+ eAugmentPressureNumber,        //16
+ eMode,                         //17
+ eModeCnt,                      //18
+ eSubroutMode,                  //19
+ eDimModeSampleCounter,         //20
+ eDimMode,                      //21
+ eTdimstart,                    //22
+ ePreturn,                      //23
+ ePclose,                       //24
+ eCodeError,                    //25
+ eMax2DiffAdress_0,             //26
+ eMax2DiffAdress_1,             //27
+ eMax2DiffAdress_2,             //28
+ eDuration_0,                   //29
+ eDuration_1,                   //30
+ eDuration_2,                   //31
+
+ eTempPeriodDiff,               //32
+ ePressureTop,                  //33
+ eNewPressure,                  //34
+ ePerror                        //35
 };
 
 
@@ -50,7 +51,7 @@ enum error_range{
 #define MAX_STEP_NUMBER	48
 
 
-#define LPRESS_0		-32768
+#define LPRESS_0	-32768
 #define LPRESS_10	-30720
 #define LPRESS_20	-28672
 #define LPRESS_30	-26624
@@ -60,90 +61,118 @@ enum error_range{
 #define LPRESS_280	24576
 
 
+#define PRESS_280 	 0xE000
+#define PRESS_260 	 0xD000
+#define PRESS_250 	 0xC800
+#define PRESS_240 	 0xC000
+#define PRESS_220 	 0xB000
+#define PRESS_200 	 0xA000
+#define PRESS_190 	 0x9800
+#define PRESS_180 	 0x9000
+#define PRESS_160 	 0x8000
+#define PRESS_145 	 0x7400
+#define PRESS_140 	 0x7000
+#define PRESS_130 	 0x6800
+#define PRESS_120 	 0x6000
+#define PRESS_100 	 0x5000
+#define PRESS_95  	 0x4C00
+#define PRESS_90  	 0x4800
+#define PRESS_80  	 0x4000
+#define PRESS_60  	 0x3000
+#define PRESS_50  	 0x2800
+#define PRESS_40  	 0x2000
+#define PRESS_30  	 0x1800
+#define PRESS_20  	 0x1000
+#define PRESS_10  	 0x0800
+#define PRESS_05  	 0x0400
+#define PRESS_02_5  	 0x0200
+#define PRESS_01_25 	 0x0100
+#define STEP_PRESS 	 0x0733
+
+
+//#pragma DATA_SECTION(SampleNumber, "bss1")
+//#pragma DATA_SECTION(SampleNumberShift, "bss1")
 extern unsigned int SampleNumber,SampleNumberShift;
 extern unsigned int MaxNumber,MaxNumberShift;
 extern unsigned int AnalysisStart,AnalysisInterval;
 extern unsigned int AveragePeriod,AveragePeriodEvaluation;
 extern unsigned int TempPeriod;
-extern int TempPeriodDiff;
 extern unsigned int TempAmplitudeDiff;
 extern unsigned int PulseCounter;
 extern unsigned int MeasurementFlags;
 extern unsigned int StartMaxNumber;
 extern unsigned int StepNumber;
-extern int PressureTop,NewPressure;
 extern unsigned int SistolPressureAmplitude;
 extern unsigned int AugmentPressureNumber;
 extern unsigned int Mode,ModeCnt,SubroutMode,DimModeSampleCounter,DimMode;
-extern unsigned int Perror; //?????
 extern unsigned int Tdimstart;
-extern unsigned int Preturn;//??????
-extern int Pclose; //?????
+extern unsigned int Preturn;
+extern unsigned int Pclose;
 extern unsigned int CodeError;
 extern unsigned int Max2DiffAdress[];
 extern unsigned int Duration[];
 
+extern int TempPeriodDiff;
+extern int PressureTop,NewPressure;
+extern int Perror;
 
 unsigned check_range()
 {
 // * Список переменных и их возможные диапазоны значений
 unsigned short code_error=0;
 
-// SampleNumber            >=0, <=TEN_SECOND
- if (SampleNumber>TEN_SECOND)
-  code_error=eSampleNumber;
+unsigned varib_down[]={0,	// 1 SampleNumber            >=0, <=TEN_SECOND
+	0,			// 2 SampleNumberShift       >=0, <=TWO_MINUTES
+	0,			// 3 MaxNumber               >=0, <=32
+	0,			// 4 MaxNumberShift          >=0, <=325
+	0,			// 5 AnalysisStart           >=0, <=TEN_SECOND
+	MIN_ANALYSIS_INTERVAL,	// 6 AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
+	MIN_DURATION*16,	// 7 AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
+	MIN_DURATION*4,		// 8 AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
+	MIN_DURATION/2,		// 9 TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
+	0,			// 10 TempAmplitudeDiff       >=0, <=B10mm*15
+	0,			// 11 PulseCounter            >=0, <=150
+	0			// 12 MeasurementFlags        >0, < 1024
+	};
+unsigned varib_up[]={TEN_SECOND,// 1 SampleNumber            >=0, <=TEN_SECOND
+	TWO_MINUTES,		// 2 SampleNumberShift       >=0, <=TWO_MINUTES
+	32,			// 3 MaxNumber               >=0, <=32
+	325,			// 4 MaxNumberShift          >=0, <=325
+	TEN_SECOND,		// 5 AnalysisStart           >=0, <=TEN_SECOND
+	MAX_ANALYSIS_INTERVAL,	// 6 AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
+	MAX_DURATION*16,	// 7 AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
+	MAX_DURATION*4,		// 8 AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
+	TEN_SECOND,		// 9 TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
+	B10mm*15,		// 10 TempAmplitudeDiff       >=0, <=B10mm*15
+	150,			// 11 PulseCounter            >=0, <=150
+	1024			// 12 MeasurementFlags        >0, < 1024
+
+	};
+
+unsigned *varibs[]={&SampleNumber,
+	&SampleNumberShift,
+	&MaxNumber,
+	&MaxNumberShift,
+	&AnalysisStart,
+	&AnalysisInterval,
+	&AveragePeriod,
+	&AveragePeriodEvaluation,
+	&TempPeriod,
+	&TempAmplitudeDiff,
+	&PulseCounter,
+	&MeasurementFlags
+	};
+int x;
+ for (x=0;x<11;x++)
+  if ( (*varibs[x]<varib_down[x])||
+       (*varibs[x]>varib_up[x])
+     )
+  code_error=x;
 
 
-// SampleNumberShift       >=0, <=TWO_MINUTES
-
- if (SampleNumberShift>TWO_MINUTES)
-  code_error=eSampleNumberShift;
 
 
-// MaxNumber               >=0, <=32
- if (MaxNumber>32)
-  code_error=eMaxNumber;
 
-// MaxNumberShift          >=0, <=325
- if (MaxNumberShift>325)
-  code_error=eMaxNumberShift;
-
-// AnalysisStart           >=0, <=TEN_SECOND
- if (AnalysisStart>TEN_SECOND)
-  code_error=eAnalysisStart;
-
-// AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
- if ( (AnalysisInterval<MIN_ANALYSIS_INTERVAL)||(AnalysisInterval>MAX_ANALYSIS_INTERVAL) )
-  code_error=eAnalysisInterval;
-
-
-// AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
- if ( (AveragePeriod<(MIN_DURATION*16))||(AveragePeriod>(MAX_DURATION*16)) )
-  code_error=eAveragePeriod;
-
-// AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
- if ( (AveragePeriodEvaluation<(MIN_DURATION*4))||(AveragePeriodEvaluation>(MAX_DURATION*4)) )
-  code_error=eAveragePeriodEvaluation;
-
-// TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
- if ( (TempPeriod<(MIN_DURATION/2))||(TempPeriod>(TEN_SECOND)) )
-  code_error=eTempPeriod;
-
-// TempPeriodDiff          >=-MAX_DURATION, <=TEN_SECOND-MIN_DURATION/2
- if ( ((TempPeriodDiff+MAX_DURATION)<0)||(TempPeriodDiff>(TEN_SECOND-MIN_DURATION/2)) )
-  code_error=eTempPeriodDiff;
-
-// TempAmplitudeDiff       >=0, <=B10mm*15
- if (TempAmplitudeDiff>(B10mm*15))
-  code_error=eTempAmplitudeDiff;
-
-
-// PulseCounter            >=0, <=150
- if (PulseCounter>150)
-  code_error=ePulseCounter;
-
-
-// MeasurementFlags        >0, < 1024
  if (MeasurementFlags>1024)
   code_error=eMeasurementFlags;
 
@@ -158,18 +187,12 @@ unsigned short code_error=0;
   code_error=eStepNumber;
 
 // HigherCount               Можно удалить.
-// PressureTop             >=#LPRESS_40, <=LPRESS_270
- if ( (PressureTop<LPRESS_40)||(PressureTop>(LPRESS_270)) )
-  code_error=ePressureTop;
 
 
 // MaxDiffSignal           any
 // MaxAverageAmplitude     any
 // LastDiff2Max            any
 
-// NewPressure		>=#LPRESS_20, <=LPRESS_280
- if ( (NewPressure<LPRESS_20)||(NewPressure>(LPRESS_280)) )
-  code_error=eNewPressure;
 
 // SistolPressure		>=#LPRESS_60, <=LPRESS_280
 // AveragePressure         >=#LPRESS_30, <=LPRESS_260
@@ -207,9 +230,6 @@ unsigned short code_error=0;
  if (DimMode>5)
   code_error=eDimMode;
 
-// Perror                  <+-PRESS_80
- if (abs(Perror)>PRESS_80)
-  code_error=ePerror;
 
 // Tdimstart               >=0, <=ONE_SECOND*4
  if (Tdimstart>(ONE_SECOND*4))
@@ -275,6 +295,24 @@ FinishMeasAddress        .usect "StepNum",MAX_STEP_NUMBER
 AvrPress                .usect "StepNum",MAX_STEP_NUMBER
 AverageAmplitude        .usect "StepNum",MAX_STEP_NUMBER
 */
+
+
+
+// TempPeriodDiff          >=-MAX_DURATION, <=TEN_SECOND-MIN_DURATION/2
+ if ( ((TempPeriodDiff+MAX_DURATION)<0)||(TempPeriodDiff>(TEN_SECOND-MIN_DURATION/2)) )
+  code_error=eTempPeriodDiff;
+
+// PressureTop             >=#LPRESS_40, <=LPRESS_270
+ if ( (PressureTop<LPRESS_40)||(PressureTop>(LPRESS_270)) )
+  code_error=ePressureTop;
+
+// NewPressure		>=#LPRESS_20, <=LPRESS_280
+ if ( (NewPressure<LPRESS_20)||(NewPressure>(LPRESS_280)) )
+  code_error=eNewPressure;
+
+// Perror                  <+-PRESS_80
+ if (abs(Perror)>PRESS_80)
+  code_error=ePerror;
 
  if (code_error) return code_error;
  else return 0;

@@ -1,5 +1,5 @@
 ;&D
-* $Id: BP206MAC.ASM,v 1.23 2001-10-22 13:38:11 peter Exp $
+* $Id: BP206MAC.ASM,v 1.24 2001-11-14 17:20:51 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -243,9 +243,9 @@ mBeepLongEnd .macro
  .endm
 
 mMax_number_plus1 .macro
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	ADD     #1
-	SACL    MaxNumber
+	SACL    _MaxNumber
  .endm
 
 mValve_on	.macro
@@ -334,28 +334,28 @@ mMotor_off_f	.macro
 * уменьшение счетчика нахождения на режиме
 ****************************
 mDec_counter	.macro
-	LACC 	ModeCnt,0
+	LACC 	_ModeCnt,0
 	SUB  	#1
-	SACL 	ModeCnt
+	SACL 	_ModeCnt
  .endm
 
 mWait3sek	.macro
-	SPLK 	#300,ModeCnt  ;3 секунды
+	SPLK 	#300,_ModeCnt  ;3 секунды
  .endm
 
 mWait 	.macro code
-	SPLK 	#code,ModeCnt
+	SPLK 	#code,_ModeCnt
  .endm
 
 
 mWait_valve_hold	.macro
-	SPLK 	#VALVE_CLOSE,ModeCnt
+	SPLK 	#VALVE_CLOSE,_ModeCnt
  .endm
 
 mNext_sub_mode	.macro
-	LACC 	SubroutMode,0
+	LACC 	_SubroutMode,0
 	ADD  	#1
-	SACL 	SubroutMode
+	SACL 	_SubroutMode
  .endm
 
 
@@ -372,7 +372,7 @@ mNext_sub_mode	.macro
 
 mEnd_error_meas .macro code
 	SPLK 	#code,ErrMeas
-	SPLK    #MEASUREMENT_FINISH,Mode
+	SPLK    #MEASUREMENT_FINISH,_Mode
  .endm
 
 mEnd_meas .macro
@@ -1645,13 +1645,13 @@ WriteEKG    .macro code
 
 mDim_pressure_init	.macro
 
-	SPLK	#PRESSURE_DIMINUTION,Mode
+	SPLK	#PRESSURE_DIMINUTION,_Mode
 	LACC	#0
-	SACL	DimMode
-	SACL    DimModeSampleCounter
-	LACC	MeasurementFlags,0
+	SACL	_DimMode
+	SACL    _DimModeSampleCounter
+	LACC	_MeasurementFlags,0
 	OR	#(1<<DIM_PRESSURE_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 
 	mValve_off
 
@@ -1663,8 +1663,8 @@ mDim_pressure_init	.macro
 
 mDim_pressure_supply_up_init	.macro
 
-	SPLK	#0,Perror
-	SPLK	#B4mm+B0_5mm*4,Preturn
+	SPLK	#0,_Perror
+	SPLK	#B4mm+B0_5mm*4,_Preturn
 
 	.endm
 **************************************************************************
@@ -1698,25 +1698,25 @@ mMeasurement_init	.macro
 	LAR	AR2,#StartMeasAdress
 	LACL	#0
 	SACL	*,0,AR2
-	SACL	SubroutMode
-	SACL    StartMaxNumber
-	SACL    MaxNumber
-	SACL    MaxNumberShift
+	SACL	_SubroutMode
+	SACL    _StartMaxNumber
+	SACL    _MaxNumber
+	SACL    _MaxNumberShift
 	SACL    TimeNakachka
-	SACL    StepNumber
-	SACL    SampleNumber
-	SACL    SampleNumberShift
+	SACL    _StepNumber
+	SACL    _SampleNumber
+	SACL    _SampleNumberShift
 	SACL	ErrMeas
 	SACL	MaxAverageAmplitude
 	SACL	SistolPressure
 	SACL	DiastolPressure
-	SPLK    #40,AnalysisInterval
-	LACC    AnalysisInterval
+	SPLK    #40,_AnalysisInterval
+	LACC    _AnalysisInterval
 	ADD     #DIFF_BASIS*2
-	SACL    AnalysisStart
-	LACC    MeasurementFlags
+	SACL    _AnalysisStart
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 
 	.if Emulator=1
 	SPLK    #0,massiv
@@ -1726,26 +1726,26 @@ mMeasurement_init	.macro
 **************************************************************************
 mClear_subrout_mode_err_meas	.macro
 	LACL	#0
-	SACL	SubroutMode
+	SACL	_SubroutMode
 	SACL	ErrMeas
 	.endm
 **************************************************************************
 mClear_sample_number	.macro
 	LACL	#0
-	SACL    StartMaxNumber
-	SACL    MaxNumber
-	SACL    MaxNumberShift
-	SACL    StepNumber
-	SACL    SampleNumber
-	SACL    SampleNumberShift
+	SACL    _StartMaxNumber
+	SACL    _MaxNumber
+	SACL    _MaxNumberShift
+	SACL    _StepNumber
+	SACL    _SampleNumber
+	SACL    _SampleNumberShift
 	SACL	ErrMeas
 	SACL	MaxAverageAmplitude
 	SACL	SistolPressure
 	SACL	DiastolPressure
-	SPLK    #40,AnalysisInterval
-	LACC    AnalysisInterval
+	SPLK    #40,_AnalysisInterval
+	LACC    _AnalysisInterval
 	ADD     #DIFF_BASIS*2
-	SACL    AnalysisStart
+	SACL    _AnalysisStart
 	.if Emulator=1
 	SPLK    #0,massiv
 	.endif
@@ -1765,7 +1765,7 @@ mClear_sample_number	.macro
 ; }
 mArrays_are_shifted	.macro
 	MAR     *,AR2
-	LAR     AR2,#Max2DiffAdress+1
+	LAR     AR2,#_Max2DiffAdress+1
 	DMOV	*-,AR2
 	DMOV	*,AR2
 	LAR     AR2,#MaxAvrPress+1
@@ -1785,12 +1785,12 @@ mIncrement_max_number     .macro
 ;  MaxNumber++;
 ;  MeasurementFlags = MeasurementFlags & (1<<FIRST_IMPULSE_FLAG)
 
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	ADD 	#1
-	SACL    MaxNumber
-	LACC	MeasurementFlags
+	SACL    _MaxNumber
+	LACC	_MeasurementFlags
 	AND	#~(1<<FIRST_IMPULSE_FLAG)
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 
 	.endm
 
@@ -1800,7 +1800,7 @@ mIncrement_max_number     .macro
 mZeroToAverageAmplitude     .macro
 
 	MAR	*,AR2
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#AverageAmplitude
 	MAR	*0+,AR2
 	LACL	#0

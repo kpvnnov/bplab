@@ -2,7 +2,7 @@
 ;/********************************************************************
 ;  Pressure_augment( PressureTop ) -
 ;  Увеличение давления до систолическое+30 мм.рт.ст.
-; $Id: PRESSAUG.ASM,v 1.9 2001-11-08 17:42:24 zykov Exp $
+; $Id: PRESSAUG.ASM,v 1.10 2001-11-14 17:20:53 peter Exp $
 ;***********************************************************************/
 ;int	AvrOfTwoDiff2Max
 ;int	TMPMaxNumber
@@ -16,7 +16,7 @@ Pressure_augment
 ;{
 ;  if ( SampleNumber > DIFF_BASIS_OF_PR_AUG_1)
 
-	LACC	SampleNumber,0
+	LACC	_SampleNumber,0
 	SUB	#DIFF_BASIS_OF_PR_AUG_1
 	BCND	Pulse_aug_check_error_2,LEQ
 
@@ -25,7 +25,7 @@ Pressure_augment
 ;		           Signal[SampleNumber-DIFF_BASIS_OF_PR_AUG_1];
 
 	MAR	*,AR2
-	LAR	AR0,SampleNumber
+	LAR	AR0,_SampleNumber
 	LAR	AR2,#Signal
 	MAR	*0+,AR3
 	LAR	AR3,#Signal - DIFF_BASIS_OF_PR_AUG_1
@@ -51,7 +51,7 @@ Pulse_aug_check_error_2:
 
 ;  if ( SampleNumber > DIFF_BASIS_OF_PR_AUG_2)
 
-	LACC	SampleNumber,0
+	LACC	_SampleNumber,0
 	SUB	#DIFF_BASIS_OF_PR_AUG_2
 	BCND	Pulse_aug_AnalysisStart,LEQ
 
@@ -60,7 +60,7 @@ Pulse_aug_check_error_2:
 ;       	           Signal[SampleNumber-DIFF_BASIS_OF_PR_AUG_2];
 
 	MAR	*,AR2
-	LAR	AR0,SampleNumber
+	LAR	AR0,_SampleNumber
 	LAR	AR2,#Signal
 	MAR	*0+,AR3
 	LAR	AR3,#Signal - DIFF_BASIS_OF_PR_AUG_2
@@ -86,13 +86,13 @@ Pulse_aug_AnalysisStart:
 
 ;  if ( MeasurementFlags & (1<<DIFF_MAX_FLAG) != 0 )
 
-	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
+	BIT	_MeasurementFlags,15-DIFF_MAX_FLAG
         BCND    Pulse_aug_MaxNotCentre,NTC
 
 ;  {
 
         MAR     *,AR3
-        LAR     AR0,MaxNumber
+        LAR     AR0,_MaxNumber
         LAR     AR3,#Diff2Max
         MAR     *0+,AR3                 ;AR3 = & Diff2Max[MaxNumber]
 
@@ -112,16 +112,16 @@ Pulse_aug_AnalysisStart:
 ;      {
 ;        TMPMaxNumber  = MaxNumber;
 
-        LACC    MaxNumber
+        LACC    _MaxNumber
         SACL    TMPMaxNumber
 
 ;        if (( abs( TempPeriod*4 - AveragePeriodEvaluation )) <
 ;                             0.33*AveragePeriodEvaluation )
 
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_33
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,13
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,13
         ABS
         SPAC
         BCND    Pulse_aug_2Period,GEQ
@@ -140,10 +140,10 @@ Pulse_aug_2Period
 ;        if (( abs( TempPeriod*4 - 2*AveragePeriodEvaluation )) <
 ;                              0.375*AveragePeriodEvaluation )
 
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_375
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,14
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,14
         ABS
         SPAC
         BCND    Pulse_aug_3Period,GEQ
@@ -162,11 +162,11 @@ Pulse_aug_3Period
 ;        if (( abs( TempPeriod*4 - 3*AveragePeriodEvaluation )) <
 ;                              0.375*AveragePeriodEvaluation )
 
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_375
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,14
-        SUB     AveragePeriodEvaluation,13
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,14
+        SUB     _AveragePeriodEvaluation,13
         ABS
         SPAC
         BCND    Pulse_aug_End_3Period,GEQ
@@ -175,33 +175,33 @@ Pulse_aug_3Period
 ;          AveragePeriodEvaluation = AveragePeriodEvaluation +
 ;                 ( TempPeriod*4 - 3*AveragePeriodEvaluation )/16;
 
-        LACC    AveragePeriodEvaluation,16
-        ADD     TempPeriod,14
-        SUB     AveragePeriodEvaluation,12
-        SUB     AveragePeriodEvaluation,13
-        SACH    AveragePeriodEvaluation,0
+        LACC    _AveragePeriodEvaluation,16
+        ADD     _TempPeriod,14
+        SUB     _AveragePeriodEvaluation,12
+        SUB     _AveragePeriodEvaluation,13
+        SACH    _AveragePeriodEvaluation,0
 
 ;          AveragePeriod = AveragePeriod + ( TempPeriod*16*0.33 -
 ;                          AveragePeriod)/16;
 
-        LT      TempPeriod
+        LT      _TempPeriod
         MPY     #CONST_0_33
-        LACC    AveragePeriod,13
-        SUB     AveragePeriod,9
+        LACC    _AveragePeriod,13
+        SUB     _AveragePeriod,9
         APAC
-        SACH    AveragePeriod,3
+        SACH    _AveragePeriod,3
 
 ;          AnalysisInterval = AveragePeriodEvaluation*1.25/4;
 
-        LACC    AveragePeriodEvaluation,14
-        ADD     AveragePeriodEvaluation,12                   ; !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        SACH    AnalysisInterval,0
+        LACC    _AveragePeriodEvaluation,14
+        ADD     _AveragePeriodEvaluation,12                   ; !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        SACH    _AnalysisInterval,0
 
 ;          AnalysisStart = SampleNumber + AnalysisInterval/4;
 
-        LACC    SampleNumber,16
-        ADD     AnalysisInterval,14
-	SACH    AnalysisStart
+        LACC    _SampleNumber,16
+        ADD     _AnalysisInterval,14
+	SACH    _AnalysisStart
 
 ;          mIncrement_max_number();
 
@@ -214,21 +214,21 @@ Pulse_aug_End_3Period
 ;        if ( TMPMaxNumber != MaxNumber)
 
         LACC    TMP+7
-        SUB     MaxNumber
+        SUB     _MaxNumber
         BCND    Pulse_aug_BadPulse,EQ
 
 ;        {
 ;          PulseCounter++;
 
-	LACC    PulseCounter
+	LACC    _PulseCounter
 	ADD	#1
-	SACL    PulseCounter
+	SACL    _PulseCounter
 
 ;          MeasurementFlags = MeasurementFlags | (1<<SYNCHRO_FLAG);
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	OR	#(1<<SYNCHRO_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 
 ;          if ( MaxDiffSignal < Diff2Max[MaxNumber-1])
 ;          // Здесь "MaxNumber-1" потому, что уже было "MaxNumber+1"
@@ -259,10 +259,10 @@ Pulse_aug_CheckAmpl
         LACC    *,0,AR4
         SACL    LastDiff2Max
 
-        LAR     AR0,MaxNumber
+        LAR     AR0,_MaxNumber
         LAR     AR4,#Diff2MaxAdress-1
         MAR     *0+,AR5
-        LAR     AR0,MaxNumberShift
+        LAR     AR0,_MaxNumberShift
         LAR     AR5,#Diff2MaxAdressFinish
         MAR     *0+,AR4
 
@@ -271,21 +271,21 @@ Pulse_aug_CheckAmpl
 ;          // Здесь "MaxNumber-1" потому, что уже было "MaxNumber+1"
 
         LACC    *,0,AR5
-        ADD     SampleNumberShift,0
+        ADD     _SampleNumberShift,0
         SACL    *,0,AR3
 
 ;          MaxNumberShift++;
 ;          MaxNumber = 0;
 
-        LACC    MaxNumberShift,0
+        LACC    _MaxNumberShift,0
         ADD     #1
-        SACL    MaxNumberShift
-        SPLK    #0,MaxNumber
+        SACL    _MaxNumberShift
+        SPLK    #0,_MaxNumber
 
 ;          if(( MaxDiffSignal*0.5 > AvrOfTwoDiff2Max)&&
 ;             ( PulseCounter > 5 ))
 
-	LACC	PulseCounter,0
+	LACC	_PulseCounter,0
 	SUB	#5
 	BCND    Pulse_aug_check_sample_number,LEQ
 	LACC    MaxDiffSignal,15
@@ -295,7 +295,7 @@ Pulse_aug_CheckAmpl
 ;          {
 ;            if ( MeasurementFlags&(1<<PRESS_MORE_SYSTOL_FLAG) == 0 )
 
-	BIT	MeasurementFlags,15-PRESS_MORE_SYSTOL_FLAG
+	BIT	_MeasurementFlags,15-PRESS_MORE_SYSTOL_FLAG
 	BCND	Pulse_aug_check_sample_number,TC
 
 ;            {
@@ -304,17 +304,17 @@ Pulse_aug_CheckAmpl
 
         MAR     *,AR2
         LAR     AR0,#Signal
-        LAR     AR2,SampleNumber
+        LAR     AR2,_SampleNumber
         MAR     *0+,AR2
         LACC    *,0
 	ADD	#RESERVE_MILL_OF_MERC,0   ;// + PRESS_02_5,0
-	SACL	PressureTop
+	SACL	_PressureTop
 
 ;              MeasurementFlags = MeasurementFlags|(1<<PRESS_MORE_SYSTOL_FLAG);
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	OR	#(1<<PRESS_MORE_SYSTOL_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 	B       Pulse_aug_check_sample_number
 
 ;            }
@@ -326,9 +326,9 @@ Pulse_aug_BadPulse
 ;          { //   Вероятная потеря синхронизации
 ;            MeasurementFlags = MeasurementFlags & (~(1<<SYNCHRO_FLAG));
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#~(1<<SYNCHRO_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 	B       Pulse_aug_check_sample_number
 
 ;          }
@@ -338,18 +338,18 @@ Pulse_aug_BadPulse
 ;        {
 ;          if (( SampleNumber - AnalysisStart ) > 1.5*AnalysisInterval )
 
-	LACC	SampleNumber,1
-	SUB	AnalysisStart,1
-	SUB	AnalysisInterval,1
-	SUB	AnalysisInterval,0
+	LACC	_SampleNumber,1
+	SUB	_AnalysisStart,1
+	SUB	_AnalysisInterval,1
+	SUB	_AnalysisInterval,0
 	BCND	Pulse_aug_SmallTime,LEQ
 
 ;          {  //   Вероятная потеря синхронизации
 ;            MeasurementFlags = MeasurementFlags & (~(1<<SYNCHRO_FLAG));
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#~(1<<SYNCHRO_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 
 ;          }
 
@@ -366,7 +366,7 @@ Pulse_aug_MoreMax:
 Pulse_aug_SmallMax:
 ;    if ( SampleNumber >= ( ONE_SECOND*9 ))
 
-	LACC	SampleNumber,0
+	LACC	_SampleNumber,0
 	SUB	#ONE_SECOND*9
 	BCND	Pulse_aug_MaxNotCentre,LT
 
@@ -377,7 +377,7 @@ Pulse_aug_SmallMax:
 ;      }
 
 	MAR	*,AR2
-	LAR	AR0,SampleNumber
+	LAR	AR0,_SampleNumber
 	LAR	AR2,#Signal - ONE_SECOND*2
 	MAR	*0+,AR2
 	RPT	#ONE_SECOND*2
@@ -386,17 +386,17 @@ Pulse_aug_SmallMax:
 ;        SampleNumberShift = SampleNumberShift + SampleNumber - ONE_SECOND*2;
 ;        SampleNumber = ONE_SECOND*2;
 
-	LACC	SampleNumberShift,0
-	ADD 	SampleNumber,0
+	LACC	_SampleNumberShift,0
+	ADD 	_SampleNumber,0
 	SUB	#ONE_SECOND*2
-	SACL	SampleNumberShift,0
-	SPLK	#ONE_SECOND*2,SampleNumber
+	SACL	_SampleNumberShift,0
+	SPLK	#ONE_SECOND*2,_SampleNumber
 
 ;        AnalysisStart = AnalysisStart - ONE_SECOND*7 );
 
-	LACC	AnalysisStart,0
+	LACC	_AnalysisStart,0
 	SUB	#ONE_SECOND*7
-	SACL	AnalysisStart,0
+	SACL	_AnalysisStart,0
 
 ;        if ( AnalysisStart < 0 )
 ;        {
@@ -404,7 +404,7 @@ Pulse_aug_SmallMax:
 ;        }
 
 	BCND	Pulse_aug_MaxNotCentre,GEQ
-	SPLK	#0,AnalysisStart
+	SPLK	#0,_AnalysisStart
 
 ;      }
 
@@ -414,10 +414,10 @@ Pulse_aug_MaxNotCentre:
 
         MAR     *,AR2
         LAR     AR0,#Signal
-        LAR     AR2,SampleNumber
+        LAR     AR2,_SampleNumber
         MAR     *0+,AR2
         LACC    *
-        SUB     PressureTop
+        SUB     _PressureTop
         BCND    Pulse_aug_End,LEQ
 ;      {
 
@@ -426,7 +426,7 @@ Pulse_aug_Next_Mode
 ;        // Next Mode
 ;        Mode = PRESSURE_AUGMENT_STOP;
 
-        SPLK    #PRESSURE_AUGMENT_STOP,Mode
+        SPLK    #PRESSURE_AUGMENT_STOP,_Mode
 
 ;        Pump_off();
 
@@ -435,42 +435,42 @@ Pulse_aug_Next_Mode
 ;        NewPressure = Signal[SampleNumber] - RESERVE_MILL_OF_MERC/4;
 
 	MAR	*,AR2
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
 	LAR	AR2,#Signal
 	MAR	*0+,AR2
 	LACC	*
 	SUB     #RESERVE_MILL_OF_MERC/4
-	SACL	NewPressure
+	SACL	_NewPressure
 
 ;        ModeCnt = WHITE_VALVE_OFF;
 
-        SPLK    #WHITE_VALVE_OFF,ModeCnt
+        SPLK    #WHITE_VALVE_OFF,_ModeCnt
 
 ;        SubroutMode = 0;
 ;        StartMaxNumber = 0;
 
         LACC    #0
-	SACL	SubroutMode
-        SACL    StartMaxNumber
+	SACL	_SubroutMode
+        SACL    _StartMaxNumber
 
 ;        SampleNumberShift = SampleNumberShift + SampleNumber + 1;
 ;        SampleNumber = -1;
 
-        LACC    SampleNumberShift
-        ADD     SampleNumber
+        LACC    _SampleNumberShift
+        ADD     _SampleNumber
         ADD     #1
-        SACL    SampleNumberShift
-        SPLK    #0FFFFh,SampleNumber
+        SACL    _SampleNumberShift
+        SPLK    #0FFFFh,_SampleNumber
 
 ;        if ( SynchroFlag == False )
 
-	BIT     MeasurementFlags,15-SYNCHRO_FLAG
+	BIT     _MeasurementFlags,15-SYNCHRO_FLAG
 	BCND 	Pulse_aug_End,TC
 
 ;        {
 ;          PulseCounter = 0;
 
-	SPLK	#0,PulseCounter
+	SPLK	#0,_PulseCounter
 
 ;        }
 ;      }
@@ -483,11 +483,11 @@ Pulse_aug_End:
 ;       FinishMeasAddress[StepNumber-1])>= TEN_SECOND*4 )
 
 	MAR	*,AR2
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#FinishMeasAddress-1
 	MAR	*0+,AR2
-	LACC	SampleNumberShift
-	ADD     SampleNumber
+	LACC	_SampleNumberShift
+	ADD     _SampleNumber
 	SUB     *,0,AR2
 	SUB	#TEN_SECOND*4
 	BCND	Pulse_aug_analysis_end,LEQ
@@ -503,9 +503,9 @@ Pulse_aug_analysis_end:
 ;  Analysis_of_end();
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 
         RET
 

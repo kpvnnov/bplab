@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPINIT.ASM,v 1.23 2001-10-22 13:38:13 peter Exp $
+* $Id: BPINIT.ASM,v 1.24 2001-11-14 17:20:51 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -217,10 +217,10 @@ INIT
 *
 ;      FirstMeasFlag = TRUE;
 
-	SPLK	#B0_5mm*2,SistolPressureAmplitude
-	LACC	MeasurementFlags,0
+	SPLK	#B0_5mm*2,_SistolPressureAmplitude
+	LACC	_MeasurementFlags,0
 	OR	#(1<<FIRST_MEAS_FLAG)
-	SACL  	MeasurementFlags,0
+	SACL  	_MeasurementFlags,0
 
 *
 	SPLK 	#0020h,_DPA0	;сохраняем данные порта в памяти,

@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: pr_dim2.asm,v 1.4 2001-10-22 13:38:19 peter Exp $
+; $Id: pr_dim2.asm,v 1.5 2001-11-14 17:20:54 peter Exp $
 ;*       Pressure_diminution_2() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       Для запуска процесса вызвать макрос:  mDim_pressure_init
 ;***********************************************************************/
@@ -58,7 +58,7 @@
 ;int         	Pclose;
 ;int		DimSignal[3];
 
-Pnew                  	.equ	NewPressure
+Pnew                  	.equ	_NewPressure
 DimSignal		.equ	SR30	; Первая ячейка сдвигового регистра ФНЧ
 
 DIM_PAUSE		.set	28 	; it was 24 to 05.10.2001
@@ -76,7 +76,7 @@ Pressure_diminition_2:
 ; switch ( DimMode )
 
 	LACC	#Dim_mode_case,0
-	ADD 	DimMode,1		; Сдвиг на "1" нужен т.к. команда
+	ADD 	_DimMode,1		; Сдвиг на "1" нужен т.к. команда
 	BACC                    	; "Branch" занимает 2-е ячейки памяти.
 Dim_mode_case:
 	B	Dim_case_0
@@ -91,12 +91,12 @@ Dim_case_0:
 ;	  if( Pclose > DimSignal[DimModeSampleCounter] )
 
 	LACC	Pnew,16
-	SUB     Preturn,16
+	SUB     _Preturn,16
 	SUB	*,8,AR2
 	SUB	#4000h,9       ; Приведение DimSignal к виду Unsigned
 	ADD	#B10mm*10,8
-	SUB	Perror,14
-	SUB	Perror,15
+	SUB	_Perror,14
+	SUB	_Perror,15
 	SUB	*,16,AR2
 	BCND	Dim_quit,LEQ
 
@@ -109,12 +109,12 @@ Dim_case_0:
 ;	}
 
 	LACC	*,0,AR2
-	SACL	Pclose,0
-	LACC	DimModeSampleCounter
-	SACL	Tdimstart
-	LACC    DimMode,0
+	SACL	_Pclose,0
+	LACC	_DimModeSampleCounter
+	SACL	_Tdimstart
+	LACC    _DimMode,0
 	ADD	#1
-	SACL    DimMode,0
+	SACL    _DimMode,0
 	mValve_on            ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ;       }
@@ -139,11 +139,11 @@ Dim_case_1:
 ;	  mValve_hold();
 ;         DimMode++;
 
-	LACC	DimModeSampleCounter
-	SACL	Tdimstart
-	LACC    DimMode
+	LACC	_DimModeSampleCounter
+	SACL	_Tdimstart
+	LACC    _DimMode
 	ADD	#1
-	SACL    DimMode
+	SACL    _DimMode
 
   	mValve_hold                     ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -172,11 +172,11 @@ Dim_case_2:
 ;         Tdimstart = DimModeSampleCounter;
 ;         DimMode++;
 
-	LACC	DimModeSampleCounter,0
-	SACL	Tdimstart,0
-	LACC    DimMode
+	LACC	_DimModeSampleCounter,0
+	SACL	_Tdimstart,0
+	LACC    _DimMode
 	ADD	#1
-	SACL    DimMode
+	SACL    _DimMode
 
 ;       }
 ;    	break;
@@ -190,8 +190,8 @@ Dim_case_3:
 
 ;       if(( DimModeSampleCounter - Tdimstart ) > DIM_PAUSE)
 
-	LACC	DimModeSampleCounter,0
-	SUB     Tdimstart,0
+	LACC	_DimModeSampleCounter,0
+	SUB     _Tdimstart,0
 	SUB	#DIM_PAUSE
 	BCND	Dim_quit,LT
 
@@ -212,16 +212,16 @@ Dim_case_3:
 ;	  MeasurementFlags = (MeasurementFlags )&(~( 1<<DIM_PRESSURE_FLAG  ));
 ;       }
 
-	BIT	MeasurementFlags,15-FIRST_MEAS_FLAG
+	BIT	_MeasurementFlags,15-FIRST_MEAS_FLAG
 	BCND    Dim_case_3_Preturn_32,NTC
 	LACC	*+,10,AR2
 	RPT	#6
 	ADD	*+,10,AR2
 	SACH    TMP+2,3
-	SUB	Pclose,13
-	SUB	Preturn,13
-	ADD	Preturn,16
-	SACH	Preturn,0
+	SUB	_Pclose,13
+	SUB	_Preturn,13
+	ADD	_Preturn,16
+	SACH	_Preturn,0
 	B	Dim_case_3_Perror_culc
 
 Dim_case_3_Preturn_32:
@@ -229,25 +229,25 @@ Dim_case_3_Preturn_32:
 	RPT	#6
 	ADD	*+,8,AR2
 	SACH    TMP+2,5
-	SUB	Pclose,11
-	SUB	Preturn,11
-	ADD	Preturn,16
-	SACH	Preturn,0
+	SUB	_Pclose,11
+	SUB	_Preturn,11
+	ADD	_Preturn,16
+	SACH	_Preturn,0
 
 Dim_case_3_Perror_culc:
-	LACC	Perror,16
+	LACC	_Perror,16
 	ADD	TMP+2,14
-	SUB	NewPressure,14
-	SUB	Perror,14
-	SACH	Perror,0
+	SUB	_NewPressure,14
+	SUB	_Perror,14
+	SACH	_Perror,0
 
 	LACC	TMP+2,0
         SUB     #EIGHT_MILL_OF_MERC-B0_2mm
-	SACL	NewPressure
+	SACL	_NewPressure
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#~(1<<DIM_PRESSURE_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 
 ;       }
 ;
@@ -262,9 +262,9 @@ Dim_quit:
 ;       DimModeSampleCounter++;
 ;	return;
 
-	LACC	DimModeSampleCounter,0
+	LACC	_DimModeSampleCounter,0
 	ADD	#1
-	SACL	DimModeSampleCounter,0
+	SACL	_DimModeSampleCounter,0
 
 ;	Stack is restore
 

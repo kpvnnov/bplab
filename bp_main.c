@@ -1,8 +1,18 @@
-// $Id: bp_main.c,v 1.5 2001-11-08 21:21:06 peter Exp $
+// $Id: bp_main.c,v 1.6 2001-11-14 17:20:54 peter Exp $
 
 #include "global.h"
 
 #include <ioports.h>
+
+#pragma DATA_SECTION(SampleNumber, "bss1")
+unsigned int SampleNumber;
+#pragma DATA_SECTION(SampleNumberShift, "bss1")
+unsigned int SampleNumberShift;
+
+#pragma DATA_SECTION(NewPressure, "bss1")
+int NewPressure;
+
+
 
 extern s16 ResultADC[];
 extern u8 WATCH[];

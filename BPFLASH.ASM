@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASH.ASM,v 1.20 2001-10-22 13:38:12 peter Exp $
+* $Id: BPFLASH.ASM,v 1.21 2001-11-14 17:20:51 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -237,7 +237,7 @@ ItIsNotManualMeas:
 * AveragePeriod (период сердечных сокращений умноженный на 16)
 * вычисляем частоту f=60 сек * 100 (част дискр) * 16 / AveragePeriod
 	LAR	AR3,#TMP+3
-	LAR	AR4,#AveragePeriod
+	LAR	AR4,#_AveragePeriod
 	MAR	*,AR3
 	LACC	#6000
 	SACL	*,AR4
@@ -643,12 +643,12 @@ MakeSectoring
 	;первый массив длиной StepNumber*8 байт
 	;второй массив длиной (MaxNumber+MaxNumberShift)*2 байта
 ** на всякий случай :)
-	LACC	StepNumber
+	LACC	_StepNumber
 	AND	#01Fh		;максимум 32 байта
 	SACL	TMP+3
 
-	LACC	MaxNumber
-	ADD	MaxNumberShift
+	LACC	_MaxNumber
+	ADD	_MaxNumberShift
 ** на всякий случай :)
 	AND	#0FFh		;максимум 256 байт
 	SACL	TMP+4

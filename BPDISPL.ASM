@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 *       режимы дисплея
-* $Id: BPDISPL.ASM,v 1.21 2001-10-22 13:38:12 peter Exp $
+* $Id: BPDISPL.ASM,v 1.22 2001-11-14 17:20:51 peter Exp $
 *****************************************************************************
 	.globl	_compute
 
@@ -216,7 +216,7 @@ MDSPL9  SETC	SXM
 MDSPL10 SETC	SXM
 	SPM	#0
 	LAR	AR3,#TMP+3
-	LAR	AR4,#AveragePeriod
+	LAR	AR4,#_AveragePeriod
 	MAR	*,AR3
 	LACC	#6000
 	SACL	*,AR4

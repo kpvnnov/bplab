@@ -1,7 +1,7 @@
 ;&D
 *****************************************************************************
 * режимы прибора (измерение давления, вывод ошибки на экран и т.д.)
-* $Id: BPMODE.ASM,v 1.12 2001-10-22 13:38:14 peter Exp $
+* $Id: BPMODE.ASM,v 1.13 2001-11-14 17:20:52 peter Exp $
 *****************************************************************************
 
 	SETC    SXM
@@ -10,7 +10,7 @@
 	SPLK	#0,TMP
 	CALL	CheckError
  .endif
-	LACC    Mode,2
+	LACC    _Mode,2
 	ADD     #Mode_branch
 	BACC
 
@@ -121,7 +121,7 @@ End_mode
 *	SUB	#1152
 *	BCND	NoOverFlow,LT
 *	LACC	#0
-*	SACL    SampleNumber
+*	SACL    _SampleNumber
 *NoOverFlow
 **
 	RET
@@ -130,8 +130,8 @@ End_mode
  .elseif WriteDebug<3
 DebugWriting:
 	CALL	pStart_Debug_Write
-	LACC	SampleNumber
-	ADD	SampleNumberShift
+	LACC	_SampleNumber
+	ADD	_SampleNumberShift
 *	ADD	TimeNakachka
 	SUB     #TWO_MINUTES
 	BCND	End_Debug_mode_ret,LT

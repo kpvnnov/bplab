@@ -1,7 +1,7 @@
 ;&D
-* $Id: ST_SHIFT.ASM,v 1.8 2001-10-22 13:38:18 peter Exp $
+* $Id: ST_SHIFT.ASM,v 1.9 2001-11-14 17:20:54 peter Exp $
 Start_shift
-	LACC    SubroutMode,1
+	LACC    _SubroutMode,1
 	ADD     #Start_shift_branch
 	BACC
 
@@ -38,7 +38,7 @@ Start_shift1_1:
 	SACL 	Preset0+1
 	SACL 	Preset0+2
 
-	SPLK 	#64,ModeCnt  ;пусть фильтр выровняется
+	SPLK 	#64,_ModeCnt  ;пусть фильтр выровняется
 	RET
 
 Start_shift2:
@@ -48,7 +48,7 @@ Start_shift2:
 	SendToDAC
 
 	mNext_sub_mode
-	SPLK 	#256,ModeCnt	;усреднение значения с канала
+	SPLK 	#256,_ModeCnt	;усреднение значения с канала
 	RET
 
 Start_shift3:
@@ -81,7 +81,7 @@ Start_shift3:
 ;	Beep
 *
 
-	SPLK 	#PRESSURE_AUGMENT_40,Mode
+	SPLK 	#PRESSURE_AUGMENT_40,_Mode
         mClear_subrout_mode_err_meas
 	SPLK 	#iCURRENT_PRESSURE,_MDSPL 	;переходим на уровень давления
         RET

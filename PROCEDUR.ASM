@@ -1,34 +1,34 @@
 ;&D
 ***********************************************************************
 *       Average
-* $Id: PROCEDUR.ASM,v 1.6 2001-10-22 13:38:16 peter Exp $
+* $Id: PROCEDUR.ASM,v 1.7 2001-11-14 17:20:53 peter Exp $
 ***********************************************************************
 Average
 
 ;  AveragePeriodEvaluation = AveragePeriodEvaluation +
 ;		TempPeriod - AveragePeriodEvaluation/4;
 
-        LACC    TempPeriod,16
-        SUB     AveragePeriodEvaluation,14   ; AveragePeriodEvaluation
-        ADD     AveragePeriodEvaluation,16   ; увеличино в 4 pаза
-        SACH    AveragePeriodEvaluation,0
+        LACC    _TempPeriod,16
+        SUB     _AveragePeriodEvaluation,14   ; AveragePeriodEvaluation
+        ADD     _AveragePeriodEvaluation,16   ; увеличино в 4 pаза
+        SACH    _AveragePeriodEvaluation,0
 
 ;  AveragePeriod = AveragePeriod + TempPeriod - AveragePeriod/16;
 
-        LACC    TempPeriod,16                ; AveragePeriod
-        SUB     AveragePeriod,12             ; увеличино в 16 pаза
-        ADD     AveragePeriod,16
-        SACH    AveragePeriod,0
+        LACC    _TempPeriod,16                ; AveragePeriod
+        SUB     _AveragePeriod,12             ; увеличино в 16 pаза
+        ADD     _AveragePeriod,16
+        SACH    _AveragePeriod,0
 
 Average_check_mode:
 
 ;  if (( Mode == PRESSURE_MEASUREMENT )||( Mode == CHECK_HIGHER_SISTOL_PRESSURE))
 ;  {
 
-	LACC	Mode
+	LACC	_Mode
 	SUB	#PRESSURE_MEASUREMENT
 	BCND	Average_impulse_not_in_center,EQ
-	LACC    Mode
+	LACC    _Mode
 	SUB     #CHECK_HIGHER_SISTOL_PRESSURE
 	BCND	Average_impulse_in_center,NEQ
 
@@ -36,19 +36,19 @@ Average_impulse_not_in_center:
 
 ;    AnalysisInterval = AveragePeriodEvaluation*1/4;
 
-        LACC    AveragePeriodEvaluation,14
-        SACH    AnalysisInterval,0
+        LACC    _AveragePeriodEvaluation,14
+        SACH    _AnalysisInterval,0
 
 ;    if ((MeasurementFlags & (1<<FIRST_IMPULSE_FLAG)) == 0)
 ;    {
 
-       	BIT	MeasurementFlags,15-FIRST_IMPULSE_FLAG
+       	BIT	_MeasurementFlags,15-FIRST_IMPULSE_FLAG
 	BCND	Average_first_impulse,TC
 
 ;      AnalysisStart = SampleNumber + AnalysisInterval/4;
 
-        LACC    SampleNumber,16
-        ADD     AnalysisInterval,14
+        LACC    _SampleNumber,16
+        ADD     _AnalysisInterval,14
 	B	Average_finish
 
 ;    }
@@ -59,8 +59,8 @@ Average_first_impulse:
 ;    {
 ;      AnalysisStart = SampleNumber + AnalysisInterval/8;
 
-        LACC    SampleNumber,16
-        ADD     AnalysisInterval,13
+        LACC    _SampleNumber,16
+        ADD     _AnalysisInterval,13
 	B	Average_finish
 
 ;    }
@@ -73,17 +73,17 @@ Average_impulse_in_center:
 
 ;    AnalysisInterval = AveragePeriodEvaluation*1.25/4;
 
-        LACC    AveragePeriodEvaluation,14
-        ADD     AveragePeriodEvaluation,12
-        SACH    AnalysisInterval,0
+        LACC    _AveragePeriodEvaluation,14
+        ADD     _AveragePeriodEvaluation,12
+        SACH    _AnalysisInterval,0
 
 ;    AnalysisStart = SampleNumber + AnalysisInterval/4;
 
-        LACC    SampleNumber,16
-        ADD     AnalysisInterval,14
+        LACC    _SampleNumber,16
+        ADD     _AnalysisInterval,14
 
 Average_finish:
-        SACH    AnalysisStart
+        SACH    _AnalysisStart
         RET
 
 ;  }
@@ -97,17 +97,17 @@ Average_2
 ;AveragePeriodEvaluation = AveragePeriodEvaluation +
 ;		TempPeriod/2 - AveragePeriodEvaluation/4;
 
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,14   ; AveragePeriodEvaluation
-        ADD     AveragePeriodEvaluation,16   ; увеличино в 4 pаза
-        SACH    AveragePeriodEvaluation,0
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,14   ; AveragePeriodEvaluation
+        ADD     _AveragePeriodEvaluation,16   ; увеличино в 4 pаза
+        SACH    _AveragePeriodEvaluation,0
 
 ; AveragePeriod = AveragePeriod + TempPeriod/2 - AveragePeriod/16;
 
-        LACC    TempPeriod,15                ; AveragePeriod
-        SUB     AveragePeriod,12             ; увеличино в 16 pаза
-        ADD     AveragePeriod,16
-        SACH    AveragePeriod,0
+        LACC    _TempPeriod,15                ; AveragePeriod
+        SUB     _AveragePeriod,12             ; увеличино в 16 pаза
+        ADD     _AveragePeriod,16
+        SACH    _AveragePeriod,0
 
 	B	Average_check_mode
 
@@ -158,10 +158,10 @@ Synchro_flag_is_reseted:
 ;  MeasurementFlags = MeasurementFlags&(~(1<<SYNCHRO_FLAG));
 ;  if ( AnalysisInterval < MIN_ANALYSIS_INTERVAL*9/8 )
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	AND 	#(~(1<<SYNCHRO_FLAG))
-	SACL    MeasurementFlags
-	LACC    AnalysisInterval
+	SACL    _MeasurementFlags
+	LACC    _AnalysisInterval
 	SUB	#MIN_ANALYSIS_INTERVAL*9/8
 	BCND    Synchro_flag_big_interval,GT
 
@@ -170,8 +170,8 @@ Synchro_flag_is_reseted:
 ;    AveragePeriodEvaluation = AnalysisInterval*4;
 ;  }
 
-	SPLK	#MIN_ANALYSIS_INTERVAL,AnalysisInterval
-	SPLK	#MIN_ANALYSIS_INTERVAL*4,AveragePeriodEvaluation
+	SPLK	#MIN_ANALYSIS_INTERVAL,_AnalysisInterval
+	SPLK	#MIN_ANALYSIS_INTERVAL*4,_AveragePeriodEvaluation
 	B	Synchro_flag_quit
 
 Synchro_flag_big_interval:
@@ -182,12 +182,12 @@ Synchro_flag_big_interval:
 ;                              AveragePeriodEvaluation/8;
 ;  }
 ;}
-	LACC	AnalysisInterval,16
-	SUB     AnalysisInterval,13
-	SACH    AnalysisInterval,0
-	LACC	AveragePeriodEvaluation,16
-	SUB     AveragePeriodEvaluation,13
-	SACH    AveragePeriodEvaluation,0
+	LACC	_AnalysisInterval,16
+	SUB     _AnalysisInterval,13
+	SACH    _AnalysisInterval,0
+	LACC	_AveragePeriodEvaluation,16
+	SUB     _AveragePeriodEvaluation,13
+	SACH    _AveragePeriodEvaluation,0
 
 Synchro_flag_quit:
 	MAR	*,AR1
@@ -214,12 +214,12 @@ Completion_of_mode:
 ;    if ( MaxNumber > 0 )
 ;    {
 
-	LACC    MaxNumber,0
+	LACC    _MaxNumber,0
 	BCND    Compl_of_mode,LEQ
 
 ;      LastDiff2Max = Diff2Max[MaxNumber-1];
 
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max-1
 	MAR	*0+,AR2
 	LACC    *,0,AR3
@@ -234,17 +234,17 @@ Completion_of_mode:
 ;      }
 ;    }
 
-        LAR     AR0,MaxNumberShift
+        LAR     AR0,_MaxNumberShift
         LAR     AR3,#Diff2MaxAdressFinish
         MAR     *0+,AR0
-        LAR     AR0,MaxNumber
+        LAR     AR0,_MaxNumber
         MAR     *-,AR2
         LAR     AR2,#Diff2MaxAdress
         MAR     *0+,AR3
         MAR     *0+,AR2
 Pulse_f_for_i
         LACC    *-,0,AR3
-	ADD	SampleNumberShift,0
+	ADD	_SampleNumberShift,0
         SACL    *-,0,AR0
         BANZ    Pulse_f_for_i,*-,AR2
 
@@ -259,21 +259,21 @@ Compl_of_mode:
 ;    MaxNumber = 0;
 ;}
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	AND     #(~((1<<NEXT_MODE_FLAG)|(1<<SYNCHRO_FLAG_WAS)))
-	SACL    MeasurementFlags
-	LACC	MaxNumberShift,0
-	ADD 	MaxNumber,0
-	SACL	MaxNumberShift,0
-	LACC	SampleNumberShift
-	ADD     SampleNumber
+	SACL    _MeasurementFlags
+	LACC	_MaxNumberShift,0
+	ADD 	_MaxNumber,0
+	SACL	_MaxNumberShift,0
+	LACC	_SampleNumberShift
+	ADD     _SampleNumber
 	ADD     #1
-	SACL    SampleNumberShift
-	SPLK	#0FFFFh,SampleNumber
+	SACL    _SampleNumberShift
+	SPLK	#0FFFFh,_SampleNumber
 	LACL	#0
-	SACL    StartMaxNumber
-	SACL    SubroutMode
-	SACL    MaxNumber
+	SACL    _StartMaxNumber
+	SACL    _SubroutMode
+	SACL    _MaxNumber
 
 	MAR	*,AR1
 	MAR	*-,AR1
@@ -295,22 +295,22 @@ End_step_analysis:
 ;{
 ;  if (( MeasurementFlags&(1<<NEXT_MODE_FLAG)) == 0 )
 
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	End_step_anal_next_mode_is,TC
 
 ;  {
 ;    if ((( SampleNumber > 8*AnalysisInterval )&&( MaxNumber < 2 ))||
 ;         ( SampleNumber > TEN_SECOND ))
 
-	LACC	MaxNumber
+	LACC	_MaxNumber
 	SUB     #2
 	BCND    End_step_anal_max_n_more_1,GEQ
-	LACC    SampleNumber,0
-	SUB	AnalysisInterval,3
-	;ADD     AnalysisInterval,0
+	LACC    _SampleNumber,0
+	SUB	_AnalysisInterval,3
+	;ADD     _AnalysisInterval,0
 	BCND    End_step_anal_start_dim,GEQ
 End_step_anal_max_n_more_1:
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
  .if Sertificarion=1
 * стоим на ступеньке две секунды
 	SUB     #TWO_SECOND
@@ -343,9 +343,9 @@ End_step_anal_next_mode_is:
 ;  SampleNumber++;
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 
 ;}
 
@@ -377,8 +377,8 @@ Analysis_of_end:
 ;  if (( SampleNumber + SampleNumberShift) < TWO_MINUTES )
 ;  {
 
-	LACC	SampleNumber,0
-	ADD	SampleNumberShift,0
+	LACC	_SampleNumber,0
+	ADD	_SampleNumberShift,0
 	ADD	TimeNakachka,0
 	SUB	#TWO_MINUTES
 	BCND    Anal_of_end_two_minutes,GEQ
@@ -399,7 +399,7 @@ Analysis_of_end:
 
 ;      NewPressure = PRESS_170_MILL_OF_MER;
 
-        SPLK	#LPRESS_170,NewPressure
+        SPLK	#LPRESS_170,_NewPressure
 	B	Anal_of_end_motor_off
 
 Anal_of_end_over_280_stop:
@@ -410,7 +410,7 @@ Anal_of_end_over_280_stop:
 
 ;      NewPressure = PRESS_275_MILL_OF_MER;
 
-	SPLK	#PRESS_275_MILL_OF_MER,NewPressure
+	SPLK	#PRESS_275_MILL_OF_MER,_NewPressure
 
 Anal_of_end_motor_off:
 
@@ -430,7 +430,7 @@ Anal_of_end_check_30_mm:
 ;      if (( Mode == PRESSURE_MEASUREMENT) && ( CurrPressure < PRESS_30 ))
 ;      // Если проводим измерение и очень низкий уровень давлени
 
-	LACC	Mode,0
+	LACC	_Mode,0
 	SUB	#PRESSURE_MEASUREMENT
 	BCND	Anal_of_end_quit,NEQ
 	LACL	CurrPressure
@@ -483,14 +483,14 @@ Finish_Meas_Address:
 
 
 	MAR	*,AR2
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#FinishMeasAddress
 	MAR	*0+,AR2
-	LACL    SampleNumberShift
+	LACL    _SampleNumberShift
 	SACL	*,0,AR2
-	LACC	StepNumber
+	LACC	_StepNumber
 	ADD	#1
-	SACL    StepNumber
+	SACL    _StepNumber
 	SUB	#MAX_STEP_NUMBER,0
 	BCND	Step_number_error_isnt,LT
     	mEnd_error_meas	rSTEP_NUMBER_IS_BIG

@@ -1,7 +1,7 @@
 ;&D
-* $Id: AN_SP_UP.ASM,v 1.18 2001-10-22 13:38:10 peter Exp $
+* $Id: AN_SP_UP.ASM,v 1.19 2001-11-14 17:20:50 peter Exp $
 Level_zero
-	LACC    SubroutMode,1
+	LACC    _SubroutMode,1
 	ADD     #LevelZero_branch
 	BACC
 
@@ -66,7 +66,7 @@ LevelZero1			;высвечиваем номер измерения
  .if WriteDebug=0
 	mWait   250		; 2.5 секунды с включенным аналоговым питанием
  .else
-	SPLK 	#64,ModeCnt	;
+	SPLK 	#64,_ModeCnt	;
  .endif
 	mClear_sample_number
 	BeginADC       ;начинаем измерять ADC
@@ -84,26 +84,26 @@ LevelZero2
 	LACC    StartCode,0
 	SUB	#1
 	BCND	NoWriteThis,NEQ
-	SPLK 	#START_DEBUG_WRITE,Mode
-	SPLK	#0,SubroutMode		;для первоначального case
+	SPLK 	#START_DEBUG_WRITE,_Mode
+	SPLK	#0,_SubroutMode		;для первоначального case
 	mClear_sample_number
 	RET
 NoWriteThis
  .else
  .endif
 
-*	LACC 	PressureTop,0
+*	LACC 	_PressureTop,0
 *	SACL	PressureCode
 *	ADD  	#TablePressValue
-*	TBLR 	PressureTop
+*	TBLR 	_PressureTop
 
 	LACC	CurrPressureLevel
 	SACL	PrevPressureLevel
 	ADD	#PRESS_PRESET
-	SACL	PressureTop
+	SACL	_PressureTop
 
-	SPLK 	#START_SHIFT,Mode
-	SPLK	#0,SubroutMode		;для первоначального case
+	SPLK 	#START_SHIFT,_Mode
+	SPLK	#0,_SubroutMode		;для первоначального case
 	mClear_sample_number
 ;проверить питание прибора - если очень низкое, то измерение остановить
 ;#####################################
@@ -122,7 +122,7 @@ NoWriteThis
 *		.word  PRESS_260+PRESS_PRESET-08000h
 
 pStart_Debug_Write
-	LACC    SubroutMode,1
+	LACC    _SubroutMode,1
 	ADD     #Start_Debug_Write_branch
 	BACC
 
@@ -144,7 +144,7 @@ Write_branch0
 	SACL 	Preset1+1
 	SACL 	Preset1+2
 
-	SPLK 	#64,ModeCnt  ;пусть фильтр выровняется
+	SPLK 	#64,_ModeCnt  ;пусть фильтр выровняется
 	RET
 
 Write_branch1
@@ -154,7 +154,7 @@ Write_branch1
 	SendToDAC
 
 	mNext_sub_mode
-	SPLK 	#256,ModeCnt	;усреднение значения с канала
+	SPLK 	#256,_ModeCnt	;усреднение значения с канала
 	RET
 
 Write_branch2
@@ -210,10 +210,10 @@ Write_branch3
 	SPLK 	#3,_MDSPL 	;переходим на уровень давления
 	LACC	StartCode+1
 	BCND	largeTime,NEQ
-	SPLK 	#10500,ModeCnt
+	SPLK 	#10500,_ModeCnt
 	RET
 largeTime:
-	SPLK 	#15000,ModeCnt
+	SPLK 	#15000,_ModeCnt
 	RET
 
 Write_branch4

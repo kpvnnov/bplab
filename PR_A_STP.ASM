@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: PR_A_STP.ASM,v 1.7 2001-10-22 13:38:16 peter Exp $
+; $Id: PR_A_STP.ASM,v 1.8 2001-11-14 17:20:53 peter Exp $
 ;* 	Pressure_augment_stop() - Процесс остановки нагнетания давлени
 ;*	При переключении в этот режим необходимо задать:
 ;*  	1. Время до выключения клапана (ModeCnt = WHITE_VALVE_OFF)!
@@ -14,14 +14,14 @@ Pressure_augment_stop
 ;{
 
         MAR     *,AR2
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
         LAR     AR2,#Signal
         MAR     *0+,AR2
 
 ; switch ( SubroutMode )
 ; {
 
-        LACC    SubroutMode,1
+        LACC    _SubroutMode,1
         ADD     #Pr_a_stp_branch
         BACC
 
@@ -34,9 +34,9 @@ Pr_a_stp_case0
 ;  case 0:
 ;   if ( ModeCnt-- <= 0 )
 
-        LACC    ModeCnt,0
+        LACC    _ModeCnt,0
         SUB     #1
-        SACL    ModeCnt
+        SACL    _ModeCnt
 	BCND    Press_aug_st_is_end,GT
 
 ;   {
@@ -46,17 +46,17 @@ Pr_a_stp_case0
 ;     Valve_off();
 
 	LACC	#0
-	SACL	DimMode
-	SACL    DimModeSampleCounter
-	LACC	MeasurementFlags,0
+	SACL	_DimMode
+	SACL    _DimModeSampleCounter
+	LACC	_MeasurementFlags,0
 	OR	#(1<<DIM_PRESSURE_FLAG)
-	SACL	MeasurementFlags,0
+	SACL	_MeasurementFlags,0
 
 	mValve_off
 
 ;     SubroutMode = 1;
 
-        SPLK    #1,SubroutMode
+        SPLK    #1,_SubroutMode
 
 ;   }
 ;   break;
@@ -69,10 +69,10 @@ Pr_a_stp_case1
 ;    if (((( MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == 0 )&&
 ;       ( SampleNumber > PREDICTION_INTERVAL ))
 
-	LACC	SampleNumber
+	LACC	_SampleNumber
 	SUB	#PREDICTION_INTERVAL
 	BCND	Press_aug_st_is_end,LEQ
-	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BIT	_MeasurementFlags,15-DIM_PRESSURE_FLAG
 	BCND	Press_aug_st_is_end,TC
 
 ;   {
@@ -80,9 +80,9 @@ Pr_a_stp_case1
 ;     Mode = CHECK_HIGHER_SISTOL_PRESSURE;
 
  .if Sertificarion=1
-        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,_Mode
  .else
-        SPLK    #CHECK_HIGHER_SISTOL_PRESSURE,Mode
+        SPLK    #CHECK_HIGHER_SISTOL_PRESSURE,_Mode
  .endif
 
 ;     Completion_of_mode();
@@ -91,29 +91,29 @@ Pr_a_stp_case1
 
 ;     AnalysisInterval = AveragePeriodEvaluation/4;
 
-        LACC    AveragePeriodEvaluation,14
-        SACH    AnalysisInterval,0
+        LACC    _AveragePeriodEvaluation,14
+        SACH    _AnalysisInterval,0
 
 ;     AnalysisStart = AnalysisInterval + DIFF_BASIS*2;
 
-        LACC    AnalysisInterval,15
+        LACC    _AnalysisInterval,15
 	ADD     #DIFF_BASIS*2,15
-        SACH    AnalysisStart,1
+        SACH    _AnalysisStart,1
 
 ;     StartMeasAdress[StepNumber] = SampleNumberShift;
 
 	MAR	*,AR2
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#StartMeasAdress
 	MAR	*0+,AR2
-	LACC	SampleNumberShift
+	LACC	_SampleNumberShift
 	SACL	*,0,AR2
 
 ;     MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG)
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR	#(1<<FIRST_IMPULSE_FLAG)
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 
 ;   }
 ;   break;
@@ -125,7 +125,7 @@ Press_aug_st_is_end:
 
 ; if ( SampleNumber > 2*ONE_SECOND )
 
-	LACC	SampleNumber,0
+	LACC	_SampleNumber,0
 	SUB	#ONE_SECOND*2
 	BCND	Press_aug_st_check_anal_end,LT
 
@@ -140,9 +140,9 @@ Press_aug_st_check_anal_end:
 ; SampleNumber++;
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 
 ;}
 	RET

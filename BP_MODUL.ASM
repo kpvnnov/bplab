@@ -34,8 +34,8 @@ Next_Sample
         SPLK    #0C20h,TCR
         LDP     #4
 
-	LACC	SampleNumber
-	ADD	SampleNumberShift
+	LACC	_SampleNumber
+	ADD	_SampleNumberShift
 	SUB	TmpAddress
 	BCND	Not_tmp_address,NEQ
 	NOP
@@ -46,7 +46,7 @@ Not_tmp_address:
 	RPT	#14
 	DMOV	*-,AR2
         LAR     AR2,#Signal
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
         MAR     *0+,AR2
         IN      *,0,AR2
 	LACC	*,0,AR2
@@ -62,23 +62,23 @@ Not_tmp_address:
 ;
 ;	      }
 ;	  }
-	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BIT	_MeasurementFlags,15-DIM_PRESSURE_FLAG
 	BCND 	Nodim,NTC
 ;;	;;CALL	Pressure_diminition_2
-	LACC	SampleNumberShift
-	ADD	SampleNumber
+	LACC	_SampleNumberShift
+	ADD	_SampleNumber
 	SUB     #8
 	SUB	DimStopAddress
 	BCND 	Nodim,NEQ
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	AND	#(~(1<<DIM_PRESSURE_FLAG))
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
         IN      DimStopAddress,1
 Nodim:
 
         CALL    ADC_value_processing
 
-        LACC    Mode,2
+        LACC    _Mode,2
         ADD     #Mode_branch
         BACC
 

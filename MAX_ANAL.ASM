@@ -1,5 +1,5 @@
 ;&D
-* $Id: MAX_ANAL.ASM,v 1.7 2001-10-22 13:38:16 peter Exp $
+* $Id: MAX_ANAL.ASM,v 1.8 2001-11-14 17:20:53 peter Exp $
 ***********************************************************************
 * 	MaximumAnalysis()  - Анализ предпологаемого импульса
 ***********************************************************************/
@@ -9,15 +9,15 @@ Maximum_analysis:
 ;{
 ; //MeasurementFlags = MeasurementFlags &(~(1<<NEXT_MODE_FLAG));
 
-     ;	LACC	MeasurementFlags
+     ;	LACC	_MeasurementFlags
      ;	AND     #(~(1<<NEXT_MODE_FLAG))
-     ;	SACL    MeasurementFlags
+     ;	SACL    _MeasurementFlags
 
 ; switch ( MaxNumber - StartMaxNumber)
 
 	MAR	*,AR2
-	LACC	MaxNumber,1
-	SUB	StartMaxNumber,1
+	LACC	_MaxNumber,1
+	SUB	_StartMaxNumber,1
 	ADD	#Max_switch
 	BACC
 Max_switch:
@@ -31,13 +31,13 @@ Max_switch_case0:
 ;    if (( MeasurementFlags &(1<<SYNCHRO_FLAG)) != 0 )
 ;    {
 
-	BIT	MeasurementFlags,15-SYNCHRO_FLAG
+	BIT	_MeasurementFlags,15-SYNCHRO_FLAG
 	BCND	Max_case0_not_synchro,NTC
 
 ;      if ( Diff2Max[MaxNumber] > 0.25*LastDiff2Max)
 ;      {
 
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,2,AR2
@@ -55,10 +55,10 @@ Max_switch_case0:
 ;                                 0.33*AveragePeriodEvaluation )
 ;          {
 
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,14
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,14
         ABS
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_33
         SPAC
 	BCND	Max_case0_not_two_intervales,GEQ
@@ -75,10 +75,10 @@ Max_case0_not_two_intervales:
 ;            if (( abs( TempPeriod*4 - AveragePeriodEvaluation )) <
 ;                                 0.33*AveragePeriodEvaluation )
 
-        LACC    TempPeriod,15
-        SUB     AveragePeriodEvaluation,13
+        LACC    _TempPeriod,15
+        SUB     _AveragePeriodEvaluation,13
         ABS
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_33
         SPAC
 	BCND	Max_case0_not_ones_intervale,GEQ
@@ -129,16 +129,16 @@ Max_switch_case1:
 ;    if (( MeasurementFlags &(1<<SYNCHRO_FLAG)) != 0 )
 ;    {
 
-	BIT	MeasurementFlags,15-SYNCHRO_FLAG
+	BIT	_MeasurementFlags,15-SYNCHRO_FLAG
 	BCND	Max_case1_not_synchro,NTC
 
 ;      if (( abs( TempPeriodDiff*4)) < 0.33*AveragePeriodEvaluation)
 ;      {
 
 
-        LACC    TempPeriodDiff,15
+        LACC    _TempPeriodDiff,15
         ABS
-        LT      AveragePeriodEvaluation
+        LT      _AveragePeriodEvaluation
         MPY     #CONST_0_33
         SPAC
 	BCND	Max_case1_bad_intervales,GEQ
@@ -147,13 +147,13 @@ Max_switch_case1:
 ;           ( Diff2Max[MaxNumber-1]+Diff2Max[MaxNumber])/2)
 ;        {
 
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max-1
 	MAR	*0+,AR2
 	LACC	*+,15,AR2
 	ADD	*,15,AR2
 	SACH	TmpAmplitude_2,0
-	LACC    TempAmplitudeDiff,13
+	LACC    _TempAmplitudeDiff,13
 	LT	TmpAmplitude_2
 	MPY	#CONST_0_35
 	SPAC
@@ -179,7 +179,7 @@ Max_switch_case1:
 	BCND	Max_case1_impulse_isnt_equal,GEQ
 
 
-        LAR     AR0,StepNumber
+        LAR     AR0,_StepNumber
         LAR     AR2,#AverageAmplitude
         MAR     *0+,AR3
         LAR     AR3,#AvrPress
@@ -206,9 +206,9 @@ Max_switch_case1:
 ;            MeasurementFlags = MeasurementFlags |(1<<NEXT_MODE_FLAG);
 ;          }
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR      #1<<NEXT_MODE_FLAG
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 	B	Max_end_case1
 
 
@@ -228,9 +228,9 @@ Max_case1_bad_impulse:
 ;        }
 ;      }
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	OR	#(1<<SYNCHRO_FLAG_WAS)
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 	CALL	Synchro_flag_is_reseted
 	B	Max_end_case1
 
@@ -242,9 +242,9 @@ Max_case1_bad_intervales:
 ;      }
 ;    }
 
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#(~(1<<SYNCHRO_FLAG_WAS))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 	CALL	Synchro_flag_is_reseted
 
 Max_end_case1:
@@ -267,7 +267,7 @@ Max_switch_default:
 ;    if (( MeasurementFlags &(1<<SYNCHRO_FLAG)) != 0 )
 ;    {
 
-	BIT	MeasurementFlags,15-SYNCHRO_FLAG
+	BIT	_MeasurementFlags,15-SYNCHRO_FLAG
 	BCND	Max_def_not_synchro,NTC
 
 ;      Average();
@@ -300,7 +300,7 @@ Max_switch_default:
 
 ;     	 /* Средние Амплитуда и Давление на этой ступеньке */
 
-        LAR     AR0,StepNumber
+        LAR     AR0,_StepNumber
         LAR     AR2,#AverageAmplitude
         MAR     *0+,AR3
         LAR     AR3,#AvrPress
@@ -340,9 +340,9 @@ Max_switch_default:
 ;        MeasurementFlags = MeasurementFlags |(1<<NEXT_MODE_FLAG);
 ;      }
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR      #1<<NEXT_MODE_FLAG
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 	B	Max_end_def
 
 Max_def_max_isnt_equal:
@@ -354,9 +354,9 @@ Max_def_max_isnt_equal:
 
 	mArrays_are_shifted
 	CALL	Synchro_flag_is_reseted
-	LACC	StartMaxNumber
+	LACC	_StartMaxNumber
 	ADD 	#1
-	SACL    StartMaxNumber
+	SACL    _StartMaxNumber
 
 ;      }
 ;    }

@@ -1,6 +1,6 @@
 *&D
 * =[ history ]========================================================
-* $Id: HISTORY.ASM,v 1.106 2001-11-13 13:18:38 peter Exp $
+* $Id: HISTORY.ASM,v 1.107 2001-11-14 17:20:52 peter Exp $
 *  ! и √ - испpавлена ошибка
 *       - небольшое изменение
 *      ■ - новая возможность
@@ -1100,7 +1100,7 @@
 * =[ 01-05-26 v0-1-9 ]================================================
 * объявляю переменную
 	.globl	CurrentRevision
-CurrentRevision: .string "$Revision: 1.106 $ $Date: 2001-11-13 13:18:38 $",0
+CurrentRevision: .string "$Revision: 1.107 $ $Date: 2001-11-14 17:20:52 $",0
 * а все остальные строчки будут комментариями ;-)
 * по Usercode8 высылается dump 2048 байта в котором нультерминатор
 * строка CurrentRevision
@@ -1560,3 +1560,80 @@ CurrentRevision: .string "$Revision: 1.106 $ $Date: 2001-11-13 13:18:38 $",0
 * проверка диапазонов переменных
 * =[ 01-11-13 v4-40 ]================================================
 * дописываю ch_range.c
+* =[ 01-11-14 v4-41 ]================================================
+* дописал ch_range.c
+* сам оригинал,который дал Андрей был такой
+* Список переменных и их возможные диапазоны значений
+
+*SampleNumber            >=0, <=TEN_SECOND
+*SampleNumberShift       >=0, <=TWO_MINUTES
+*MaxNumber               >=0, <=32
+*MaxNumberShift          >=0, <=325
+*AnalysisStart           >=0, <=TEN_SECOND
+*AnalysisInterval        >=MIN_ANALYSIS_INTERVAL, <=MAX_ANALYSIS_INTERVAL
+*AveragePeriod           >=MIN_DURATION*16, <=MAX_DURATION*16
+*AveragePeriodEvaluation >MIN_DURATION*4, <=MAX_DURATION*4
+*TempPeriod              >MIN_DURATION/2, <=TEN_SECOND
+*TempPeriodDiff          >=-MAX_DURATION, <=TEN_SECOND-MIN_DURATION/2
+*TempAmplitudeDiff       >=0, <=B10mm*15
+*PulseCounter            >=0, <=150
+
+*MeasurementFlags        >0, < 1024
+
+*StartMaxNumber          >0, <= 32
+*StepNumber              >0, MAX_STEP_NUMBER
+*HigherCount               Можно удалить.
+*PressureTop             >=#LPRESS_40, <=LPRESS_270
+*MaxDiffSignal           any
+*MaxAverageAmplitude     any
+*LastDiff2Max            any
+
+*NewPressure		>=#LPRESS_20, <=LPRESS_280
+*SistolPressure		>=#LPRESS_60, <=LPRESS_280
+*AveragePressure         >=#LPRESS_30, <=LPRESS_260
+*DiastolPressure		>=#LPRESS_30, <=LPRESS_240
+*SistolPressureAmplitude >=B0_1mm, <=B4mm
+*AugmentPressureNumber   >=0, <=3
+*ArtefactCount           Пока не используетс
+
+*Mode                    >=0, <=14
+*ModeCnt			>=0, <=15000 or <=code
+*SubroutMode		>=0, <=5
+
+*DimModeSampleCounter    >=0, <=ONE_SECOND*4
+*DimMode                 >=0, <=5
+*Perror                  <+-PRESS_80
+*Tdimstart               >=0, <=ONE_SECOND*4
+*Preturn                 >=0, <=PRESS_80
+*Pclose                  >=#PRESS_20, <=PRESS_280
+*CodeError               >=0, <=1
+
+*Max2DiffAdress[0]       >=0, <=TWO_MINUTES
+*Max2DiffAdress[1]       >=0, <=TWO_MINUTES
+*Max2DiffAdress[2]       >=0, <=TWO_MINUTES
+*Duration[0]             >=0, <=TEN_SECOND
+*Duration[1]             >=0, <=TEN_SECOND
+*Duration[2]             >=0, <=TEN_SECOND
+
+* Остальное МОЖНО не проверять НА ДИАПАЗОН ЗНАЧЕНИЙ.
+
+*Max                     .usect "bss1",3
+*DTrend                  .usect "bss1",6
+*MaxAvrPress             .usect "bss1",3
+*MinAvrPress             .usect "bss1",3
+
+
+*Diff2Max                .usect "MNArray0",32
+*Diff2MaxAdress          .usect "MNArray0",32
+*Diff2MaxAdressFinish    .usect "MNArray",325
+
+*Signal                  .usect "SigArray",1024        ; 1k
+*DiffSignal              .usect "SigArray",MAX_ANALYSIS_INTERVAL
+
+*MAX_STEP_NUMBER		.equ	48
+*StartMeasAdress         .usect "StepNum",MAX_STEP_NUMBER ;((280-30)/7)+2=40
+*FinishMeasAddress        .usect "StepNum",MAX_STEP_NUMBER
+*AvrPress                .usect "StepNum",MAX_STEP_NUMBER
+*AverageAmplitude        .usect "StepNum",MAX_STEP_NUMBER
+* =[ 01-11-14 v4-42 ]================================================
+* переделал все переменные в С соглашении

@@ -1,7 +1,7 @@
 ;&D
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.28 2001-10-22 13:38:13 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.29 2001-11-14 17:20:51 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -43,7 +43,7 @@ NoPowerDown
 	CALL 	ADCPRO
 ;	if (((MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == ( 1<<DIM_PRESSURE_FLAG ));
 ;          { Pressure_diminition_2(); }
-	BIT	MeasurementFlags,15-DIM_PRESSURE_FLAG
+	BIT	_MeasurementFlags,15-DIM_PRESSURE_FLAG
 	BCND 	NoAdc,NTC
 	CALL	Pressure_diminition_2
 NoAdc:
@@ -265,7 +265,7 @@ CallValueProcessing
 	LACC	TMP
 	MAR     *,AR2
 	LAR     AR2,#Signal
-	LAR     AR0,SampleNumber
+	LAR     AR0,_SampleNumber
 	MAR     *0+,AR2
 	SACL    *,0
 	CALL	ADC_value_processing
@@ -275,7 +275,7 @@ CallValueProcessing
 	SUB	Preset0
 	MAR     *,AR2
 	LAR     AR2,#Signal
-	LAR     AR0,SampleNumber
+	LAR     AR0,_SampleNumber
 	MAR     *0+,AR2
 	SACL    *,0
 	CALL	ADC_value_processing

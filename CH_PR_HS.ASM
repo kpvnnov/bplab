@@ -11,16 +11,16 @@ Check_higher_sistol_pressure:
 ;  if (( MeasurementFlags&(1<<DIFF_MAX_FLAG)) != 0 )
 
 	MAR	*,AR2
-	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
+	BIT	_MeasurementFlags,15-DIFF_MAX_FLAG
 	BCND	Check_hsp_max_isnt,NTC
 ;  {
 ;    //MeasurementFlags = MeasurementFlags &(~(1<<NEXT_MODE_FLAG));
 ;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_SISTOL )
 
-     ;	LACC	MeasurementFlags
+     ;	LACC	_MeasurementFlags
      ;	AND     #(~(1<<NEXT_MODE_FLAG))
-     ;	SACL    MeasurementFlags
-	LAR	AR0,MaxNumber
+     ;	SACL    _MeasurementFlags
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,0,AR2
@@ -40,13 +40,13 @@ Check_higher_sistol_pressure:
 
 ;        if (( MeasurementFlags&(1<<NEXT_MODE_FLAG)) != 0 )
 
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Check_hsp_next_mode_isnt,NTC
 
 ;        {
 ;          if (( MeasurementFlags&(1<<PRESS_MORE_SYSTOL_FLAG)) != 0 )
 
-	BIT	MeasurementFlags,15-PRESS_MORE_SYSTOL_FLAG
+	BIT	_MeasurementFlags,15-PRESS_MORE_SYSTOL_FLAG
 	BCND	Check_hsp_pr_m_s_flag_0,NTC
 
 ;          {
@@ -65,7 +65,7 @@ Check_hsp_pr_m_s_flag_0:
 	LAR	AR2,#Max
 	LACC	*+,11,AR2
 	ADD	*,11,AR2
-	LT	SistolPressureAmplitude
+	LT	_SistolPressureAmplitude
 	MPY	#CONST_0_8
 	SPAC
 	BCND	Check_hsp_check_new_aug,GEQ
@@ -82,7 +82,7 @@ Check_hsp_check_new_aug:
 ;            { // Augment pressure at 30 .
 ;              if ( AugmentPressureNumber < 2 )
 
-	LACC    AugmentPressureNumber,0
+	LACC    _AugmentPressureNumber,0
 	SUB	#2
 	BCND	Check_hsp_start_dim,GEQ
 
@@ -113,8 +113,8 @@ Check_hsp_impulse_high:
 ;        StartMaxNumber = MaxNumber;
 ;        Synchro_flag_is_reseted();
 
-	LACC	MaxNumber,0
-	SACL    StartMaxNumber,0
+	LACC	_MaxNumber,0
+	SACL    _StartMaxNumber,0
 	CALL	Synchro_flag_is_reseted
 
 ;      }
@@ -155,25 +155,25 @@ Next_augment_pressure:
 ;  mZeroToAverageAmplitude();
 ;  Finish_Meas_Address();
 ;}
-	SPLK	#PRESSURE_AUGMENT,Mode
+	SPLK	#PRESSURE_AUGMENT,_Mode
 	SPLK	#0,MaxDiffSignal
 	mMotor_on
-	LAR	AR0,SampleNumber
+	LAR	AR0,_SampleNumber
 	LAR     AR2,#Signal
 	MAR	*0+,AR2
 	LACC	*,0,AR2
 	ADD	#PRESS_30+RESERVE_MILL_OF_MERC
-	SACL	PressureTop
-	LACC	MeasurementFlags
+	SACL	_PressureTop
+	LACC	_MeasurementFlags
 	AND 	#(~(1<<SYNCHRO_FLAG))
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 	CALL	Completion_of_mode
-	LACC	AnalysisInterval,14
+	LACC	_AnalysisInterval,14
 	ADD	#TIME_OF_MAX_PRESSURE,15
-	SACH    AnalysisStart,1
-	LACC    AugmentPressureNumber
+	SACH    _AnalysisStart,1
+	LACC    _AugmentPressureNumber
 	ADD	#1
-	SACL    AugmentPressureNumber
+	SACL    _AugmentPressureNumber
 	mZeroToAverageAmplitude
         CALL	Finish_Meas_Address
 

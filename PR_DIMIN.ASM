@@ -1,6 +1,6 @@
 ;&D
 ;***********************************************************************
-; $Id: PR_DIMIN.ASM,v 1.7 2001-10-22 13:38:17 peter Exp $
+; $Id: PR_DIMIN.ASM,v 1.8 2001-11-14 17:20:53 peter Exp $
 ;*       Pressure_diminution() - Процесс понижения давлени на 8 мм.рт.ст.
 ;*       При переключении в этот режим:
 ;*       1. выключить клапан !
@@ -14,21 +14,21 @@ Pressure_diminution
 ;{
 
         MAR     *,AR2
-        LAR     AR0,SampleNumber
+        LAR     AR0,_SampleNumber
         LAR     AR2,#Signal
         MAR     *0+,AR2
 
 ; switch ( SubroutMode )
 ; {
 
-        LACC    SubroutMode
+        LACC    _SubroutMode
         BCND    Pr_dimin_case1,NEQ
 
 ;  case 0:
 ;    if ( Signal[SampleNumber] < NewPressure )
 
         LACC    *,0,AR2
-        SUB     NewPressure
+        SUB     _NewPressure
         RETC    GEQ
 
 ;    {
@@ -38,11 +38,11 @@ Pressure_diminution
 
 ;            SubroutMode = 1;
 
-        SPLK    #1,SubroutMode
+        SPLK    #1,_SubroutMode
 
 ;            ModeCnt = VALVE_CLOSE;
 
-        SPLK    #VALVE_CLOSE,ModeCnt
+        SPLK    #VALVE_CLOSE,_ModeCnt
 
 ;    }
 ;    break;
@@ -57,9 +57,9 @@ Pr_dimin_case1
 ;  case 1:
 ;    if ( ModeCnt-- <= 0 )
 
-        LACC    ModeCnt,0
+        LACC    _ModeCnt,0
         SUB     #1
-        SACL    ModeCnt
+        SACL    _ModeCnt
 	RETC    GT
 
 ;    {
@@ -69,7 +69,7 @@ Pr_dimin_case1
 
 ;            SubroutMode = 2;
 
-        SPLK    #2,SubroutMode
+        SPLK    #2,_SubroutMode
 
 ;    }
 ;    break;
@@ -90,43 +90,43 @@ Pr_dimin_case2
 ;            Mode = PRESSURE_MEASUREMENT;
 
  .if Sertificarion=1
-        SPLK    #PRESSURE_MEASUREMENT_MANUAL,Mode
+        SPLK    #PRESSURE_MEASUREMENT_MANUAL,_Mode
  .else
-        SPLK    #PRESSURE_MEASUREMENT,Mode
+        SPLK    #PRESSURE_MEASUREMENT,_Mode
  .endif
 
 
 
 ;            SampleNumberShift = SampleNumberShift + SampleNumber+1;
 
-        LACC    SampleNumberShift
-        ADD     SampleNumber
+        LACC    _SampleNumberShift
+        ADD     _SampleNumber
         ADD     #1
-        SACL    SampleNumberShift
+        SACL    _SampleNumberShift
 
 ;            SampleNumber = -1;
 
-        SPLK    #0FFFFh,SampleNumber
+        SPLK    #0FFFFh,_SampleNumber
 
 ;            AnalysisStart = AnalysisInterval + TIME_OUT;
 
-        LACC    AnalysisInterval,15
+        LACC    _AnalysisInterval,15
 	ADD     #TIME_OUT,15
-        SACH    AnalysisStart,1
+        SACH    _AnalysisStart,1
 
 ;	StartMeasAdress[StepNumber] = SampleNumberShift;
 
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#StartMeasAdress
 	MAR	*0+,AR2
-	LACC	SampleNumberShift
+	LACC	_SampleNumberShift
 	SACL	*,0,AR2
 
 ;      MeasurementFlags = MeasurementFlags | (1<<FIRST_IMPULSE_FLAG)
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR	#(1<<FIRST_IMPULSE_FLAG)
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 
 ;    }
 ;    break;

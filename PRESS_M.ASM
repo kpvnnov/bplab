@@ -1,7 +1,7 @@
 ;&D
 ***********************************************************************
 * 	Pressure_measurement() - Процесс измерения давлени
-* $Id: PRESS_M.ASM,v 1.11 2001-11-02 14:51:21 zykov Exp $
+* $Id: PRESS_M.ASM,v 1.12 2001-11-14 17:20:53 peter Exp $
 ***********************************************************************
 ;Pressure_measurement()
 Pressure_measurement:
@@ -10,12 +10,12 @@ Pressure_measurement:
 ;  {
 
 	MAR	*,AR2
-	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
+	BIT	_MeasurementFlags,15-DIFF_MAX_FLAG
 	BCND	Press_m_max_isnt,NTC
 
 ;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_SISTOL)
 ;    {
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,0,AR2
@@ -35,13 +35,13 @@ Pressure_measurement:
 ;        if ( MeasurementFlags &(1<<NEXT_MODE_FLAG) != 0 )
 ;        {
 
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Press_m_end,NTC
 
 ;          if ( MaxAverageAmplitude <= AverageAmplitude[StepNumber])
 ;          {
 
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#AverageAmplitude
 	MAR	*0+,AR2
 	LACC	MaxAverageAmplitude
@@ -58,7 +58,7 @@ Press_m_check_meas_end:
 ;          if (( 0.6*MaxAverageAmplitude > AverageAmplitude[StepNumber])&&
 ;              ( StepNumber > MIN_STEP_NUMBER ))
 
-	LACC	StepNumber
+	LACC	_StepNumber
 	SUB	#MIN_STEP_NUMBER
 	BCND   	Press_m_next_mode,LEQ
 	LACC	*,12,AR2
@@ -93,8 +93,8 @@ Press_m_big_impulse:
 ;        StartMaxNumber = MaxNumber;
 
 	CALL	Synchro_flag_is_reseted
-	LACC	MaxNumber,0
-	SACL	StartMaxNumber,0
+	LACC	_MaxNumber,0
+	SACL	_StartMaxNumber,0
 
 ;      }
 ;    }
@@ -112,15 +112,15 @@ Press_m_max_isnt:
  .if (Sertificarion==1)
 * стоим на ступеньке две секунды
 Pressure_measurement_Manual:
-	LACC	SampleNumber
-	ADD	SampleNumberShift
+	LACC	_SampleNumber
+	ADD	_SampleNumberShift
 	ADD	TimeNakachka
 	SUB     #TWO_MINUTES
 	BCND	End_Sertification_mode_ret,LT
 	mEnd_error_meas rTIME_MORE_2_MINUTES
 
 End_Sertification_mode_ret:
-	LACC	SampleNumber
+	LACC	_SampleNumber
 
   .if (WriteDebug!=0)
 * стоим на ступеньке десять секунд
@@ -132,9 +132,9 @@ End_Sertification_mode_ret:
 	BCND	Pressure_m_manual_quit,LT
 	CALL	Start_diminution_pressure
 Pressure_m_manual_quit:
-	LACC	SampleNumber
+	LACC	_SampleNumber
 	ADD	#1
-	SACL	SampleNumber
+	SACL	_SampleNumber
 	RET
 
  .endif
@@ -185,17 +185,17 @@ Determination_s_a_d
 ;  FinishMeasAddress[StepNumber] = SampleNumberShift + SampleNumber;
 
         MAR     *,AR2
-	LAR	AR0,StepNumber
+	LAR	AR0,_StepNumber
 	LAR	AR2,#FinishMeasAddress
 	MAR	*0+,AR2
-	LACC	SampleNumberShift
+	LACC	_SampleNumberShift
 	SUB	#1
 	SACL	*,0,AR2
 
 ;  // Перемещаем значения амплитуд и соответ. давлений во врем.массив
 ;  TempStepNumber = StepNumber - 1;
 
-	LACC	StepNumber
+	LACC	_StepNumber
 	SUB	#1
 	SACL	TempStepNumber
 
@@ -544,7 +544,7 @@ Deter_sistol
 
 ;    if ( FirstMeasFlag == TRUR )
 
-	BIT	MeasurementFlags,15-FIRST_MEAS_FLAG
+	BIT	_MeasurementFlags,15-FIRST_MEAS_FLAG
 	BCND	Deter_not_FirstMeasFlag,NTC
 
 ;    {
@@ -552,10 +552,10 @@ Deter_sistol
 ;      FirstMeasFlag = FALSE;
 
 	LACC    MaxAverageAmplitude,15
-	SACH    SistolPressureAmplitude,0
-	LACC	MeasurementFlags,0
+	SACH    _SistolPressureAmplitude,0
+	LACC	_MeasurementFlags,0
 	AND	#~(1<<FIRST_MEAS_FLAG)
-	SACL  	MeasurementFlags,0
+	SACL  	_MeasurementFlags,0
 
 ;    }
 
@@ -569,10 +569,10 @@ Deter_not_FirstMeasFlag:
 ;    SistolPressureAmplitude = SistolPressureAmplitude*3/4 +
 ;          		       MaxAverageAmplitude/8;
 
-	LACC	SistolPressureAmplitude,15
-	ADD     SistolPressureAmplitude,14
+	LACC	_SistolPressureAmplitude,15
+	ADD     _SistolPressureAmplitude,14
 	ADD     MaxAverageAmplitude,13
-	SACH    SistolPressureAmplitude,0
+	SACH    _SistolPressureAmplitude,0
 
 ;    }
 ;  }
@@ -748,7 +748,7 @@ Deter_next_mode
 
 ;     Mode = MEASUREMENT_FINISH
 
-	SPLK    #MEASUREMENT_FINISH,Mode
+	SPLK    #MEASUREMENT_FINISH,_Mode
 
 ;}
 

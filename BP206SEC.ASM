@@ -1,22 +1,43 @@
 ;&D
-* $Id: BP206SEC.ASM,v 1.14 2001-10-22 13:38:11 peter Exp $
+* $Id: BP206SEC.ASM,v 1.15 2001-11-14 17:20:51 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
-SampleNumber            .usect "bss1",1
-SampleNumberShift       .usect "bss1",1
-MaxNumber               .usect "bss1",1
-MaxNumberShift          .usect "bss1",1
-AnalysisStart           .usect "bss1",1
-AnalysisInterval        .usect "bss1",1
-AveragePeriod           .usect "bss1",1
-AveragePeriodEvaluation .usect "bss1",1
-TempPeriod              .usect "bss1",1
-TempPeriodDiff          .usect "bss1",1
-TempAmplitudeDiff       .usect "bss1",1
-PulseCounter            .usect "bss1",1
+	.global	_SampleNumber
+	.global	_SampleNumberShift
+	.global	_MaxNumber
+_MaxNumber               .usect "bss1",1
 
-MeasurementFlags        .usect "bss1",1
+	.global _MaxNumberShift
+_MaxNumberShift          .usect "bss1",1
+
+	.global _AnalysisStart
+_AnalysisStart           .usect "bss1",1
+
+	.global	_AnalysisInterval
+_AnalysisInterval        .usect "bss1",1
+
+	.global	_AveragePeriod
+_AveragePeriod           .usect "bss1",1
+
+	.global	_AveragePeriodEvaluation
+_AveragePeriodEvaluation .usect "bss1",1
+
+	.global	_TempPeriod
+_TempPeriod              .usect "bss1",1
+
+	.global	_TempPeriodDiff
+_TempPeriodDiff          .usect "bss1",1
+
+	.global	_TempAmplitudeDiff
+_TempAmplitudeDiff       .usect "bss1",1
+
+	.global	_PulseCounter
+_PulseCounter            .usect "bss1",1
+
+	.global	_MeasurementFlags
+_MeasurementFlags        .usect "bss1",1
+
 DIFF_MAX_FLAG           .equ	0
 FIRST_IMPULSE_FLAG      .equ	1
 SYNCHRO_FLAG		.equ	2
@@ -28,44 +49,62 @@ PRESS_MORE_SYSTOL_FLAG  .equ	7
 DIM_PRESSURE_FLAG       .equ	8
 BAD_SYNCHRO_FLAG .equ	9
 
-StartMaxNumber          .usect "bss1",1
-StepNumber              .usect "bss1",1
+	.global	_StartMaxNumber
+_StartMaxNumber          .usect "bss1",1
+
+	.global	_StepNumber
+_StepNumber              .usect "bss1",1
 HigherCount             .usect "bss1",1
-PressureTop             .usect "bss1",1
+
+	.global	_PressureTop
+_PressureTop             .usect "bss1",1
 MaxDiffSignal           .usect "bss1",1
 MaxAverageAmplitude     .usect "bss1",1
 LastDiff2Max            .usect "bss1",1
-
-NewPressure		.usect "bss1",1
+	.global	_NewPressure
 SistolPressure		.usect "bss1",1
 AveragePressure         .usect "bss1",1
 DiastolPressure		.usect "bss1",1
-SistolPressureAmplitude .usect "bss1",1
-AugmentPressureNumber   .usect "bss1",1
+	.global	_SistolPressureAmplitude
+_SistolPressureAmplitude .usect "bss1",1
+	.global	_AugmentPressureNumber
+_AugmentPressureNumber   .usect "bss1",1
 ArtefactCount           .usect "bss1",1
 
-Mode                    .usect "bss1",1
-ModeCnt			.usect "bss1",1
-SubroutMode		.usect "bss1",1
+	.global	_Mode
+_Mode                    .usect "bss1",1
+	.global	_ModeCnt
+_ModeCnt			.usect "bss1",1
+	.global	_SubroutMode
+_SubroutMode		.usect "bss1",1
 
-Max2DiffAdress          .usect "bss1",3
-Duration                .usect "bss1",3
+	.global	_Max2DiffAdress
+_Max2DiffAdress          .usect "bss1",3
+	.global	_Duration
+_Duration                .usect "bss1",3
 Max                     .usect "bss1",3
 DTrend                  .usect "bss1",6
 MaxAvrPress             .usect "bss1",3
 MinAvrPress             .usect "bss1",3
 
-DimModeSampleCounter  	.usect "bss1",1
-DimMode               	.usect "bss1",1
+	.global	_DimModeSampleCounter
+_DimModeSampleCounter  	.usect "bss1",1
+	.global	_DimMode
+_DimMode               	.usect "bss1",1
 ;Pline0                	.usect "bss1",1
 ;Pline1                	.usect "bss1",1
-Perror                	.usect "bss1",1
+	.global	_Perror
+_Perror                	.usect "bss1",1
 ;Tclosing              	.usect "bss1",1
 ;Tedge                 	.usect "bss1",1
-Tdimstart             	.usect "bss1",1
-Preturn             	.usect "bss1",1
-Pclose             	.usect "bss1",1
-CodeError               .usect "bss1",1
+	.global	_Tdimstart
+_Tdimstart             	.usect "bss1",1
+	.global	_Preturn
+_Preturn             	.usect "bss1",1
+	.global	_Pclose
+_Pclose             	.usect "bss1",1
+	.global	_CodeError
+_CodeError               .usect "bss1",1
 
 	.if ( SIM == 1 )
 TmpAddress              .usect "bss1",1

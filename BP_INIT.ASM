@@ -31,11 +31,11 @@ INIT    SETC INTM               ;запрет прерываний
 
 ;      FirstMeasFlag = TRUE;
 
-	SPLK	#B0_5mm*2,SistolPressureAmplitude
-	LACC	MeasurementFlags,0
+	SPLK	#B0_5mm*2,_SistolPressureAmplitude
+	LACC	_MeasurementFlags,0
 	OR	#(1<<FIRST_MEAS_FLAG)
-	SACL  	MeasurementFlags,0
+	SACL  	_MeasurementFlags,0
 
-	SPLK	#PULSE_FREQ_EVALUATION_40,Mode
+	SPLK	#PULSE_FREQ_EVALUATION_40,_Mode
 
 	LAR	AR1,#0800h

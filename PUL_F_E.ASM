@@ -1,5 +1,5 @@
 ;&D
-* $Id: PUL_F_E.ASM,v 1.10 2001-10-24 12:05:46 zykov Exp $
+* $Id: PUL_F_E.ASM,v 1.11 2001-11-14 17:20:53 peter Exp $
 ;/***********************************************************
 ;*   Measurement_initialization
 ;***********************************************************/
@@ -110,8 +110,8 @@ Pulse_frequency_evaluation:
 
 ; switch ( MaxNumber - StartMaxNumber )
 
-	LACC	MaxNumber,0
-	SUB	StartMaxNumber,0
+	LACC	_MaxNumber,0
+	SUB	_StartMaxNumber,0
 	BCND    Pulse_MN_01,EQ
 	SUB	#1
 	BCND	Pulse_check_MN_2,NEQ
@@ -139,14 +139,14 @@ Pulse_check_MN_2:
 ;       FlagsWord = 0;
 ;       FlagsWord2 = 0;
 
-	LACC    MeasurementFlags
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 	LACL    #0
-        SACL	CodeError,0
+        SACL	_CodeError,0
 	SACL    FlagsWord,0
 	SACL    FlagsWord2,0
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max-1
 	MAR	*0+,AR2
 ;
@@ -241,9 +241,9 @@ Pulse_3_comparison_end:
 	SACL	FlagsWord,0
 	B	Pulse_4_comparison_end
 Pulse_4_comparison_bad:
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#(~(1<<SYNCHRO_FLAG_WAS))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 Pulse_4_comparison_end:
 
 ;       if ( MeasurementFlags & (1<<SYNCHRO_FLAG_WAS))
@@ -253,16 +253,16 @@ Pulse_4_comparison_end:
 ;            FlagsWord = FlagsWord |(1<<SYNCHRONIZATION_IS);
 ;       }
 
-	BIT	MeasurementFlags,15-SYNCHRO_FLAG_WAS
+	BIT	_MeasurementFlags,15-SYNCHRO_FLAG_WAS
 	BCND    Pulse_41_comparison_end,NTC
 	LAR	AR2,#Diff2MaxAdress
 	MAR	*0+,AR2
 	LACC    *-,15,AR2
 	MAR	*-,AR2
 	SUB	*-,15,AR2
-	SUB	AveragePeriodEvaluation,14
+	SUB	_AveragePeriodEvaluation,14
 	ABS
-	LT  	AveragePeriodEvaluation
+	LT  	_AveragePeriodEvaluation
 	MPY	#CONST_0_249
 	SPAC
 	BCND	Pulse_41_comparison_end,GEQ
@@ -290,9 +290,9 @@ Pulse_41_comparison_end:
 	LACC	FlagsWord,0
 	OR	#1<<INTERVALE_IS_MORE_MAX
 	SACL	FlagsWord,0
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#(~(1<<SYNCHRO_FLAG_WAS))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 Pulse_5_comparison_end:
 	MAR	*+,AR2
 	LACC	*-,0,AR2                ; Diff2MaxAdress[MaxNumber]
@@ -302,9 +302,9 @@ Pulse_5_comparison_end:
 	LACC	FlagsWord,0
 	OR	#1<<INTERVALE_IS_MORE_MAX
 	SACL	FlagsWord,0
-	LACC	MeasurementFlags,0
+	LACC	_MeasurementFlags,0
 	AND	#(~(1<<SYNCHRO_FLAG_WAS))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 Pulse_6_comparison_end:
 ;
 ;       if ( Diff2Max[MaxNumber-1] > Diff2Max[MaxNumber-2])
@@ -450,7 +450,7 @@ Pulse_flags_word2_switch1_04:
 ;      		    case 0x03:      // Impulse 1<2, 2<3, 1>3.impossible event
 ;      		    case 0x04:      // Impulse 1>2, 2>3, 1<3.impossible event
 ;      		    	 CodeError = SW_FLAGS_WORD2_ERROR;
-	SPLK	#SW_FLAGS_WORD2_ERROR,CodeError
+	SPLK	#SW_FLAGS_WORD2_ERROR,_CodeError
 	B	Pulse_poin_to_oper_switch
 
 ;      		  }
@@ -800,7 +800,7 @@ Pulse_flags_word_switch_def_if:
 Pulse_poin_to_oper_switch:
 ;       if ( CodeError == 0 )
 ;       {
-	LACC	CodeError,0
+	LACC	_CodeError,0
 	BCND	Pulse_quit,NEQ
 
 ;         switch ( PointerToOperation )
@@ -833,15 +833,15 @@ Pulse_ALL_IMPULSE_IS_GOOD:
 	LACC	*-,1,AR2
 	MAR	*-,AR2
 	SUB	*,1,AR2
-	SACL	AveragePeriodEvaluation,0
+	SACL	_AveragePeriodEvaluation,0
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,0,AR2
 	SACL	LastDiff2Max,0
 	mIncrement_max_number
-	LACC    MeasurementFlags
+	LACC    _MeasurementFlags
 	OR	#(1<<SYNCHRO_FLAG)
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 	B	Pulse_quit
 
 Pulse_FIRST_IMPULSE_IS_BAD:
@@ -885,7 +885,7 @@ Pulse_SECOND_IMPULSE_IS_BAD:
 	MAR	*0+,AR2
 	LACC	*-,0,AR2
 	SACL    *,0,AR2
-	LAR	AR2,#Max2DiffAdress
+	LAR	AR2,#_Max2DiffAdress
 	DMOV	*,AR2
 	LAR	AR2,#MaxAvrPress
 	DMOV	*,AR2
@@ -905,10 +905,10 @@ Pulse_FIRST_IMPULSE_IS_GOOD:
 ;                 MaxAvrPress[1] = MaxAvrPress[2];
 ;                 MinAvrPress[1] = MinAvrPress[2];
 ;                 break;
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	SUB	#1
-	SACL    MaxNumber
-	LAR	AR2,#Max2DiffAdress+2
+	SACL    _MaxNumber
+	LAR	AR2,#_Max2DiffAdress+2
 	LACC	*-,0,AR2
 	SACL	*,0,AR2
 	LAR	AR2,#MaxAvrPress+2
@@ -933,9 +933,9 @@ Pulse_SECOND_IMPULSE_IS_GOOD:
 	MAR	*0+,AR2
 	LACC	*-,0,AR2
 	SACL    *,0,AR2
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	SUB	#1
-	SACL    MaxNumber
+	SACL    _MaxNumber
 	B	Pulse_quit
 
 Pulse_THIRD_IMPULSE_IS_GOOD:
@@ -957,10 +957,10 @@ Pulse_THIRD_IMPULSE_IS_GOOD:
 	LACC	*-,0,AR2
 	MAR	*-,AR2
 	SACL    *,0,AR2
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	SUB	#1
-	SACL    MaxNumber
-	LAR	AR2,#Max2DiffAdress
+	SACL    _MaxNumber
+	LAR	AR2,#_Max2DiffAdress
 	DMOV	*,AR2
 	LAR	AR2,#MaxAvrPress
 	DMOV	*,AR2
@@ -972,9 +972,9 @@ Pulse_ALL_IMPULSE_IS_BAD:
 ;           case  ALL_IMPULSE_IS_BAD:     		// all is bad
 ;                 MaxNumber = MaxNumber - 2;
 ;                 break;
-	LACC    MaxNumber
+	LACC    _MaxNumber
 	SUB	#2
-	SACL    MaxNumber
+	SACL    _MaxNumber
 	B	Pulse_quit
 ;          }
 ;       }
@@ -986,10 +986,10 @@ Pulse_code_error:
 ;       MeasurementFlags = MeasurementFlags &
 ;                       (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)));
 ;       CodeError=PUL_F_E_CODE_ERROR;
-	LACC    MeasurementFlags
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
-	SACL	MeasurementFlags
-        SPLK	#PUL_F_E_CODE_ERROR,CodeError
+	SACL	_MeasurementFlags
+        SPLK	#PUL_F_E_CODE_ERROR,_CodeError
 	B	Pulse_quit
 
 ;    }// End switch( MaxNumber - StartMaxNumber )
@@ -1021,7 +1021,7 @@ Pulse_frequency_evaluation_40_80:
 ;  if ( MaxNumber <= 2 )
 ;  {
 
-	LACC    MaxNumber,0
+	LACC    _MaxNumber,0
 	SUB	#2
 	BCND	Pulse_40_80_MN_more_2,GT
 
@@ -1036,14 +1036,14 @@ Pulse_frequency_evaluation_40_80:
 ;      AnalysisStart = SampleNumber + AnalysisInterval/2;
 ;    }
 ;  }
-	BIT	MeasurementFlags,15-SYNCHRO_FLAG
+	BIT	_MeasurementFlags,15-SYNCHRO_FLAG
 	BCND	Pulse_40_80_quit,NTC
-	LACC	AveragePeriodEvaluation,12
-	ADD     AveragePeriodEvaluation,14
-	SACH    AnalysisInterval,0
-	LACC    AnalysisInterval,15
-	ADD     SampleNumber,16
-	SACH    AnalysisStart,0
+	LACC	_AveragePeriodEvaluation,12
+	ADD     _AveragePeriodEvaluation,14
+	SACH    _AnalysisInterval,0
+	LACC    _AnalysisInterval,15
+	ADD     _SampleNumber,16
+	SACH    _AnalysisStart,0
 	B	Pulse_40_80_quit
 
 Pulse_40_80_MN_more_2:
@@ -1051,9 +1051,9 @@ Pulse_40_80_MN_more_2:
 ;  {
 ;    if (( abs( TempPeriodDiff*4 )) < 0.33*AveragePeriodEvaluation)
 
-	LACC	TempPeriodDiff,15
+	LACC	_TempPeriodDiff,15
 	ABS
-	LT	AveragePeriodEvaluation
+	LT	_AveragePeriodEvaluation
 	MPY	#CONST_0_33
 	SPAC
 	BCND	Pulse_40_80_temp_period_more_2,GT
@@ -1063,13 +1063,13 @@ Pulse_40_80_MN_more_2:
 ;         ( Diff2Max[MaxNumber-1]+Diff2Max[MaxNumber])/2)
 
 	MAR	*,AR2
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max-1
 	MAR	*0+,AR2
 	LACC	*+,15,AR2
 	ADD	*,15,AR2
 	SACH	TmpAmplitude_2,0
-	LACC    TempAmplitudeDiff,13
+	LACC    _TempAmplitudeDiff,13
 	LT	TmpAmplitude_2
 	MPY	#CONST_0_499
 	SPAC
@@ -1084,14 +1084,14 @@ Pulse_40_80_MN_more_2:
 ;      }
 ;    }
 
-	LACC	AveragePeriodEvaluation,2
-	SACL	AveragePeriod
+	LACC	_AveragePeriodEvaluation,2
+	SACL	_AveragePeriod
 	CALL   	Average
 	mIncrement_max_number
-	LACC    MeasurementFlags,0
+	LACC    _MeasurementFlags,0
 	OR	#1<<NEXT_MODE_FLAG
         AND     #(~(1<<BAD_SYNCHRO_FLAG))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 	B	Pulse_40_80_quit
 
 Pulse_40_80_temp_period_more_2:
@@ -1100,10 +1100,10 @@ Pulse_40_80_temp_period_more_2:
 ;      if (( abs( TempPeriod*4 - 2*AveragePeriodEvaluation)) <
 ;         	 0.33*AveragePeriodEvaluation)
 
-	LACC    TempPeriod,15
-	SUB     AveragePeriodEvaluation,14
+	LACC    _TempPeriod,15
+	SUB     _AveragePeriodEvaluation,14
 	ABS
-	LT      AveragePeriodEvaluation
+	LT      _AveragePeriodEvaluation
 	MPY	#CONST_0_33
 	SPAC
 	BCND	Pulse_40_80_bad_period,GT
@@ -1113,13 +1113,13 @@ Pulse_40_80_temp_period_more_2:
 ;           ( Diff2Max[MaxNumber-1]+Diff2Max[MaxNumber])/2)
 
 	MAR	*,AR2
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max-1
 	MAR	*0+,AR2
 	LACC	*+,15,AR2
 	ADD	*,15,AR2
 	SACH	TmpAmplitude_2,0
-	LACC    TempAmplitudeDiff,13
+	LACC    _TempAmplitudeDiff,13
 	LT	TmpAmplitude_2
 	MPY	#CONST_0_499
 	SPAC
@@ -1129,8 +1129,8 @@ Pulse_40_80_temp_period_more_2:
 ;          AveragePeriod=AveragePeriodEvaluation*4;
 ;          Average_2();
 
-	LACC	AveragePeriodEvaluation,2
-	SACL	AveragePeriod
+	LACC	_AveragePeriodEvaluation,2
+	SACL	_AveragePeriod
 	CALL   	Average_2
 
 ;          if ( MeasurementFlags&(1<<BAD_SYNCHRO_FLAG) != 0 );
@@ -1144,13 +1144,13 @@ Pulse_40_80_temp_period_more_2:
 ;            MaxNumber = 2;
 ;          }
 
-	BIT	MeasurementFlags,15-BAD_SYNCHRO_FLAG
+	BIT	_MeasurementFlags,15-BAD_SYNCHRO_FLAG
 	BCND    Pulse_40_80_bad_synchro_1,NTC
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	AND     #(~((1<<BAD_SYNCHRO_FLAG)|(1<<SYNCHRO_FLAG)))
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 	MAR	*,AR2
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2MaxAdress-1
 	LAR	AR3,#Diff2MaxAdress
 	MAR	*0+,AR2
@@ -1165,7 +1165,7 @@ Pulse_40_80_temp_period_more_2:
 	SACL	*+,AR2
 	LACL	*,AR3
 	SACL	*,AR2
-	SPLK	#2,MaxNumber
+	SPLK	#2,_MaxNumber
 	B	Pulse_40_80_quit
 
 Pulse_40_80_bad_synchro_1:
@@ -1176,9 +1176,9 @@ Pulse_40_80_bad_synchro_1:
 ;          }
 ;        }
 
-	LACC	MeasurementFlags
+	LACC	_MeasurementFlags
 	OR      #(1<<BAD_SYNCHRO_FLAG)
-	SACL    MeasurementFlags
+	SACL    _MeasurementFlags
 	mIncrement_max_number
 	B	Pulse_40_80_quit
 
@@ -1198,10 +1198,10 @@ Pulse_40_80_bad_period:
 ;          (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)|(1<<BAD_SYNCHRO_FLAG)));
 ;      }
 
-	SPLK	#0,MaxNumber
-	LACC    MeasurementFlags
+	SPLK	#0,_MaxNumber
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)|(1<<BAD_SYNCHRO_FLAG)))
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 	B	Pulse_40_80_quit
 
 ;    }
@@ -1233,28 +1233,28 @@ Pulse_f_e_next_mode:
 
 	SPLK	#0,MaxDiffSignal
 	mMotor_on
-	SPLK	#PRESSURE_AUGMENT,Mode
+	SPLK	#PRESSURE_AUGMENT,_Mode
 	CALL	Completion_of_mode
 
 ;     PulseCounter = 0;
 ;     AugmentPressureNumber = 0;
 
 	LACL	#0
-	SACL    PulseCounter,0
-	SACL    AugmentPressureNumber,0
+	SACL    _PulseCounter,0
+	SACL    _AugmentPressureNumber,0
 
 ;     MeasurementFlags = MeasurementFlags &
 ;     (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)|(1<<PRESS_MORE_SYSTOL_FLAG)));
 
-	LACC    MeasurementFlags,0
+	LACC    _MeasurementFlags,0
 	AND     #~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)|(1<<PRESS_MORE_SYSTOL_FLAG))
-	SACL    MeasurementFlags,0
+	SACL    _MeasurementFlags,0
 
 ;     AnalysisStart = TIME_OF_MAX_PRESSURE + 0,5*AnalysisInterval;
 
-	LACC	AnalysisInterval,14
+	LACC	_AnalysisInterval,14
 	ADD	#TIME_OF_MAX_PRESSURE,15
-	SACH	AnalysisStart,1
+	SACH	_AnalysisStart,1
 
 ;     mZeroToAverageAmplitude();
 ;     Finish_Meas_Address();
@@ -1278,14 +1278,14 @@ Pulse_frequency_evaluation_40:
 ;{
 ;  if (( MeasurementFlags&(1<<DIFF_MAX_FLAG)) != 0 )
 
-	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
+	BIT	_MeasurementFlags,15-DIFF_MAX_FLAG
         BCND    Pulse_f_e_40_quit,NTC
 
 ;  {
 ;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_40MM )  // > 0.1 мм.рт.ст
 
 	MAR	*,AR2
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,0
@@ -1306,7 +1306,7 @@ Pulse_frequency_evaluation_40:
 ;        }
 
 	CALL	Pulse_frequency_evaluation_40_80
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Pulse_f_e_40_quit,NTC
 	CALL	Pulse_f_e_next_mode
 	B	Pulse_f_e_40_quit
@@ -1320,10 +1320,10 @@ Pulse_f_e_40_implse_more_max:
 ;          MeasurementFlags = MeasurementFlags &
 ;                          (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)));
 
-	SPLK	#0,MaxNumber
-	LACC    MeasurementFlags
+	SPLK	#0,_MaxNumber
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 
 ;      }
 ;    }
@@ -1332,12 +1332,12 @@ Pulse_f_e_40_implse_more_max:
 Pulse_f_e_40_quit:
 ;  if (( MeasurementFlags&(1<<NEXT_MODE_FLAG)) == 0 )
 
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Pulse_f_e_40_next_mode_is,TC
 ;  {
 ;    if ( SampleNumber > TEN_SECOND )
 
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	SUB     #TEN_SECOND
 	BCND    Pulse_f_e_40_sn_less_10,LEQ
 
@@ -1348,7 +1348,7 @@ Pulse_f_e_40_quit:
 ;      mZeroToAverageAmplitude();
 ;      Finish_Meas_Address();
 
-	SPLK 	#PRESSURE_AUGMENT_80,Mode
+	SPLK 	#PRESSURE_AUGMENT_80,_Mode
 	CALL	Synchro_flag_is_reseted
 	CALL	Completion_of_mode
 	mZeroToAverageAmplitude
@@ -1363,9 +1363,9 @@ Pulse_f_e_40_next_mode_is:
 ;  SampleNumber++;
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 
 	RET
 ;}
@@ -1379,14 +1379,14 @@ Pulse_frequency_evaluation_80:
 ;{
 ;  if (( MeasurementFlags&(1<<DIFF_MAX_FLAG)) != 0 )
 
-	BIT	MeasurementFlags,15-DIFF_MAX_FLAG
+	BIT	_MeasurementFlags,15-DIFF_MAX_FLAG
         BCND    Pulse_f_e_80_quit,NTC
 
 ;  {
 ;    if ( Diff2Max[MaxNumber] > MIN_THRESHOLD_40MM )  // > 0.1 мм.рт.ст
 
 	MAR	*,AR2
-	LAR	AR0,MaxNumber
+	LAR	AR0,_MaxNumber
 	LAR	AR2,#Diff2Max
 	MAR	*0+,AR2
 	LACC	*,0
@@ -1407,7 +1407,7 @@ Pulse_frequency_evaluation_80:
 ;        }
 
 	CALL	Pulse_frequency_evaluation_40_80
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Pulse_f_e_80_quit,NTC
 	CALL	Pulse_f_e_next_mode
 	B	Pulse_f_e_80_quit
@@ -1421,10 +1421,10 @@ Pulse_f_e_80_implse_more_max:
 ;          MeasurementFlags = MeasurementFlags &
 ;                          (~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)));
 
-	SPLK	#0,MaxNumber
-	LACC    MeasurementFlags
+	SPLK	#0,_MaxNumber
+	LACC    _MeasurementFlags
 	AND	#(~((1<<SYNCHRO_FLAG)|(1<<NEXT_MODE_FLAG)))
-	SACL	MeasurementFlags
+	SACL	_MeasurementFlags
 
 ;      }
 ;    }
@@ -1433,12 +1433,12 @@ Pulse_f_e_80_implse_more_max:
 Pulse_f_e_80_quit:
 ;  if (( MeasurementFlags&(1<<NEXT_MODE_FLAG)) == 0 )
 
-	BIT	MeasurementFlags,15-NEXT_MODE_FLAG
+	BIT	_MeasurementFlags,15-NEXT_MODE_FLAG
 	BCND	Pulse_f_e_80_next_mode_is,TC
 ;  {
 ;    if ( SampleNumber > TEN_SECOND )
 
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	SUB     #TEN_SECOND
 	BCND    Pulse_f_e_80_sn_less_10,LEQ
 
@@ -1462,8 +1462,8 @@ Pulse_f_e_80_next_mode_is:
 ;  SampleNumber++;
 
 	CALL	Analysis_of_end
-	LACC    SampleNumber,0
+	LACC    _SampleNumber,0
 	ADD	#1
-	SACL    SampleNumber,0
+	SACL    _SampleNumber,0
 	RET
 ;}

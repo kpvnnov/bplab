@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2001-11-13 13:18:39 peter Exp $
+# $Id: Makefile,v 1.7 2001-11-14 17:20:53 peter Exp $
 
 AC=asmtms\dspa.exe
 CC=asmtms\dspcl.exe
@@ -23,7 +23,7 @@ all: bp_noekg bp_debug bpnekgs bpnekgsd bp_ekg bpekgd bp_ekg_s bpekgsd
 bp_noekg: bp206vec.asm bp_noekg.asm bp_main.c $(INPROGRAM) ch_range.obj
  $(AC) bp206vec.asm $(ASMOPT) $(BPNOEKG)
  $(AC) bp_noekg.asm $(ASMOPT) $(BPNOEKG)
- $(CC) bp_main $(CCOPT)  -z bp_noekg.obj -o bp_noekg.out -m bp_noekg.map -l lib\rts2xx.lib bp206.cmd
+ $(CC) bp_main $(CCOPT)  -z bp_noekg.obj ch_range.obj -o bp_noekg.out -m bp_noekg.map -l lib\rts2xx.lib bp206.cmd
 
 bp_debug: bp206vec.asm bp_debug.asm bp_main.c $(INPROGRAM)
  $(AC) bp206vec.asm $(ASMOPT) $(BPNOEKGD)
@@ -45,10 +45,10 @@ bpnekgsd: bp206vec.asm bpnekgsd.asm bp_main.c $(INPROGRAM)
  $(AC) bpnekgsd.asm $(ASMOPT) $(BPNOEKGSD)
  $(CC) bp_main $(CCOPT)  -z bpnekgsd.obj -o bpnekgsd.out -m bpnekgsd.map -l lib\rts2xx.lib bp206.cmd
 
-bp_ekg: bp206vec.asm bp_ekg.asm bp_main.c $(INPROGRAM)
+bp_ekg: bp206vec.asm bp_ekg.asm bp_main.c $(INPROGRAM) ch_range.obj
  $(AC) bp206vec.asm $(ASMOPT) $(BPEKG)
  $(AC) bp_ekg.asm   $(ASMOPT) $(BPEKG)
- $(CC) bp_main $(CCOPT)  -z bp_ekg.obj -o bp_ekg.out -m bp_ekg.map -l lib\rts2xx.lib bp206.cmd
+ $(CC) bp_main $(CCOPT)  -z bp_ekg.obj ch_range.obj -o bp_ekg.out -m bp_ekg.map -l lib\rts2xx.lib bp206.cmd
 
 bpekgd: bp206vec.asm bpekgd.asm bp_main.c $(INPROGRAM)
  $(AC) bp206vec.asm $(ASMOPT) $(BPEKGD)
@@ -82,8 +82,8 @@ flashprg\sutils4.obj: flashprg\sutils4.asm
   $(AC) flashprg\sutils4.asm $(ASMOPT)
 
 ch_range.obj: ch_range.c 
- $(CC) ch_range   -k -ss $(CCOPT)
-#  
+ $(CC) ch_range  $(CCOPT) -ss
+#  -ss
 # можно добавить ключ -k - keep .asm file
 main: bp_main.c
  $(CC) bp_main $(CCOPT) -ss
