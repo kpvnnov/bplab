@@ -1,4 +1,4 @@
-* $Id: ANAL_END.ASM,v 1.9 2001-08-22 14:17:35 peter Exp $
+* $Id: ANAL_END.ASM,v 1.10 2001-08-23 14:23:41 peter Exp $
 ;Analysis_of_end()
  .if WriteDebug!=0
 
@@ -25,8 +25,22 @@ Analysis_of_end:
  .if NotCheck280mm=1
 	B	Anal_end_anal_time
  .else
-	LACL	CurrPressure
-	SUB	#PRESS_140,1
+	MAR  	*,AR2
+	LAR	AR2,#MayModify+1
+	LACC	*
+	SUB	#0A5h		;взрослый режим
+	BCND	Over280Stop,EQ
+;работает детский режим
+
+        LACL	CurrPressure
+	SUB	#PRESS_95,1		;*2=190
+	BCND	Anal_end_anal_time,LEQ
+	SPLK	#LPRESS_170,NewPressure
+	B	GotoMotorOff
+
+Over280Stop:
+        LACL	CurrPressure
+	SUB	#PRESS_140,1		;*2=280
 	BCND	Anal_end_anal_time,LEQ
  .endif
 
@@ -34,6 +48,7 @@ Analysis_of_end:
 ;     NewPressure = PRESS_275_MILL_OF_MERC;
 
 	SPLK	#PRESS_275_MILL_OF_MER,NewPressure
+GotoMotorOff:
 	SPLK 	#PRESSURE_DIMINUTION,Mode
 	mMotor_off
 	mDim_pressure_init
