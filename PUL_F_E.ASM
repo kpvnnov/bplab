@@ -1,4 +1,4 @@
-* $Id: PUL_F_E.ASM,v 1.6 2001-02-15 14:10:40 peter Exp $
+* $Id: PUL_F_E.ASM,v 1.7 2001-04-26 13:54:26 zykov Exp $
 ; /* При инициализации процесса измерения */
 ; MaxNumber = 0;                                   // Номер максимума.
 ; MaxNumberShift = 0;                              // Номер максимума.
@@ -65,9 +65,9 @@ Pulse_frequency_evaluation
 	BCND    Pulse_f_MaxMoreTh_Anal,LT
 
 ;     {
-;       ThresholdOfMax = MAX_THRESHOLD_SISTOL-MIN_THRESHOLD_40MM;
+;       ThresholdOfMax = MAX_THRESHOLD_SISTOL;
 
-	SPLK	#MAX_THRESHOLD_40MM-MIN_THRESHOLD_40MM,ThresholdOfMax
+	SPLK	#MAX_THRESHOLD_SISTOL,ThresholdOfMax
 
 ;     }
 ;   if ( Diff2Max[MaxNumber] < ThresholdOfMax )  // < 4 мм.рт.ст
