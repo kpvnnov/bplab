@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPAVRPRG.ASM,v 1.16 2001-11-23 15:37:37 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.17 2002-01-30 13:43:59 peter Exp $
  .copy bpavrprg.mac
 
 	.globl	_clk_xf_avr
@@ -299,17 +299,51 @@ ChetReaded:
 	XOR	#0FFh
 	BCND	NextByte,EQ
 
+	BIT 	Flags,15-WriteEEPROM ;пишем EEPROM ?
+        BCND	IsProgramMemory,NTC
+*┌──────────────┬────────────────┬──────────┬──────────┬──────────┐
+*│Write EEPROM  │      1100 0000 │xxxx aaaa │bbbb bbbb │iiii iiii │
+*│   Memory     ├────────────────┴──────────┴──────────┴──────────┤
+*├──────────────┘                                                 │
+*│ H = 0 - Low byte, 1 - High byte                                │
+*│ a = address high bits                                          │
+*│ b = address low  bits                                          │
+*│ i = data in                                                    │
+*└────────────────────────────────────────────────────────────────┘
+	LACC	*,8,AR1		;выделяем старшую часть адреса
+	SACH	*,0,AR1		;сохраняем ее в стеке
+	OR	#0C000H		;добавляем код команды
+        B	IsEEPROM
+IsProgramMemory:
 	LACC	*,7,AR1		;выделяем старшую часть адреса
 	SACH	*,0,AR7		;сохраняем ее в стеке
+
 	LACC	*,11,AR1	;выделяем младший бит (Hig/Low byte)
 	AND	#00800H
 	OR	#04000H		;добавляем код команды
+IsEEPROM:
 	OR	*		;добавляем страшую часть адреса из стека
 	SACL	*		;сохраняем все в стеке
 	OUT  	*,SDTR,AR7	;отправляем в SPI
 
+	BIT 	Flags,15-WriteEEPROM ;пишем EEPROM ?
+        BCND	IsProgramLowAddress,NTC
+*┌──────────────┬────────────────┬──────────┬──────────┬──────────┐
+*│Write EEPROM  │      1100 0000 │xxxx aaaa │bbbb bbbb │iiii iiii │
+*│   Memory     ├────────────────┴──────────┴──────────┴──────────┤
+*├──────────────┘                                                 │
+*│ H = 0 - Low byte, 1 - High byte                                │
+*│ a = address high bits                                          │
+*│ b = address low  bits                                          │
+*│ i = data in                                                    │
+*└────────────────────────────────────────────────────────────────┘
+	LACC	*+,8		;выделяем младшую часть адреса
+				;переключаемся на данные
+        B	IsEEPROMLowAddress
+IsProgramLowAddress:
 	LACC	*+,7		;выделяем младшую часть адреса
 				;переключаемся на данные
+IsEEPROMLowAddress:
 	AND	#0FF00h
 	OR	*,AR1		;к младшей части адреса добавляем данные
 	SACL	*		;сохраняем ее в стеке
@@ -384,6 +418,12 @@ NextByte:
 	LACC	*
 	ADD	#1
 	SACL	*
+	BIT 	Flags,15-WriteEEPROM ;пишем EEPROM ?
+        BCND	IsIncAddressPM,NTC
+	SUB	#2048
+	BCND    ProgrammNext,LT	;если не достигнут последний адрес
+        B	QPrgAVROK
+IsIncAddressPM:
 	SUB	#4096
 	BCND    ProgrammNext,LT	;если не достигнут последний адрес
 QPrgAVROK:

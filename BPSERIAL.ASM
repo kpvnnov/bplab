@@ -1,6 +1,6 @@
 ;&D
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.31 2001-12-24 15:32:38 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.32 2002-01-30 13:43:59 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -444,7 +444,7 @@ CountRecNotOver
 
 	LACC 	WhatDoingReceve,0
 	BCND	ReceveWork_error,LT
-	SUB	#RecUserCode11
+	SUB	#RecUserCode12
 	BCND	ReceveWork_0,LEQ
 ReceveWork_error:
 	SPLK	#0,WhatDoingReceve     ;?????????????????????
@@ -559,6 +559,9 @@ RecUserCode10	.set 17
 ********************************
 RecUserCode11	.set 18
       B		ReceveUserCode11
+********************************
+RecUserCode12	.set 19
+      B		ReceveUserCode12
 
 CommandReceve
 	LAR  	AR2,#DATART   	;загружаем указатель на буфер приема-передачи
@@ -1633,7 +1636,7 @@ CommAndUserData
 	LACC 	*
         AND	#0FFh
         SACL	*
-	SUB  	#11     ;пока обрабатываем всего одинадцать команд
+	SUB  	#12     ;пока обрабатываем всего двенадцать команд
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
 	LACC 	*,1        ;код команды Branch из двух слов состоит
 	BCND	ERRCOMM,EQ
@@ -1654,6 +1657,8 @@ UserCode:
 	B UserCode9	;чтение версии прошивки TMS и другая служебная инфо
         B UserCode10    ;закрываем память программы AVR
         B UserCode11    ;чтение версии прошивки AVR и другая служебная инфо
+        B UserCode12    ;Переписать область flash памяти
+			;данных в память EEPROM AVR
 ;если добавляем команды, то вверх несколько строчек в команде SUB #NN
 ;стоит ограничитель обрабатываемых комманд, его тоже подпарвить необходимо
 ;он равен числу обрабатываемых комманд
@@ -1941,6 +1946,11 @@ OutBufferUserCode5
 	LACC	*
 	XOR	#MagicPass
 	BCND	PassFail,NEQ
+
+	LACC	Flags			;пишем ProgramMemory ?
+	AND	#~(1<<WriteEEPROM)
+	SACL	Flags
+
 	CALL    Program_AVR
 	MAR	*,AR2
 	LAR  	AR2,#DATART+2
@@ -2228,6 +2238,66 @@ ReceveUserCode11:	;он как бы и не нужен, но для проформы стоит
 	SACH 	*+
 	SPLK 	#0808h,CNTASPTR     ;в буфере 2048+4+4 символов
 	B 	SendBackC
+UserCode12:
+ .if AVRProcessor=1		;с AVR
+	SPLK #RecUserCode12,WhatDoingReceve
+	LAR  AR2,#DATART+4
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
+	B RETASPINT ;возрат из прерывания
+ReceveUserCode12:
+	LAR  AR2,PosTransmit
+	LACC ByteReceve,0  ;в акумулятор загружаем принятый байт
+	SACL *+              ;сдвигаем буфер на единичку
+	SAR  AR2,PosTransmit ;чтобы сразу запоминать данные приема
+
+	LACC PosTransmit
+	SUB  #DATART
+	SUB  #4+4      ;четыре код комманды + CRC
+	BCND OutBufferUserCode12,GEQ ;остаток от вычитания больше или равен 0
+	;принимаем пока следующий байт (еще не все приняли)
+	B RETASPINT ;возрат из прерывания
+
+OutBufferUserCode12:
+	SPLK #0FFFFh,CRC ;надо посчитать контрольную сумму
+	DMOV CRC
+*        LAR  AR2,#DATART+4
+*        LAR  AR0,#2047     ;2048 байт данных
+*        CLRC SXM
+*        CALL CRCCALC
+	LAR  AR2,#DATART+4 ;по этому смещению находится CRC
+	LACC *+
+	ADD  *+,8
+	XOR  CRC
+	BCND OUTFF,NEQ
+	LACC *+
+	ADD  *+,8
+	XOR  CRC+1
+	BCND OUTFF,NEQ
+
+	MAR  	*,AR2
+	LAR  	AR2,#MayModify
+	LACC	*
+	XOR	#MagicPass
+	BCND	PassFail,NEQ
+
+	LACC	Flags			;пишем ProgramMemory ?
+	OR	#(1<<WriteEEPROM)
+	SACL	Flags
+
+	CALL    Program_AVR
+	MAR	*,AR2
+	LAR  	AR2,#DATART+2
+
+	SACL 	*
+	DMOV 	*
+ .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
+ .else
+	Beep
+ .endif
+ .else
+ReceveUserCode12:
+ .endif 		;AVRProcessor
+	B SendBack
 
 
 CODD	;считывание данных из AVR
