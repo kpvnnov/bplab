@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.22 2001-05-22 11:21:42 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.23 2001-05-22 12:42:50 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -543,6 +543,9 @@ RecUserCode7	.set 14
 ********************************
 RecUserCode8	.set 15
       B		ReceveUserCode8
+********************************
+RecUserCode9	.set 16
+      B		ReceveUserCode9
 
 CommandReceve
 	LAR  	AR1,#DATART   	;загружаем указатель на буфер приема-передачи
@@ -1604,7 +1607,7 @@ CommAndUserData
 	;в DATART+2(мл) и DATART+3(ст) находится номер команды
 	LAR  AR1,#DATART+2
 	LACC 	*
-	SUB  	#8         ;пока обрабатываем всего восемь команды
+	SUB  	#9         ;пока обрабатываем всего девять команд
 	BCND ERRCOMM,GT ;вышли за предел обрабатываемых комманд?
 	LACC 	*,1        ;код команды Branch из двух слов состоит
 	BCND	ERRCOMM,EQ
@@ -1622,6 +1625,7 @@ UserCode:
 	B UserCode6	;стереть данные в памяти программ AVR
 	B UserCode7	;запустить тестовый режим часов
 	B UserCode8	;считать аварийный код процессора
+	B UserCode9	;чтение версии прошивки TMS и другая служебная инфо
 ;если добавляем команды, то вверх несколько строчек в команде SUB #NN
 ;стоит ограничитель обрабатываемых комманд, его тоже подпарвить необходимо
 ;он равен числу обрабатываемых комманд
@@ -2043,6 +2047,51 @@ ReceveUserCode8:	;он как бы и не нужен, но для проформы стоит
 	LACC	*
 	LAR	AR1,#DATART+4
 	SACL	*
+
+	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
+	DMOV 	CRC
+	LAR  	AR1,#DATART+4
+	LAR  	AR0,#07FFh
+	MAR	*,AR1
+	CALL 	CRCCALC
+	LACC 	CRC
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC,8
+	SACH 	*+
+	LACC 	CRC+1
+	AND  	#0FFh
+	SACL 	*+
+	LACC 	CRC+1,8
+	SACH 	*+
+	SPLK 	#0808h,CNTASPTR     ;в буфере 2048+4+4 символов
+	B 	SendBackC
+
+UserCode9:
+ReceveUserCode9:	;он как бы и не нужен, но для проформы стоит
+
+        MAR	*,AR1
+	LAR  	AR1,#DATART+4  	;Считывание номера версии и даты
+				;для передачи в компьютер
+	LACC 	#CurrentRevision
+
+ReadAgainRevision:
+        TBLR 	CRC		;CRC используем как промежуточную ячейку
+        SACL	CRC+1
+	LACC	CRC,8
+        SACH	*
+        LACC	*+
+        AND	#0FFH
+        BCND	RevisionReaded,EQ
+        LACC	CRC
+        SACL	*+
+        AND	#0FFH
+        BCND	RevisionReaded,EQ
+        LACC	CRC+1
+        ADD	#1
+        B	ReadAgainRevision
+
+RevisionReaded:
 
 	SPLK 	#0FFFFh,CRC    ; Подсчет контрольной суммы
 	DMOV 	CRC
