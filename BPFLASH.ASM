@@ -1,4 +1,4 @@
-* $Id: BPFLASH.ASM,v 1.12 2001-02-23 09:48:23 peter Exp $
+* $Id: BPFLASH.ASM,v 1.13 2001-04-26 15:44:23 peter Exp $
 ****отладка
 WriteEnd
 *	BIT     Jobs,7			;пишем во флеш ?
@@ -80,8 +80,14 @@ Yes_It_Is:
 	LAR  	AR1,#TimeOfBeginMeas
 
 	LACC	*
+        AND	#03Fh
+        BIT	Jobs,15-Manual_Meas
+        BCND	ItIsNotManualMeas,NTC
+        OR	#040H		;ставим бит ручного 
+ItIsNotManualMeas:
 	SACL 	TMP
 	CALL 	FLPROG     ;количество секунд записали
+        mManual_MeasOff		;сбрасываем бит ручного измерения
 
 	MAR  	*,AR1      	;modify auxiliary register
 				;данная команда из подмножества LARP 1

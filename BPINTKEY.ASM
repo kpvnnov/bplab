@@ -1,6 +1,6 @@
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.13 2001-02-23 09:48:23 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.14 2001-04-26 15:44:23 peter Exp $
 *****************************************************************************
 *
 
@@ -90,7 +90,8 @@ KEY112   SPLK 	#0h,MDSPL
 	mEnd_error_meas rCancelByUser
 	RET
 
-KEY10
+KEY10:
+	mManual_MeasOn
 	BIT 	Flags,0
 	BCND    MognoIzmerat,NTC
 	SPLK	#rPowerLow,DispErrMeas

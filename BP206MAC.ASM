@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.16 2001-03-20 16:07:19 peter Exp $
+* $Id: BP206MAC.ASM,v 1.17 2001-04-26 15:44:23 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -64,6 +64,25 @@ EndADC .macro
 	AND   #~(1<<CallADCPRO_Flag)  	;надо заканчивать измерять
 	SACL Jobs
  .endm
+
+*******************************
+*включение флага ручного измерения
+*******************************
+mManual_MeasOn .macro
+	LACC Jobs
+	OR   #(1<<Manual_Meas)  
+
+	SACL Jobs
+ .endm
+*******************************
+*выключение флага ручного измерения
+*******************************
+mManual_MeasOff .macro
+	LACC Jobs
+	AND   #~(1<<Manual_Meas) 
+	SACL Jobs
+ .endm
+
 
 *******************************
 *начинаем процесс измерения
