@@ -1,6 +1,6 @@
 *&D
 * =[ history ]========================================================
-* $Id: HISTORY.ASM,v 1.127 2002-08-21 08:44:24 peter Exp $
+* $Id: HISTORY.ASM,v 1.128 2002-09-02 11:58:36 peter Exp $
 *  ! и √ - испpавлена ошибка
 *       - небольшое изменение
 *      ■ - новая возможность
@@ -140,13 +140,13 @@
 *    Revision: 2.1,  1/31/98
 *    Changes20: Re-written to include latest flash algorithms.
 *    Changes21: Cleaned up source for release to mass market.
-*	    Removed redundant call/ret to XOR_erase
-*	    routine. Changed variable names from B2_ to
-*	    BASE_ since they're not necessarily stored in
-*	    B2 RAM. Removed imr modifications. Merged
-*	    inc_erase sub-routine into erase routine.
-*	    Referenced constant ENDADDR for address
-*	    complementing. Added more comments.
+*       Removed redundant call/ret to XOR_erase
+*       routine. Changed variable names from B2_ to
+*       BASE_ since they're not necessarily stored in
+*       B2 RAM. Removed imr modifications. Merged
+*       inc_erase sub-routine into erase routine.
+*       Referenced constant ENDADDR for address
+*       complementing. Added more comments.
 *
 *  SFLW4    ASM
 *    FLASH-WRITE subroutine
@@ -154,14 +154,14 @@
 *     Revision: 2.0,  9/10/97
 *     Revision: 2.1,  1/31/98
 *    Changes20: Added to the flash utilities for re-covery of
-*	       over-erased units.
+*          over-erased units.
 *    Changes21: Increased the maximum number of pulses from
-*	       3000 to 10000, to allow recovery of units that
-*	       have been severely over-erased because
-*	       operator error. Changed variable names from
-*	       B2_ to BASE_. Removed extra branch at top of
-*	       FLWS. Remove imr modification. Replaced calls
-*	       to CLR_CMND subroutine with SET_MODE.
+*          3000 to 10000, to allow recovery of units that
+*          have been severely over-erased because
+*          operator error. Changed variable names from
+*          B2_ to BASE_. Removed extra branch at top of
+*          FLWS. Remove imr modification. Replaced calls
+*          to CLR_CMND subroutine with SET_MODE.
 *
 *  SPGM4    ASM
 *    PROGRAM Subroutine
@@ -173,17 +173,17 @@
 *
 *     Changes20: Re-written to include latest flash algorithms.
 *     Changes20b: Changed conditional branch on line 185 near
-*	  row-done label from GEQ to GT, to prevent
-*	  skipping of last address on sections that end
-*	  with a mult of 32d address (020h,040h,etc.)
+*     row-done label from GEQ to GT, to prevent
+*     skipping of last address on sections that end
+*     with a mult of 32d address (020h,040h,etc.)
 *     Changes21: Cleaned up source for release to mass market.
-*	  Replaced the manual 2s-comp in adj_row with
-*	  neg instruction. Removed extra branch at top
-*	  of GPGMJ. Created PRG_BYTE subroutine for use
-*	  on both high and low bytes. Changed variable
-*	  names from B2_ to BASE_ since they're not
-*	  necessarily stored in B2 RAM. Added more
-*	  comments.
+*     Replaced the manual 2s-comp in adj_row with
+*     neg instruction. Removed extra branch at top
+*     of GPGMJ. Created PRG_BYTE subroutine for use
+*     on both high and low bytes. Changed variable
+*     names from B2_ to BASE_ since they're not
+*     necessarily stored in B2 RAM. Added more
+*     comments.
 *
 *  SUTILS4  ASM
 *   Delay And Access Mode Subroutines
@@ -202,9 +202,9 @@
 *       PROGRAM algorithms written for F2xx devices.
 *       Function : DELAY - Delay loop specified by AR7.
 *       REGS  - Clears MODE bit of F_ACCESS0/1 to
-*	 access flash module control registers.
+*    access flash module control registers.
 *       ARRAY - Sets MODE bit of F_ACCESS0/1 to access
-*	 the flash array.
+*    the flash array.
 *  SVAR5    H
 *    Variable declaration file
 *
@@ -286,7 +286,7 @@
 *
 *  TREND    ASM
 *   Trend_measurement_1() - Процесс измерения Trend-a
-*		     и амплитуд пульсаций.
+*            и амплитуд пульсаций.
 *
 * =[ 23.06.00 v0.0.1 ]================================================
 *
@@ -318,7 +318,7 @@
 *   работоспособность (правки писать не буду, слишком много)
 * √ 0x1f0000-0x1fffff добавить стерку и этого адреса
 *   (bserial.asm вариант для последовательной флеш)
-*  добавлен дефайнер SerialProg 	.set 1
+*  добавлен дефайнер SerialProg    .set 1
 *   метод программирования по последовательному порту
 *   1 - процедуры включены
 *   0 - процедуры выключены
@@ -326,7 +326,7 @@
 * √ для последовательной флеш минимум 20 ms для "стабилизации"
 *   bp_init. уже есть задержка при очистки памяти, но вроде не хватает
 *  добавлен дефайнер для отладки bp206.asm
-*   DebugSerial	.set 0
+*   DebugSerial .set 0
 *   в сериальном порту включается блок отладки, в котором
 *   порт после принятия символа A начинает выдавать 58h
 *   1 вкл 0 выкл
@@ -348,8 +348,8 @@
 *    - защелкивает данные по заднему фронту
 *    - действия совершает по переднему фронту (загрузка данных)
 *    цикл, который был до недавнего времени "забит"
-*    CLRC 	XF
-*    SETC 	XF
+*    CLRC   XF
+*    SETC   XF
 *    при этом SPI самостоятельно (SETC XF это делал) выходил из режима
 *    передачи.
 *
@@ -380,7 +380,7 @@
 *   в ней делаю правку 099 ошибки
 * =[ 01-01-16 v0-0-8-2 ]===============================================
 *   * если проводим измерение и очень низкий уровень давления
-*    mEnd_error_meas rMEASURMENT_ON_LOW	заменил на 088
+*    mEnd_error_meas rMEASURMENT_ON_LOW заменил на 088
 * =[ 01-01-16 v0-0-9 ]================================================
 *   слил ветку v0-0-8-2 с основной
 * =[ 01-01-16 v0-0-9-1 ]================================================
@@ -466,25 +466,25 @@
 *   открываю новую ветку, для добавления детского режима
 * =[ 01-02-18 v0-0-20-1 ]================================================
 *   надо в параметры программирования прибора добавить
-*   - Возраст (лет)	1	Беззнаковое целое число
+*   - Возраст (лет) 1   Беззнаковое целое число
 *   Менее 14  лет - считается ребенком
-*   - Порог изменения результатов измерения	1
+*   - Порог изменения результатов измерения 1
 *   Величина относительного изменения (в процентах) одного из измеренных
 *   значений давления или ЧСС по сравнению с усредненной величиной за 4
 *   предыдущих измерения, при превышении которой проводится повторное измерение
-*   - Максимальное давление в манжете	1
+*   - Максимальное давление в манжете   1
 *   Величина давления в манжете, которую нельзя превышать для данного пациента,
 *   значение соответствует истинному минус 48 (мм.рт.ст.)
 *   Рекомендуемые значения:
 *   Для детей - (190 - 48)
-*   Для взрослых (290 - 48) [2001-01-29]	Диапазон от 48 до 300
-*   - Детский/взрослый	1
+*   Для взрослых (290 - 48) [2001-01-29]    Диапазон от 48 до 300
+*   - Детский/взрослый  1
 *   5Ah - детский
 *   A5h - взрослый [2001-01-29]
-*   - Подтверждение режима Детский/взрослый	1
+*   - Подтверждение режима Детский/взрослый 1
 *   FFh - не подтвержден
 *   5Ah - детский
-*   A5h - взрослый [2001-01-29]	Поле устанавливается прибором
+*   A5h - взрослый [2001-01-29] Поле устанавливается прибором
 * =[ 01-02-18 v0-0-20-2 ]================================================
 *   привел в соответствие ТУ на прибор(bp005-6) с внутренними структурами данных
 *   касательно параметров программирования прибора
@@ -569,8 +569,8 @@
 *  сливаю с основным стволом версию v0-0-21-2-3-0 по v0-0-21-2-3-5 включительно
 * =[ 01-03-20 v0-0-25 ]================================================
 *  когда алгоритм пытается мерить на слишком низком уровне давления
-*  rMEASURMENT_ON_LOW	.set	046
-*	.word	09400h+094	;46 - фальш режим - не обнаружена диастола
+*  rMEASURMENT_ON_LOW   .set    046
+*   .word   09400h+094  ;46 - фальш режим - не обнаружена диастола
 *  данную ошибку вынес в раздел для причины сделать повторное измерение
 *
 *
@@ -589,8 +589,8 @@
 *  открываю ветку v0-0-27-0 чтобы написать обмен с флеш, больше чем 2Mbyte
 * =[ 01-03-26 v0-0-27-1 ]================================================
 *  написал версию, чтобы видела вторую половинку в четырех мегабайтной флеш
-*  .if Mem=20		;одна микросхема на 2 Mbyte
-*  .elseif Mem=40	;одна микросхема на 4 Mbyte
+*  .if Mem=20       ;одна микросхема на 2 Mbyte
+*  .elseif Mem=40   ;одна микросхема на 4 Mbyte
 *  ошибку, связанную с незаполнение таблицы результатов при переполнении флеш
 *  пока не нашел
 * =[ 01-03-26 v0-0-27-2 ]================================================
@@ -720,8 +720,8 @@
 *
 * =[ 01-05-26 v0-1-9 ]================================================
 * объявляю переменную
-	.globl	CurrentRevision
-CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
+    .globl  CurrentRevision
+CurrentRevision: .string "$Revision: 1.128 $ $Date: 2002-09-02 11:58:36 $",0
 * а все остальные строчки будут комментариями ;-)
 * по Usercode8 высылается dump 2048 байта в котором нультерминатор
 * строка CurrentRevision
@@ -942,7 +942,7 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * ну а include - он и в африке include
 * (на другом компе отказался работать - imho в батнике у меня забит на моем компе)
 * выяснили, что порты в C для 2xx обзываются так:
-* #define	portSDTR	portFFF0
+* #define   portSDTR    portFFF0
 * volatile ioport unsigned portSDTR;
 * и потом работаешь с переменной как с портом (четние/запись - чтение/присваивание)
 * =[ 01-10-02 v4-13-5 ]================================================
@@ -977,9 +977,9 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * //проверка инициализации времени (установки при программировании)
 * unsigned short check_time()
 * {
-* //	MAR	*,AR7
-* //	LAR	AR7,#_WATCH+2
-* //	CALL	CheckTime
+* //    MAR *,AR7
+* //    LAR AR7,#_WATCH+2
+* //    CALL    CheckTime
 * }
 * если будет прямой вызов этой процедурры не ЗАБЫВАТЬ про LDPK
 * =[ 01-10-10 v4-13-11 ]================================================
@@ -1011,7 +1011,7 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * =[ 01-10-11 v4-13-18 ]================================================
 * установлена "синхронизация" окончания измерения на 115
 * если не удается получить данные с AVR, то выдаем код
-* rAVR_SPI_BAD			.set 02  (07000h+070)
+* rAVR_SPI_BAD          .set 02  (07000h+070)
 
 
 
@@ -1026,11 +1026,11 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * при обработке кода дополнительной комманды (по ком-порту)
 * происходило распространение знака(?)
 * ввел маскирование
-*	LAR  AR2,#DATART+2
-*	LACC 	*
-*       AND	#0FFh
-*       SACL	*
-*	SUB  	#10     ;пока обрабатываем всего девять команд
+*   LAR  AR2,#DATART+2
+*   LACC    *
+*       AND #0FFh
+*       SACL    *
+*   SUB     #10     ;пока обрабатываем всего девять команд
 * =[ 01-09-24 v4-17 ]================================================
 * В "сертификационном" режиме при отладочной прошивке стоим
 * на ступеньке десть секунд
@@ -1039,17 +1039,17 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 *  .if (WriteDebug!=0)
 * стоим на ступеньке десять секунд
 *Pressure_measurement_Manual:
-*	LACC	SampleNumber
-*	SUB     #TEN_SECOND
-*	RETC	LT
-*	B	Press_m_next_mode
+*   LACC    SampleNumber
+*   SUB     #TEN_SECOND
+*   RETC    LT
+*   B   Press_m_next_mode
 *  .else
 * стоим на ступеньке две секунды
 *Pressure_measurement_Manual:
-*	LACC	SampleNumber
-*	SUB     #TWO_SECOND
-*	RETC	LT
-*	B	Press_m_next_mode
+*   LACC    SampleNumber
+*   SUB     #TWO_SECOND
+*   RETC    LT
+*   B   Press_m_next_mode
 *  .endif
 * .endif
 * =[ 01-09-26 v4-18 ]================================================
@@ -1058,12 +1058,12 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * bp_display.asm
 *SecondChannel:
 * .if Sertificarion==0
-*	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+*   LAR AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
 * .else
-*  .if (WriteDebug!=0) 	;в отладочной версии показываем аварийный датчик
-*	LAR	AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
-*  .else 		;иначе показываем основное давление
-*        LAR	AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
+*  .if (WriteDebug!=0)  ;в отладочной версии показываем аварийный датчик
+*   LAR AR6,#_ResultADC+9;AIN9 (аварийный) значение на выходе датчика
+*  .else        ;иначе показываем основное давление
+*        LAR    AR6,#_ResultADC+6;AIN6 (PR0) значение на выходе датчика
 *  .endif
 * .endif
 * =[ 01-10-08 v4-19 ]================================================
@@ -1119,8 +1119,8 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * bp_main.c - неправильное использование указателей на массив памяти (исправил)
 * =[ 01-10-16 v4-23-3 ]================================================
 * imr,ifr находятся в адресном пространстве памяти
-* #define portIMR		(*(volatile unsigned short *)0x0004)
-* #define portIFR		(*(volatile unsigned short *)0x0006)
+* #define portIMR       (*(volatile unsigned short *)0x0004)
+* #define portIFR       (*(volatile unsigned short *)0x0006)
 * =[ 01-10-16 v4-23-4 ]================================================
 * не спим если:
 * - идет вывод ошибки
@@ -1229,17 +1229,17 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 *MaxAverageAmplitude     any
 *LastDiff2Max            any
 
-*NewPressure		>=#LPRESS_20, <=LPRESS_280
-*SistolPressure		>=#LPRESS_60, <=LPRESS_280
+*NewPressure        >=#LPRESS_20, <=LPRESS_280
+*SistolPressure     >=#LPRESS_60, <=LPRESS_280
 *AveragePressure         >=#LPRESS_30, <=LPRESS_260
-*DiastolPressure		>=#LPRESS_30, <=LPRESS_240
+*DiastolPressure        >=#LPRESS_30, <=LPRESS_240
 *SistolPressureAmplitude >=B0_1mm, <=B4mm
 *AugmentPressureNumber   >=0, <=3
 *ArtefactCount           Пока не используетс
 
 *Mode                    >=0, <=14
-*ModeCnt			>=0, <=15000 or <=code
-*SubroutMode		>=0, <=5
+*ModeCnt            >=0, <=15000 or <=code
+*SubroutMode        >=0, <=5
 
 *DimModeSampleCounter    >=0, <=ONE_SECOND*4
 *DimMode                 >=0, <=5
@@ -1271,7 +1271,7 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 *Signal                  .usect "SigArray",1024        ; 1k
 *DiffSignal              .usect "SigArray",MAX_ANALYSIS_INTERVAL
 
-*MAX_STEP_NUMBER		.equ	48
+*MAX_STEP_NUMBER        .equ    48
 *StartMeasAdress         .usect "StepNum",MAX_STEP_NUMBER ;((280-30)/7)+2=40
 *FinishMeasAddress        .usect "StepNum",MAX_STEP_NUMBER
 *AvrPress                .usect "StepNum",MAX_STEP_NUMBER
@@ -1303,10 +1303,10 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * =[ 01-11-15 v4-46-4 ]================================================
 * "посыпались" ошибки
 * инициализируем _Pclose
-*  SPLK	#PRESS_20,_Pclose
-*  SPLK	#TEN_SECOND,_TempPeriod
-*  SPLK	#MAX_DURATION*4,AveragePeriod
-*  SPLK	#MAX_DURATION*4,AveragePeriodEvaluation
+*  SPLK #PRESS_20,_Pclose
+*  SPLK #TEN_SECOND,_TempPeriod
+*  SPLK #MAX_DURATION*4,AveragePeriod
+*  SPLK #MAX_DURATION*4,AveragePeriodEvaluation
 * =[ 01-11-15 v4-46-5 ]================================================
 * _Pclose выходит за предел - будем разбираться 
 * =[ 01-11-16 v4-46-6 ]================================================
@@ -1325,7 +1325,7 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * =[ 01-11-23 v4-47 ]================================================
 * сливаю ветку v4-46-0 (по v4-46-10)
 * убираю только проверку переменных из таймерного прерывания
-* в bp_noekg.asm DebugStop	.set  	0
+* в bp_noekg.asm DebugStop  .set    0
 
 * =[ 01-11-28 v4-48 ]================================================
 * сливаю v4-45-0 по v4-45-1 включительно
@@ -1391,10 +1391,10 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * получилось:
 *;КИХ фильтр 28 порядка, для канала ЭКГ. 15.04.2002.
 *CF_EKG:.word  -209, -133,  254, 481,   -9, -709
-*	.word  -376,  960, 1292,-701,-2722, -579
-*	.word  6319,12754,12754,6319, -579,-2722
-*	.word  -701, 1292,  960,-376, -709,   -9
-*	.word   481,  254, -133,-209
+*   .word  -376,  960, 1292,-701,-2722, -579
+*   .word  6319,12754,12754,6319, -579,-2722
+*   .word  -701, 1292,  960,-376, -709,   -9
+*   .word   481,  254, -133,-209
 * начал пробовать прописывать 4x4 = 8Mb флеш, дописать процедуру записи/чтения
 * =[ 02-04-23 v4-56 ]================================================
 * написал для EKG 4x4
@@ -1416,12 +1416,12 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 *        -186         -18
 *;Коэффициенты ФНЧ (Remez) 32-го порядка
 *CF_EKG:
-*	.word   -18,  -186, -305,  -112,  325, 403
-*	.word  -219,  -793, -229,  1084, 1147,-951
-*	.word -2722,  -339, 6412, 12529,12529,6412
-*	.word  -339, -2722, -951,  1147, 1084,-229
-*	.word  -793,  -219,  403,   325, -112,-305
-*	.word  -186,   -18
+*   .word   -18,  -186, -305,  -112,  325, 403
+*   .word  -219,  -793, -229,  1084, 1147,-951
+*   .word -2722,  -339, 6412, 12529,12529,6412
+*   .word  -339, -2722, -951,  1147, 1084,-229
+*   .word  -793,  -219,  403,   325, -112,-305
+*   .word  -186,   -18
 * в соответствии с письмом КЕ от 10 апреля 2002 года 14:22
 *исправил сигнатуру (смещение ЭКГ и давления)
 * =[ 02-04-26 v4-60 ]================================================
@@ -1435,3 +1435,5 @@ CurrentRevision: .string "$Revision: 1.127 $ $Date: 2002-08-21 08:44:24 $",0
 * версия для сертификации - качает только до 160
 * =[ 02-08-21 v4-64 ]================================================
 * свел номер на правильный (как в документации на ветке 1.123)
+* =[ 02-09-02 v4-65 ]================================================
+* проверка автоматического оповещения bplab
