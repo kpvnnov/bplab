@@ -1,5 +1,5 @@
 ;&D
-* $Id: BPFLASH.ASM,v 1.23 2002-04-23 17:31:00 peter Exp $
+* $Id: BPFLASH.ASM,v 1.24 2002-05-28 11:47:44 peter Exp $
 ****отладка
 WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
@@ -1060,19 +1060,25 @@ BeginPrgAlgor	.set	$
 	SPLK    #0ff00h,PROTECT
 	SPLK    #00000h,SEG_ST
 	SPLK    #03FFFh,SEG_END
+	CALL	_erase
+
+	SPLK    #0ff00h,PROTECT
+	SPLK    #04000h,SEG_ST
+	SPLK    #07FFFh,SEG_END
+	CALL	_erase
+	B	program_flash
 ***********First clear flash ************
+_erase:
 ers_loop:
         MAR	*,AR1
 	LACK	0
 	SACL	*+
 	LACK	0
 	SACL	*+
-	CALL	_display_persent1
+        call	_display_persent1
 	SBRK	2
-	CALL	MODIFSB1
-	LDP     #4		;у нас другая страница памяти :)
-	CALL	DISPL_REFRESH,*,AR1
-	LDP     #SEG_PARMS
+
+        LDP     #SEG_PARMS
 
 	CALL    GCLR            ;Clear flash.
 	LACL    ERROR           ;Check for CLEAR/ERASE error
@@ -1086,9 +1092,6 @@ ers_loop:
 	SACL	*+
 	CALL	_display_persent1
 	SBRK	2
-	CALL	MODIFSB1
-	LDP     #4		;у нас другая страница памяти :)
-	CALL	DISPL_REFRESH,*,AR1
 	LDP     #SEG_PARMS
 
 	CALL    GERS            ;Erase flash.
@@ -1104,9 +1107,6 @@ depletion:
 	SACL	*+
 	CALL	_display_persent1
 	SBRK	2
-	CALL	MODIFSB1
-	LDP     #4		;у нас другая страница памяти :)
-	CALL	DISPL_REFRESH,*,AR1
 	LDP     #SEG_PARMS
 
 
@@ -1122,6 +1122,7 @@ depletion:
 
 
 ers_done:
+	RET
 *******************************************************************
 ** If here then flash is erased and ready to be reprogrammed.    **
 ** This is a good place in the example to set a breakpoint so    **
@@ -1133,6 +1134,7 @@ ers_done:
 ** the data to be programmed. To simulate this in the example,   **
 ** three SARAM locations are initialized.                        **
 *******************************************************************
+program_flash:
 	LDP     #4		;у нас другая страница памяти :)
 	LAR	AR2,#0		;начальный адрес программирования
 
@@ -1154,9 +1156,6 @@ Save_Next_Block
 	SACL	*+
 	CALL	_display_persent1
 	SBRK	2
-	CALL	MODIFSB1
-	LDP     #4		;у нас другая страница памяти :)
-	CALL	DISPL_REFRESH,*,AR1
         MAR	*-,AR1
         LAR	AR2,*
 
@@ -1166,7 +1165,7 @@ Save_Next_Block
 	LACC	*
 	ADD	#100h
 	SACL	*
-	SUB	#4000h
+	SUB	#8000h
 	BCND	prg_done,GEQ
 	LAR	AR2,*
 
@@ -1182,7 +1181,7 @@ Save_Next_Block
 	LACC 	_FLADR+1
 	ADD  	#1
 	SACL 	_FLADR+1
-Progr_Flash_NoOver
+Progr_Flash_NoOver:
 
 	B	Save_Next_Block
 
@@ -1320,12 +1319,19 @@ DISPL_REFRESH:
         MAR	*,AR2
 	LAR	AR2,#iDISPL
 
+        BIT	_Jobs,15-Manual_Meas
+	BCND 	CurNoRefresh,NTC
 	LACC 	*          	;производим refresh
 	CMPL
 	SACL 	*+
 	LACC 	*
 	CMPL
 	SACL    *
+CurNoRefresh:
+	LACC _Jobs
+	XOR   #(1<<Manual_Meas)
+	SACL _Jobs
+
 
         MAR	*,AR1
 ;вывод ячеек памяти индикатора на дисплей
@@ -1392,25 +1398,26 @@ DISPL_REFRESH:
 * FUNCTION DEF : _display_persent
 ******************************************************
 _display_persent1:
-LF4	.set	1
+LF2	.set	1
 	SAR	AR0,*+
 	SAR	AR1,*
 	LAR	AR0,*+,AR2
-*** 51	-----------------------    iSYMBL[3] = perc&0xffu;
-;>>>> 	  iSYMBL[3]=(perc&0x0FF);
-	LACK	255
-	LARK	AR2,-4+LF4
+*** 105	-----------------------    iSYMBL[3] = perc&0xfu;
+;>>>> 	  iSYMBL[3]=(perc&0x0F);
+	LACK	15
+	LARK	AR2,-4+LF2
 	MAR	*0+
 	AND	* 
 	LDPK	_iSYMBL+3
 	SACL	_iSYMBL+3
-*** 52	-----------------------    iSYMBL[2] = perc>>8;
-;>>>> 	  iSYMBL[2]=(perc&0x0FF00)>>8;
+*** 106	-----------------------    iSYMBL[2] = perc>>4&0xfu;
+;>>>> 	  iSYMBL[2]=(perc&0x0F0)>>4;
 	RSXM
-	LAC	*+,7
+	LAC	*+,11
+	ANDK	15,15
 	LDPK	_iSYMBL+2
 	SACH	_iSYMBL+2,1
-*** 53	-----------------------    iSYMBL[1] = 10u;
+*** 107	-----------------------    iSYMBL[1] = 10u;
 ;>>>> 	  iSYMBL[1]=S_SPACE;
 ;>>>> 	  switch(cod){
 ;>>>> 	   case FLASH_CLEAR:
@@ -1425,41 +1432,45 @@ LF4	.set	1
 	SACL	_iSYMBL+1
 ***  	-----------------------    switch ( cod ) {...};
 	ZALS	* 
-	BZ	L7
+	BZ	L3
 	SUBK	1
-	BZ	L6
+	BZ	L2
 	SUBK	1
-	BNZ	EPI0_4
+	BNZ	disp_pers_EPI0_2
 ***	-----------------------g1:
-*** 62	-----------------------    iSYMBL[0] = 14u;
+*** 116	-----------------------    iSYMBL[0] = 14u;
 ;>>>> 	    iSYMBL[0]=S_P;
 	LACK	14
 	LDPK	_iSYMBL
 	SACL	_iSYMBL
-*** 63	-----------------------    goto g4;
+*** 117	-----------------------    goto g4;
 ;>>>> 	    break;
-	B	EPI0_4
-L6:
+	B	disp_pers_EPI0_2
+L2:
 ***	-----------------------g2:
-*** 59	-----------------------    iSYMBL[0] = 15u;
+*** 113	-----------------------    iSYMBL[0] = 15u;
 	LACK	15
 	LDPK	_iSYMBL
 	SACL	_iSYMBL
-*** 60	-----------------------    goto g4;
-	B	EPI0_4
-L7:
+*** 114	-----------------------    goto g4;
+	B	disp_pers_EPI0_2
+L3:
 ***	-----------------------g3:
-*** 56	-----------------------    iSYMBL[0] = 16u;
+*** 110	-----------------------    iSYMBL[0] = 16u;
 	LACK	16
 	LDPK	_iSYMBL
 	SACL	_iSYMBL
 ***	-----------------------g4:
 ***  	-----------------------    return;
-EPI0_4:
+disp_pers_EPI0_2:
+	CALL	MODIFSB1
+	LDP     #4		;у нас другая страница памяти :)
+	CALL	DISPL_REFRESH,*,AR1
 	MAR	* ,AR1
 	SBRK	2
 	LAR	AR0,* 
 	RET
+
 MODIFSB1:
 	LDP     #4		;у нас другая страница памяти :)
 	MAR  	*,AR7
@@ -1490,6 +1501,8 @@ MODIFSB1:
 	OR   	TMP+3
 	SACL 	*
 	RET
+out_display:
+
 *                                                         GFEDCBA
 DSIM0_1 .word   003Fh   ; 0 Описание символа 0           00111111    A
         .word   0006h   ; 1 Описание символа 1           00000110  F   B
