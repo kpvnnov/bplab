@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2001-11-12 15:26:42 peter Exp $
+# $Id: Makefile,v 1.6 2001-11-13 13:18:39 peter Exp $
 
 AC=asmtms\dspa.exe
 CC=asmtms\dspcl.exe
@@ -82,8 +82,8 @@ flashprg\sutils4.obj: flashprg\sutils4.asm
   $(AC) flashprg\sutils4.asm $(ASMOPT)
 
 ch_range.obj: ch_range.c 
- $(CC) ch_range $(CCOPT) -k
-
+ $(CC) ch_range   -k -ss $(CCOPT)
+#  
 # можно добавить ключ -k - keep .asm file
 main: bp_main.c
  $(CC) bp_main $(CCOPT) -ss
