@@ -1,4 +1,4 @@
-* $Id: BP206SEC.ASM,v 1.12 2001-04-11 10:03:40 peter Exp $
+* $Id: BP206SEC.ASM,v 1.13 2001-06-07 15:08:24 peter Exp $
 SIM			.set	0
 
 *TMP                     .usect "bss1",8,1
@@ -153,7 +153,7 @@ TIME_OF_MAX_PRESSURE  	.set	32
 ONE_SECOND              .set    100
 TWO_SECOND              .set    200
 TEN_SECOND              .set    1000
-TWO_MINUTES		.set	11500
+TWO_MINUTES		.set	11000
 
 TIME_OUT               	.set    10
 WHITE_VALVE_OFF		.set    15
