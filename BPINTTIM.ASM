@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.18 2001-03-26 15:02:27 zykov Exp $
+* $Id: BPINTTIM.ASM,v 1.19 2001-05-29 11:50:09 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -564,7 +564,7 @@ CLKSERT001
 	SPLK	#0,*
 	B	NoTestTime
 BeginTestTime
-	Beep
+;	Beep
 	B	WaitThreeSecond_1
 WaitThreeSecond
 	BCND	WaitThreeSecond_1,NEQ
