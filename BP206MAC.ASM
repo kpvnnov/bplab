@@ -1,4 +1,4 @@
-* $Id: BP206MAC.ASM,v 1.20 2001-08-22 14:17:37 peter Exp $
+* $Id: BP206MAC.ASM,v 1.21 2001-10-11 12:39:48 peter Exp $
 
 mCheckBabyLevel .macro
 	CALL	CheckBabyLevel
@@ -24,9 +24,9 @@ mIncAddressToFlash .macro
 	SACH IZFLMSB
 
 
-	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
+	SACH 	_FLADR+1,1  ;запоминаем старшую часть адреса
 	AND   	#07FFFh
-	SACL 	FLADR    ;запоминаем младшую часть адреса
+	SACL 	_FLADR    ;запоминаем младшую часть адреса
  .endm
 
 *******************************
@@ -49,34 +49,34 @@ PowerAnalogOff .macro
 *включение процедуры обработки АЦП
 *******************************
 BeginADC .macro
-	LACC Jobs
+	LACC _Jobs
 	OR   #(1<<CallADCPRO_Flag)  	;надо начинать измерять(ADCPRO)
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *выключение процедуры обработки АЦП
 *******************************
 EndADC .macro
-	LACC Jobs
+	LACC _Jobs
 	AND   #~(1<<CallADCPRO_Flag)  	;надо заканчивать измерять
-	SACL Jobs
+	SACL _Jobs
  .endm
 
 *******************************
 *включение флага ручного измерения
 *******************************
 mManual_MeasOn .macro
-	LACC Jobs
+	LACC _Jobs
 	OR   #(1<<Manual_Meas)  
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *выключение флага ручного измерения
 *******************************
 mManual_MeasOff .macro
-	LACC Jobs
+	LACC _Jobs
 	AND   #~(1<<Manual_Meas) 
-	SACL Jobs
+	SACL _Jobs
  .endm
 
 
@@ -84,96 +84,96 @@ mManual_MeasOff .macro
 *начинаем процесс измерения
 *******************************
 Begin_measurement .macro
-	LACC Jobs
+	LACC _Jobs
 ;	OR   	#CallMeasur	;надо начинать
 	OR	#(1<<CallMeasur_Flag)	;надо начинать
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *заканчиваем процесс измерения
 *******************************
 End_measurement .macro
-	LACC Jobs
+	LACC _Jobs
 	AND	#~(1<<CallMeasur_Flag)	;сбрасываем бит
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *один раз процедуру запись во флеш уже вызвали
 *и подсчитали количество измерений во флеш
 *******************************
 mWeCountingFlash .macro
-	LACC Jobs
+	LACC _Jobs
 	OR	#(1<<WeCountingFlash)	;подсчитали количество измерений
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *вызвали процедуру записи во флеш и закончили туда писАть
 *флаг подсчета надо сбросить
 *******************************
 mWeCountingFlashEnd .macro
-	LACC Jobs
+	LACC _Jobs
 	AND	#~(1<<WeCountingFlash)	;сбрасываем бит
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 * устанавливаем флаг отсутствия места во флеш
 *******************************
 mNoPlaceInFlash .macro
-	LACC Jobs
+	LACC _Jobs
 	OR	#(1<<NoPlaceInFlash)	;подсчитали количество измерений
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 * сбрасываем флаг отсутствия места во флеш
 *******************************
 mNoPlaceInFlashClear .macro
-	LACC Jobs
+	LACC _Jobs
 	AND	#~(1<<NoPlaceInFlash)	;сбрасываем бит
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *надо загнать в ЦАП значение,и
 *установить сброс значения в канал
 *******************************
 SendToDAC .macro
-	LACC Jobs
+	LACC _Jobs
 ;	OR   #SendValToDAC  	;надо загнать в ЦАП значение,и
 ;				;установить сброс значения в канал
 	OR   #(1<<SendToDAC_Flag)	;надо загнать в ЦАП значение,и
 					;установить сброс значения в канал
 
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *значение в ЦАП загнали
 *******************************
 ClearSendToDAC .macro
-	LACC Jobs
+	LACC _Jobs
 ;	AND   #SendToValDACmask
 	AND   #~(1<<SendToDAC_Flag)	;надо загнать в ЦАП значение,и
 					;установить сброс значения в канал
 
-	SACL Jobs
+	SACL _Jobs
  .endm
 
 *******************************
 *надо считать значение ЦАП
 *******************************
 ReadDAC .macro
-	LACC Jobs
+	LACC _Jobs
 ;	OR   #ReadDACVal
 	OR   #(1<<ReadDACVal_Flag)
 
-	SACL Jobs
+	SACL _Jobs
  .endm
 *******************************
 *значение ЦАП считали уже
 *******************************
 ClearReadDAC .macro
-	LACC Jobs
+	LACC _Jobs
 ;	AND  #ReadDACValmask	;значение ЦАП считали уже
 	AND  #~(1<<ReadDACVal_Flag)
-	SACL Jobs
+	SACL _Jobs
  .endm
 
 Clear_measurement	.macro
@@ -209,11 +209,11 @@ Clear_measurement	.macro
 *******************************
 Beep .macro
  .newblock
-        BIT	Jobs,15-MayBeeping_Flag
+        BIT	_Jobs,15-MayBeeping_Flag
 	BCND 	$1,NTC
-	LACC 	Jobs
+	LACC 	_Jobs
 	OR	#(1<<BeepLittle_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
 $1
  .newblock
  .endm
@@ -221,52 +221,52 @@ $1
 * выключаем один короткий звонок
 *******************************
 mBeepEnd .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	AND	#~(1<<BeepLittle_Flag)	;кончаем баловаться(пищать)
-	SACL 	Jobs
+	SACL 	_Jobs
  .endm
 
 mOnSound .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	OR	#(1<<MayBeeping_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
 
  .endm
 
 mOffSound .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	AND	#~(1<<MayBeeping_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
  .endm
 
 mOnResult .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	OR	#(1<<MayShowRes_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
 
  .endm
 
 mOffResult .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	AND	#~(1<<MayShowRes_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
  .endm
 
 *******************************
 * один длинный звонок
 *******************************
 BeepLong .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	OR	#(1<<BeepLong_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
  .endm
 *******************************
 * выключаем один длинный звонок
 *******************************
 mBeepLongEnd .macro
-	LACC 	Jobs
+	LACC 	_Jobs
 	AND	#~(1<<BeepLong_Flag)
-	SACL 	Jobs
+	SACL 	_Jobs
  .endm
 
 mMax_number_plus1 .macro
@@ -311,10 +311,10 @@ mMotor_on	.macro
 	SACL DPA0
 	OUT  DPA0,PA0
 
-	LACC Jobs
+	LACC _Jobs
 ;	OR   #MotorIsOnn
 	OR   #(1<<MotorIsOnn_Flag)
-	SACL Jobs
+	SACL _Jobs
 	SPLK	#1,Motor
 	SPLK    #33,Motor+1
 	SPLK    #0,Motor+2
@@ -330,10 +330,10 @@ mMotor_off	.macro
 	AND  #0FFFBh,0
 	SACL DPA0
 	OUT  DPA0,PA0
-	LACC Jobs
+	LACC _Jobs
 ;	AND   #MotorIsOnnmask
 	AND   #~(1<<MotorIsOnn_Flag)
-	SACL Jobs
+	SACL _Jobs
 
  .endm
 
@@ -410,7 +410,7 @@ mEnd_meas .macro
 	BCND	$3,EQ
 	SPLK 	#0,_MDSPL
 $3
-        BIT	Jobs,15-Manual_Meas
+        BIT	_Jobs,15-Manual_Meas
         BCND	$5,TC
         ;это автоматическое измерение
         SPLK	#6,ProtectShow
@@ -418,7 +418,7 @@ $5
 	LACC 	ProtectShow
 	SUB	#5
         BCND	$4,LT
-	BIT 	Jobs,15-MayShowRes_Flag     	;показывать результаты
+	BIT 	_Jobs,15-MayShowRes_Flag     	;показывать результаты
 	BCND 	$2,NTC
 $4
 	LACC	ErrMeas
@@ -440,7 +440,7 @@ $1
 	SPLK	#1,Standartmeas
 $6
 	LACC	ErrMeas
-	SACL	DispErrMeas
+	SACL	_DispErrMeas
 $2
 	mMotor_off
 	mValve_off
@@ -533,10 +533,10 @@ mBeeper_xor	.macro
 **************************
 mBegin_write_flash	.macro
 
-	LACC Jobs
+	LACC _Jobs
 ;	OR   #BeginWriteFlash
 	OR   #(1<<BegWrFlash_Flag)
-	SACL Jobs
+	SACL _Jobs
 	CALL	MakeValue	;чтобы создать таблицу
  .endm
 
@@ -545,10 +545,10 @@ mBegin_write_flash	.macro
 * сбрасываем бит записи во флеш
 **************************
 mEnd_write_flash	.macro
-	LACC Jobs
+	LACC _Jobs
 ;	AND   #BeginWriteFlashm
 	AND   #~(1<<BegWrFlash_Flag)
-	SACL Jobs
+	SACL _Jobs
  .endm
 
 * установка текущего времени в ноль :(
@@ -563,7 +563,7 @@ mResetTime	.macro
 * загрузка интервала в зависимости от суток
 * а также с учетом специнтервала
 mResetInterval .macro
-	SPLK	#0200h+DayLightTimeSh,FLADR
+	SPLK	#0200h+DayLightTimeSh,_FLADR
 
 	LAR     AR7,#TMP
 
@@ -668,7 +668,7 @@ mResetInterval .macro
 	BCND	NotSpecial,LEQ	;в спец интервал не попадает
 	;СПЕЦИАЛЬНЫЙ ИНТЕРВАЛ!!!
 Load_Special
-	LAR	AR3,#DayTimeInter+2
+	LAR	AR3,#_DayTimeInter+2
         mOnSound
 	B	LoadInterval_1
 
@@ -702,7 +702,7 @@ NotSpecial
 	BCND	NotDay,LEQ	;в дневной интервал не попадает
 	;Дневной ИНТЕРВАЛ!!!
 Load_Day
-	LAR	AR3,#DayTimeInter
+	LAR	AR3,#_DayTimeInter
         mOnSound
 	B	LoadInterval_1
 
@@ -718,12 +718,12 @@ NotDay
 
 	;Ночной ИНТЕРВАЛ!!!
         mOffSound
-	LAR	AR3,#DayTimeInter+1
+	LAR	AR3,#_DayTimeInter+1
 
 LoadInterval_1
 	MAR	*,AR3
 	LAR	AR2,#CounterToBegin
-*	LAR	AR3,#DayTimeInter
+*	LAR	AR3,#_DayTimeInter
 	LACC	*+,AR2
 	SACL	*
  .endm
@@ -757,14 +757,14 @@ mSetInterval3min .macro
 mOn_Interval	.macro
  .newblock
 
-	LACC Jobs
+	LACC _Jobs
 	OR   #(1<<OnInterval_Flag)
-	SACL Jobs
+	SACL _Jobs
 *	mLoadInterval
 	SUB	#1	;если интервал не в пределах
 	BCND	$1,NEQ
 	mOff_Interval
-	SPLK	#rMONITOR_NOT_PROGRAMM,DispErrMeas
+	SPLK	#rMONITOR_NOT_PROGRAMM,_DispErrMeas
 	B	$2
 
 $1
@@ -777,10 +777,10 @@ $2
 
 mOff_Interval	.macro
 
-	LACC Jobs
+	LACC _Jobs
 ;	AND   #OnIntervalmask
 	AND   #~(1<<OnInterval_Flag)
-	SACL Jobs
+	SACL _Jobs
 
  .endm
 
@@ -840,7 +840,7 @@ mADCPowerDown	.macro
 
 ;записываем выборку устройств в регистр вывода
 mOutDIOSR	.macro
-	OUT  	rDIOSR,IOSR      ;записываем в IO status register
+	OUT  	_rDIOSR,IOSR      ;записываем в IO status register
  .endm
 
 
@@ -865,15 +865,15 @@ mOutDIOSR	.macro
  .if VersionFerrum=1		;без дешифратора
 
 mOffPeriph	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	OR	#03H		;уст в 1 IO0(#CS0),IO1(#CS1)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .elseif VersionFerrum=2        ;с дешифратором
 mOffPeriph	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	OR	#07H		;дешифратор
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -883,15 +883,15 @@ mOffPeriph	.macro
  .if VersionFerrum=1		;без дешифратора
 
 mOnADC	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0EH  		;сбрасываем в ноль IO0(#CS0)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .elseif VersionFerrum=2        ;с дешифратором
 mOnADC	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#08H  		;сбрасываем в ноль #CSADC
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -900,17 +900,17 @@ mOnADC	.macro
 ;включаем выборку ЦАП
  .if VersionFerrum=1		;без дешифратора
 mOnDAC	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0DH  		;сбрасываем в ноль IO1(#CS1)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
 
  .elseif VersionFerrum=2        ;с дешифратором
 mOnDAC	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#08H
 	OR	#01h		;устанавливаем в ноль #CSDAC
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -922,26 +922,26 @@ mOnDAC	.macro
 
  .if VersionFerrum=1		;без дешифратора
 mC5VAOnn	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0BH  		;IO2(#C+5VA)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
 mC5VAOff	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	OR  	#04H  		;IO2(#C+5VA)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
 
  .elseif VersionFerrum=2        ;с дешифратором
 mC5VAOnn	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#07H  		;IO3(#C+5VA)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
 mC5VAOff	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	OR  	#08H  		;IO3(#C+5VA)
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -953,10 +953,10 @@ mC5VAOff	.macro
 
  .elseif VersionFerrum=2        ;с дешифратором
 mOnFlash0	.macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#08H
 	OR	#02h		;устанавливаем в ноль #CSF0
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
  .endm
  .else
   .emsg _ERROR __ MISSING PARAMETER_
@@ -984,13 +984,13 @@ mRead_512b	.macro
 
 	LACC 	DPA0
 	AND  	#01Fh
-	ADD  	FLADR+1,6
+	ADD  	_FLADR+1,6
 	SACL 	DPA0
 	OUT  	DPA0,PA0
 	OR   	#20h
 	SACL 	DPA0
 
-	LACC    FLADR
+	LACC    _FLADR
 	OR	#08000H
 	SACL	*
 	LAR  	AR2,*
@@ -1049,7 +1049,7 @@ $4	SUB  	#1
 	SPLK	#0,*
 	OUT  	*,SDTR     	;0.нулевое :) слово для передачи
 
-	LACC    FLADR+1,1
+	LACC    _FLADR+1,1
  .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#003Fh,1
  .elseif Mem=40	;одна микросхема на 4 Mbyte
@@ -1060,7 +1060,7 @@ $4	SUB  	#1
 
 	OR	#5200h,1
 
-	BIT	FLADR,1
+	BIT	_FLADR,1
 	BCND	$3,NTC
 	OR	#0001H
 $3
@@ -1081,7 +1081,7 @@ $3
 	mOutDIOSR
 
 
-	LACC    FLADR,2
+	LACC    _FLADR,2
 	AND     #0FC00h,1
 	SACL 	*
 	OUT  	*,SDTR     	;2.второе слово для передачи

@@ -1,4 +1,4 @@
-* $Id: BPFLASHS.ASM,v 1.7 2001-08-22 14:17:39 peter Exp $
+* $Id: BPFLASHS.ASM,v 1.8 2001-10-11 12:39:49 peter Exp $
 * последовательная флеш
 *****************************************************************************
 * очистка флеш
@@ -22,8 +22,8 @@ FlashPageCheck
 *************************
 *       программирование флеш
 *       Надо опpеделить
-*       [FLADR]      0-14bit
-*       [FLADR+1]   15-20bit
+*       [_FLADR]      0-14bit
+*       [_FLADR+1]   15-20bit
 *       TMP    -  Входные данные
 *       Если пpи выходе из подпpогpаммы ACC=0 все Ok.
 * использует
@@ -33,9 +33,9 @@ FLPROG
 	POPD	*+
 	SAR     AR7,*+
 
-	LACC	FLADR
+	LACC	_FLADR
 	SACL	*+
-	LACC	FLADR+1
+	LACC	_FLADR+1
 	SACL	*+
 	LACC	TMP
 	SACL	*+
@@ -61,21 +61,21 @@ SleepSpokoino:
 	LACC	*-
 	SACL	TMP
 	LACC	*-
-	SACL	FLADR+1
+	SACL	_FLADR+1
 	LACC	*-
-	SACL	FLADR
+	SACL	_FLADR
 
 ;увеличиваем адрес на единицу
-	LACC 	FLADR
+	LACC 	_FLADR
 	AND	#07FFFh
 	ADD  	#1
-	SACL 	FLADR
+	SACL 	_FLADR
 	AND  	#07FFFh
 	BCND 	FLPR_NoOver,NEQ
-	SACL	FLADR
-	LACC 	FLADR+1
+	SACL	_FLADR
+	LACC 	_FLADR+1
 	ADD  	#1
-	SACL 	FLADR+1
+	SACL 	_FLADR+1
 FLPR_NoOver
 
 	LAR     AR7,*-
@@ -114,9 +114,14 @@ WaitForReady:
 *       AFLLSB      0-14bit
 *       ACC    -  Выходные данные
 *************************
-FLREAD
+	.globl	_flash_read
+_flash_read:
+FLREAD:
 	MAR     *,AR1
 	POPD	*+
+ .if WARNINGLDP=1
+	LDP	#4
+ .endif
 
 	CALL	Clear_Fifo
 
@@ -128,16 +133,16 @@ FLR_found_in_cache
 	CALL	Read_from_cache
 	SACL	*
 
-	LACC 	FLADR
+	LACC 	_FLADR
 	AND	#07FFFh
 	ADD  	#1
-	SACL 	FLADR
+	SACL 	_FLADR
 	AND  	#07FFFh
 	BCND 	FLR_NoOver,NEQ
-	SACL	FLADR
-	LACC 	FLADR+1
+	SACL	_FLADR
+	LACC 	_FLADR+1
 	ADD  	#1
-	SACL 	FLADR+1
+	SACL 	_FLADR+1
 FLR_NoOver
 
 	LACC	*
@@ -158,7 +163,7 @@ Find_in_cache
 	SAR     AR7,*+
 
 	LAR	AR7,#PageCache
-	LACC	FLADR,7
+	LACC	_FLADR,7
  .if Mem=20	;одна микросхема на 2 Mbyte
 	AND     #03FH,16
  .elseif Mem=40	;одна микросхема на 4 Mbyte
@@ -167,7 +172,7 @@ Find_in_cache
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 	SACH	*
-	LACC	FLADR+1,6
+	LACC	_FLADR+1,6
 	OR	*,AR7
 	XOR	*
 	BCND	NotFoundPage,NEQ
@@ -188,7 +193,7 @@ Write_to_cache
 	POPD	*+
 	SAR     AR7,*+
 
-	LACC	FLADR,15
+	LACC	_FLADR,15
 	SACH	*
 	LACC	*
 	AND	#0FFH
@@ -201,7 +206,7 @@ Write_to_cache
 *	AND	#0FFh
 *	SACL	TMP
 
-	BIT	FLADR,15
+	BIT	_FLADR,15
 	BCND	Wr_Chetn,NTC	;четный байт
 *	LACC	TMP,8
 *	SACL	TMP
@@ -242,7 +247,7 @@ Read_from_cache
 	POPD	*+
 	SAR     AR7,*+
 
-	LACC	FLADR,15
+	LACC	_FLADR,15
 	SACH	*
 	LACC	*
 	AND	#0FFH
@@ -251,7 +256,7 @@ Read_from_cache
 	LAR	AR7,*
 	MAR	*,AR7
 
-	BIT	FLADR,15
+	BIT	_FLADR,15
 	BCND	Rd_Chetn,NTC	;четный байт
 	LACC	*,8,AR1
 	SACH	*
@@ -308,7 +313,7 @@ Read_flash_to_cache
 	LAR	AR7,#PageCache
 	MAR	*,AR7
 
-	LACC	FLADR,7
+	LACC	_FLADR,7
  .if Mem=20	;одна микросхема на 2 Mbyte
 	AND	#03FH,16
  .elseif Mem=40	;одна микросхема на 4 Mbyte
@@ -317,7 +322,7 @@ Read_flash_to_cache
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
 	SACH	*
-	LACC	FLADR+1,6
+	LACC	_FLADR+1,6
 	OR	*
 	SACL	*
 
@@ -348,9 +353,9 @@ Clear_cashe:
 Clear_Fifo:
 	MAR	*,AR1
 	POPD	*+
-	LACC	FLADR
+	LACC	_FLADR
 	SACL	*+
-	LACC	FLADR+1
+	LACC	_FLADR+1
 	SACL	*+
 	LACC	TMP
 	SACL	*+
@@ -372,9 +377,9 @@ False_Clear:
 	LACC	*-
 	SACL	TMP
 	LACC	*-
-	SACL	FLADR+1
+	SACL	_FLADR+1
 	LACC	*-
-	SACL	FLADR
+	SACL	_FLADR
 	PSHD	*
 	RET
 
@@ -390,8 +395,8 @@ FifoAddr	.usect "flbuf",2*LengthFifo     ;адреса данных
 FifoHeadTail	.usect "flbuf",2		;адрес "головы" и "хвоста"
 
 * запись байта в фифошку
-*       FLADR+1   15-20bit
-*       FLADR      0-14bit
+*       _FLADR+1   15-20bit
+*       _FLADR      0-14bit
 *       TMP  -  Входные данные
 
 WriteToFifo:
@@ -418,9 +423,9 @@ WriteToFifo:
 	MAR	*,AR1
 	SACL	*
 	LAR     AR7,*,AR7
-	LACC	FLADR
+	LACC	_FLADR
 	SACL	*+
-	LACC	FLADR+1
+	LACC	_FLADR+1
 	SACL	*+
 
 	MAR	*,AR1
@@ -449,8 +454,8 @@ InitFifoAndCache:
 * чтение байта из фифошки
 * адрес заносится сюда
 * инкремент хвоста НЕ ДЕЛАЕМ
-*       FLADR+1   15-20bit
-*       FLADR      0-14bit
+*       _FLADR+1   15-20bit
+*       _FLADR      0-14bit
 *       ACC    -  Выходные данные
 *
 ReadFromFifoNotInc:
@@ -474,9 +479,9 @@ ReadFromFifoNotInc:
 	SACL	*
 	LAR     AR7,*,AR7
 	LACC	*+
-	SACL	FLADR
+	SACL	_FLADR
 	LACC	*+
-	SACL	FLADR+1
+	SACL	_FLADR+1
 
 	POP
 
@@ -696,7 +701,7 @@ Write_page_1
 
 
 ***********
-* чтение по адресу FLADR 2 kb данных в AR2
+* чтение по адресу _FLADR 2 kb данных в AR2
 ***********
 Read2K
 	MAR	*,AR1

@@ -1,4 +1,4 @@
-* $Id: BP206.ASM,v 1.44 2001-08-22 14:17:35 peter Exp $
+* $Id: BP206.ASM,v 1.45 2001-10-11 12:39:46 peter Exp $
 ***********************************************************
 *          blood pressure                  05.10.99 09:53
 * determination of arterial pressure
@@ -8,12 +8,15 @@
 *  Измерение артериального давления
 *
 ***********************************************************
+WARNINGLDP	.set	1
+
             .mmregs               ; Include standard register mnemonics.
             .global INIT,
             .global INTU,INTKEY,INTTIM,INTASP
             .global SIGNT
             .global LengthSignat
 	.copy   Bp206def.asm
+
 
 ******************
 * в сегмент программы включается таблица со значениями

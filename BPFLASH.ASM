@@ -1,9 +1,9 @@
-* $Id: BPFLASH.ASM,v 1.16 2001-10-08 09:20:16 peter Exp $
+* $Id: BPFLASH.ASM,v 1.17 2001-10-11 12:39:48 peter Exp $
 ****отладка
-WriteEnd
+WriteEnd:
 ;необходимо произвести подсчет количества измерения в таблице
 ;измерений (флэш)
-	BIT	Jobs,15-WeCountingFlash
+	BIT	_Jobs,15-WeCountingFlash
         BCND    AlreadyMaked,TC
 	CALL	MakeValue		;надо забить таблицу
 AlreadyMaked:
@@ -26,8 +26,8 @@ AlreadyMaked:
  .endif
 
 NoMaxInfo:
-	SPLK 	#0,FLADR+1
-	SPLK 	#0,FLADR
+	SPLK 	#0,_FLADR+1
+	SPLK 	#0,_FLADR
 	LACC 	IZNUMREC
 	BCND 	NotFirst,NEQ	;это не первое измерение
 ;самое первое измерение
@@ -47,7 +47,7 @@ NoMaxInfo:
 NotFirst:
 	LACC 	IZNUMREC,1
 	ADD	#1,1
-	SACL 	FLADR     ;надо записать адрес окончания измерения
+	SACL 	_FLADR     ;надо записать адрес окончания измерения
 FirstCompiled:
 
 	LACC 	CountWrite
@@ -116,7 +116,7 @@ NoDataWrited:
 PresentDataWrited
 ;	LACC	NoWritePlace	;есть место во флеш ?
 ;	BCND	Yes_It_Is,EQ	;да, место есть!
-	BIT	Jobs,15-NoPlaceInFlash	;;есть место во флеш ?
+	BIT	_Jobs,15-NoPlaceInFlash	;;есть место во флеш ?
         BCND	Yes_It_Is,NTC   ;да, место есть!
 	SPLK	#0FFFEh,TMP
 Yes_It_Is:
@@ -128,7 +128,7 @@ Yes_It_Is:
 ;надо записать результаты измерения
 	LACC 	IZNUMREC,3 ;в таблице 8 элементов
 	ADD  	#0800h     ;смещение во flash
-	SACL 	FLADR
+	SACL 	_FLADR
 
 	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
@@ -137,7 +137,7 @@ Yes_It_Is:
 
 	LACC	*
         AND	#03Fh
-        BIT	Jobs,15-Manual_Meas
+        BIT	_Jobs,15-Manual_Meas
         BCND	ItIsNotManualMeas,NTC
         OR	#040H		;ставим бит ручного 
 ItIsNotManualMeas:
@@ -287,7 +287,7 @@ MakeValue
 **
 ;	LACC MayToWrite
 ;	BCND YesWeWrite,NEQ
-	BIT	Jobs,15-WeCountingFlash
+	BIT	_Jobs,15-WeCountingFlash
         BCND    YesWeWrite,TC
 
 	CLRC 	SXM
@@ -349,7 +349,7 @@ YesWeWrite
 	BCND NeChet,EQ ;не пишем, если не было разрешения
 ;	LACC	NoWritePlace  ;есть ли место во флеш?
 ;	BCND NeChet,NEQ		;нет места :(
-        BIT	Jobs,15-NoPlaceInFlash	;есть ли место во флеш?
+        BIT	_Jobs,15-NoPlaceInFlash	;есть ли место во флеш?
 	BCND	NeChet,TC		;нет места :(
 	LACC CountWrite ;сколько байтов записали во флеш
  .if OutputSectoring=1
@@ -368,8 +368,8 @@ AlreadyWrite
 	SPLK	#1,CountWrite	;во флеш была запись
 	LACC IZFLLSB
         ADD  IZFLMSB,16
-	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
-	SACL 	FLADR    ;запоминаем младшую часть адреса
+	SACH 	_FLADR+1,1  ;запоминаем старшую часть адреса
+	SACL 	_FLADR    ;запоминаем младшую часть адреса
 
  .if Mem=20	;одна микросхема на 2 Mbyte
         LACC IZFLLSB,11
@@ -455,11 +455,11 @@ AlreadyWrite
  .newblock
  .elseif ModeOutput=2
 
-        BIT Jobs,11
+        BIT _Jobs,11
         BCND NormailWrite1,NTC
-        LACC Jobs
+        LACC _Jobs
         AND  #0FFEFH
-	SACL Jobs      ;сбрасываем бит записи в канал значения ЦАП
+	SACL _Jobs      ;сбрасываем бит записи в канал значения ЦАП
         WriteParams 12 ;пишем с первого канала после фильтра (один байт)
         WriteParams 00 ;пишем 0 (индикатор, что в след слове - ступенька)
         WriteParams 41 ;пишем значение DAC2
@@ -481,10 +481,9 @@ NotNormalWrite1
         SACL IZFLLSB
         SACH IZFLMSB
  .elseif ModeOutput=1
-
-        BIT Jobs,11
+        BIT _Jobs,11
         BCND NormailWrite2,NTC
-        LACC Jobs
+        LACC _Jobs
         AND  #0FFEFH
         SACL Jobs      ;сбрасываем бит записи в канал значения ЦАП
 NormailWrite2:
@@ -537,11 +536,11 @@ NormailWrite2:
 	SACH IZFLMSB
  .newblock
  .elseif ModeOutput=0
-        BIT Jobs,11
+        BIT _Jobs,11
         BCND NormailWrite3,NTC
-        LACC Jobs
+        LACC _Jobs
         AND  #0FFEFH
-        SACL Jobs      ;сбрасываем бит записи в канал значения ЦАП
+        SACL _Jobs      ;сбрасываем бит записи в канал значения ЦАП
 ;        WriteParams 12 ;пишем с первого канала после фильтра (один байт)
         WriteParams 00 ;пишем 0 (индикатор, что ЦАП подстроился)
         B NotNormailWrite3
@@ -687,9 +686,9 @@ MakeSectoring
 
 
 
-	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
+	SACH 	_FLADR+1,1  ;запоминаем старшую часть адреса
 	AND   	#07FFFh
-	SACL 	FLADR    ;запоминаем младшую часть адреса
+	SACL 	_FLADR    ;запоминаем младшую часть адреса
 
 
 
@@ -857,8 +856,8 @@ NeChetSectoring
 **************
 GetFlashCount
 	LACC	#0		;читаем флеш по данному адресу
-	SACL	FLADR
-	SACL	FLADR+1
+	SACL	_FLADR
+	SACL	_FLADR+1
 
 
 	SACL 	TMP+2
@@ -909,11 +908,11 @@ GetRecordFlash
 	SAR	AR0,*+
 
 
-	SACL	FLADR
-	LACC	FLADR,3
+	SACL	_FLADR
+	LACC	_FLADR,3
 	ADD  	#0800h     ;смещение во flash таблицы результатов
-	SACL	FLADR
-	SPLK	#0,FLADR+1
+	SACL	_FLADR
+	SPLK	#0,_FLADR+1
 
 	LAR	AR0,#7
 	LAR	AR2,#TMP
@@ -1107,8 +1106,8 @@ ers_done:
 	LAR	AR2,#0		;начальный адрес программирования
 
 	LACC    #1Fh,1		;#1F0000h адрес для зашивки
-	SACL	FLADR+1		;начальный адрес во флеш
-	SPLK	#0,FLADR
+	SACL	_FLADR+1		;начальный адрес во флеш
+	SPLK	#0,_FLADR
 Save_Next_Block
 	LAR     AR7, #AddressForRead     ;Using last 3K of SARAM as buffer.
 	CALL	Read_512	;читаем 256 слов (512 байт)
@@ -1141,17 +1140,17 @@ Save_Next_Block
 	LAR	AR2,*
 
 	;увеличиваем адрес чтения из флеш
-	LACC 	FLADR
+	LACC 	_FLADR
 	AND	#07FFFh
 	ADD  	#200H		;плюс 512
-	SACL 	FLADR
-	BIT	FLADR,0
+	SACL 	_FLADR
+	BIT	_FLADR,0
 	BCND 	Progr_Flash_NoOver,NTC
 	AND  	#07FFFh
-	SACL	FLADR
-	LACC 	FLADR+1
+	SACL	_FLADR
+	LACC 	_FLADR+1
 	ADD  	#1
-	SACL 	FLADR+1
+	SACL 	_FLADR+1
 Progr_Flash_NoOver
 
 	B	Save_Next_Block

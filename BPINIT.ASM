@@ -1,4 +1,4 @@
-* $Id: BPINIT.ASM,v 1.20 2001-08-22 14:17:40 peter Exp $
+* $Id: BPINIT.ASM,v 1.21 2001-10-11 12:39:49 peter Exp $
 INIT
 	SETC 	INTM 		;запрет прерываний
 	LDP  	#4      	;load data memory page pointer
@@ -208,7 +208,7 @@ INIT
 ;        SPLK 	#0,CNTERROR            ;счетчик вывода ошибки обнуляем
 ;        SPLK 	#0,ERRORS              ;никаких ошибок пока небыло
 ;        SPLK 	#0,MODEPR              ;пока ничего не делаем
-	SPLK 	#0FFh,rDIOSR		;запоминаем состояние IOSR
+	SPLK 	#0FFh,_rDIOSR		;запоминаем состояние IOSR
 	mOffPeriph                      ;выключаем всю периферию
 	mDim_pressure_supply_up_init    ;подготовка переменных для Pressure_diminition
 
@@ -251,7 +251,12 @@ INIT
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
-	mADCPowerDown		;software power down ADC
+;	mADCPowerDown		;software power down ADC
+	.global	_adc_power_down
+	call	_adc_power_down,*,AR1
+ .if WARNINGLDP=1
+	LDP	#4
+ .endif
 
 ****************
 * при включении питания устанавливаем время
@@ -270,8 +275,8 @@ INIT
  .endif
 
 
-	SPLK	#0,FLADR
-	SPLK	#0,FLADR+1
+	SPLK	#0,_FLADR
+	SPLK	#0,_FLADR+1
 	CALL	FLREAD
 
 
@@ -282,6 +287,32 @@ INIT
  .if AVRProcessor=1
         mSendBabyModeToAVR
  .endif
+
+	.global _load_avr_state
+        .global _load_avr_time
+* проверяем как работает AVR 
+        MAR	* ,AR1
+	LALK	AVRProg
+	SACL	*+
+	CALL	_load_avr_state
+	MAR	*-
+        BCND	load_avr_state_ok,NEQ
+        LDPK    _DispErrMeas
+	SPLK	#rAVR_SPI_BAD,_DispErrMeas
+load_avr_state_ok:
+        LALK	AVRProg
+	SACL	*+
+	CALL	_load_avr_time
+	MAR	*-
+        BCND	load_avr_time_ok,NEQ
+        LDPK    _DispErrMeas
+	SPLK	#rAVR_SPI_BAD,_DispErrMeas
+load_avr_time_ok:
+
+ .if WARNINGLDP=1
+	LDP	#4
+ .endif
+
 
 ;//сбрасываем еще раз флаги
 	SPLK 	#001Fh,TMP 	;0015H->[TMP]
@@ -323,7 +354,7 @@ INIT
 
  .if Sertificarion=1
 
-	SPLK	#rSertification,DispErrMeas
+	SPLK	#rSertification,_DispErrMeas
  .endif
 
 	CLRC 	INTM 		;разрешение прерываний

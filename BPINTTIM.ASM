@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Таймер частоты дискретизации - 200Гц.
-* $Id: BPINTTIM.ASM,v 1.23 2001-09-13 09:01:32 peter Exp $
+* $Id: BPINTTIM.ASM,v 1.24 2001-10-11 12:39:49 peter Exp $
 ****************************************************************************
 
 INTTIM
@@ -37,7 +37,7 @@ NoPowerDown
 
 ****
 
-	BIT 	Jobs,8
+	BIT 	_Jobs,8
 	BCND 	NoAdc,NTC
 	CALL 	ADCPRO
 ;	if (((MeasurementFlags )&( 1<<DIM_PRESSURE_FLAG )) == ( 1<<DIM_PRESSURE_FLAG ));
@@ -46,7 +46,7 @@ NoPowerDown
 	BCND 	NoAdc,NTC
 	CALL	Pressure_diminition_2
 NoAdc:
-	BIT 	Jobs,15-BeepLittle_Flag     	;пищать
+	BIT 	_Jobs,15-BeepLittle_Flag     	;пищать
 	BCND 	NoBeep,NTC
 	mBeepEnd
  .if AVRProcessor=1
@@ -64,7 +64,7 @@ NoBeep
 **************************
 * длинный писк
 **************************
-	BIT  	Jobs,15-BeepLong_Flag
+	BIT  	_Jobs,15-BeepLong_Flag
 	BCND 	NootLongBeeping,NTC
  .if AVRProcessor=1
 	mBeepLongEnd
@@ -108,7 +108,7 @@ NoCountBeep
 * если долго в "отстое", то переводим
 * в режим "автопилота"
 ********************************
-	BIT 	Jobs,13     	;последовательный порт работает ?
+	BIT 	_Jobs,13     	;последовательный порт работает ?
 	BCND 	PortNotJob,NTC 	;нет, не работает. проверять не будем
 	MAR  	*,AR2      	;modify auxiliary register
 	LAR	AR2,#iCNTASP
@@ -119,9 +119,9 @@ NoCountBeep
 	SACL 	*,0
 	BCND 	PortNotJob,NEQ 	;пока еще не достигли нуля
 	SPLK 	#0h,_MDSPL  	;выводим на экран время
-	LACC 	Jobs,0
+	LACC 	_Jobs,0
 	AND  	#0FFFBh
-	SACL 	Jobs     	;порт на "автопилоте" ;)
+	SACL 	_Jobs     	;порт на "автопилоте" ;)
 ********************************
 * выводим порт на "автоприем"
 ********************************
@@ -132,7 +132,7 @@ NoCountBeep
 	OUT  	TMP,ASPCR  	;ASPSRA -> ASPCR(IS@0FFF5h)
 				;asynchronous serial-port
 				;control register(ASPCR)
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#CIOSR
 	SACL 	TMP
@@ -161,16 +161,16 @@ PortNotJob
 
 ;=========================bpmode
 
-	BIT     Jobs,15			;процесс измерения идет?
+	BIT     _Jobs,15			;процесс измерения идет?
 	BCND    NetIzmereniya,NTC
 
 
-*	BIT     Jobs,7			;пишем во флеш ?
+*	BIT     _Jobs,7			;пишем во флеш ?
 *	BCND	NetIzmereniya1,NTC
 *	CALL	MakeValue
 *NetIzmereniya1
 
-	BIT     Jobs,5			;motor on?
+	BIT     _Jobs,5			;motor on?
 	BCND	NotPumping,NTC
 
 	LACC	Motor+2
@@ -280,7 +280,7 @@ CallValueProcessing
 	MAR     *0+,AR2
 	SACL    *,0
 	CALL	ADC_value_processing
-	BIT     Jobs,7			;пишем во флеш ?
+	BIT     _Jobs,7			;пишем во флеш ?
 	BCND	NetIzmereniya,NTC
 	CALL	MakeValue
  .endif
@@ -411,9 +411,9 @@ EnsShpion3min
 
 
 
-	BIT     Jobs,6			;sheduler on?
+	BIT     _Jobs,6			;sheduler on?
 	BCND	EndSheduler,NTC
-	BIT     Jobs,15			;процесс измерения идет?
+	BIT     _Jobs,15			;процесс измерения идет?
 	BCND    EndSheduler,TC         ;да идет
 	MAR  	*,AR2
 	LAR  	AR2,#CounterToBegin
@@ -453,14 +453,14 @@ NoPress1Chanal
 **отладка
 ;        LACC _MDSPL
 ;        BCND ItIsNoTime,NEQ
-;        LACC Jobs
+;        LACC _Jobs
 ;        OR   #02h     ;кончаем баловаться
-;        SACL Jobs
+;        SACL _Jobs
 ;ItIsNoTime
 ***
-;        LACC Jobs
+;        LACC _Jobs
 ;        AND   #0FFFDh     ;кончаем баловаться
-;        SACL Jobs
+;        SACL _Jobs
 	MAR  	*,AR2      	;modify auxiliary register
 				;данная команда из подмножества LARP 1
 				;т.е. при дальнейшей записи индексом AR2
@@ -468,7 +468,7 @@ NoPress1Chanal
 
  .if ShowBeginTime=1
 
-	BIT     Jobs,6			;sheduler on?
+	BIT     _Jobs,6			;sheduler on?
 	BCND	NotfingBlank,NTC
 	LACC	_MDSPL
 	BCND	ItIsTime,EQ
@@ -602,6 +602,69 @@ NoTestTime
  .endif 	;Sertificarion
 
 
+ .if WriteDebug==0
+
+* отладка
+;       MAR	* ,AR1
+;	LALK	AVRProg
+;	SACL	*+
+;	.global _load_avr_state
+;	CALL	_load_avr_state
+;	MAR	*-,AR7
+* конец отладки
+
+
+        MAR	* ,AR1
+	LALK	AVRProg
+	SACL	*+
+	.global _load_avr_time
+	CALL	_load_avr_time
+        MAR	*-,AR7
+  .if WARNINGLDP=1
+	LDP	#4
+  .endif
+
+        BCND	time_loaded,NEQ		;если процедура вернула 0, то по какой-то причине
+        				;считать не удалось - avaria
+
+	BIT     _Jobs,15			;процесс измерения идет?
+	BCND    ne_idet_izmer,NTC
+
+        mEnd_error_meas	rAVR_SPI_BAD
+	CALL	Measurment_finish
+
+ne_idet_izmer:
+	SPLK	#rAVR_SPI_BAD,_DispErrMeas
+        B	NetIdet
+
+time_loaded:
+
+        LAR	AR7,#AVRProg
+        LACC	*
+        AND	#0FFh
+        SUB	#115
+;        SUB	#60			;для режима отладки
+        BCND	NoWarningStop,LT
+
+	BIT     _Jobs,15			;процесс измерения идет?
+	BCND    NetIdet,NTC
+
+	mEnd_error_meas	rAVR_TIME_BAD
+
+	CALL	Measurment_finish
+
+NetIdet:
+	mMotor_off
+	mValve_off
+	EndADC
+	PowerAnalogOff
+	End_measurement
+
+NoWarningStop:
+
+ .endif
+
+
 ENDTIME
 
 	LACC	CountResult
@@ -640,7 +703,7 @@ NotDisplayed
 	LACC *,0
 	BCND COUNTERR,NEQ 	;счетчик не равен нулю?
 	;счетчик равен нулю - проверяем флаги ошибок
-	LACC 	DispErrMeas,0
+	LACC 	_DispErrMeas,0
 	BCND ENDCOUNTERR,EQ ;если ошибок нет,
 			    ;то страшных надписей не выводим
 	ADD	#ERRORS_TABLE
@@ -653,7 +716,7 @@ NotDisplayed
 *	SPLK 	#CNTERRDISPL,CNTERROR
 	SPLK 	#CNTERRDISPL,*
 	SPLK 	#5h,_MDSPL
-	SPLK	#0,DispErrMeas
+	SPLK	#0,_DispErrMeas
 	B    ENDCOUNTERR
 COUNTERR     ;да, мы еще считаем вывод ошибки
 	SUB  	#1
@@ -678,7 +741,7 @@ ENDCOUNTERR
 				;т.е. при дальнейшей записи индексом AR2
 
  .if DisableDisplay=1
-	BIT 	Jobs,13     	;последовательный порт работает ?
+	BIT 	_Jobs,13     	;последовательный порт работает ?
 	BCND 	ENDDISPLAY,TC 	;работает. печатать не будем
  .elseif DisableDisplay=0
 * gh
@@ -726,7 +789,7 @@ ENDCOUNTERR
 	SACL 	*+
 
  .if ShowSecondPoint=1
-	BIT     Jobs,6			;меряем
+	BIT     _Jobs,6			;меряем
 	BCND	ENDPOINTSEC,NTC
 	LACC 	#080h,0
 	XOR  	*
@@ -883,12 +946,12 @@ SetWatchToInit
 	POPD	*+
 	SAR     AR3,*+
 
-	SPLK	#0,FLADR+1
+	SPLK	#0,_FLADR+1
 ;по данному адресу находится Время инициализации
 *    4 байта - Минуты - единицы, десятки
 *              Часы   - единицы, десятки,
 *              В двоичном коде
-	SPLK	#0200h+TimeInitSh,FLADR
+	SPLK	#0200h+TimeInitSh,_FLADR
 
 	LAR	AR3,#_WATCH+2
 	;устанавливаем время (смещение + TimeInitSh)
@@ -1186,8 +1249,8 @@ ReadAllInterval
 ******
 * чтение дневного интервала
 ****
-	SPLK	#0,FLADR+1
-	SPLK	#0200h+IntervalDayLightSh,FLADR
+	SPLK	#0,_FLADR+1
+	SPLK	#0200h+IntervalDayLightSh,_FLADR
 
 	LAR     AR7,#TMP
 
@@ -1203,13 +1266,13 @@ ReadAllInterval
 	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR7,#DayTimeInter
+	LAR	AR7,#_DayTimeInter
 	SACL	*
 
 ******
 * чтение ночного интервала
 ****
-	SPLK	#0200h+IntervalDayNightSh,FLADR
+	SPLK	#0200h+IntervalDayNightSh,_FLADR
 
 	LAR     AR7,#TMP
 
@@ -1225,12 +1288,12 @@ ReadAllInterval
 	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR7,#DayTimeInter+1
+	LAR	AR7,#_DayTimeInter+1
 	SACL	*
 ******
 * чтение специального интервала
 ****
-	SPLK	#0200h+IntervalSpecSh,FLADR
+	SPLK	#0200h+IntervalSpecSh,_FLADR
 
 	LAR     AR7,#TMP
 
@@ -1246,7 +1309,7 @@ ReadAllInterval
 	LAR     AR7,#TMP
 	;преобразование времени минуты, десятки минут в секунды
 	CALL	Hour2BIN
-	LAR	AR7,#DayTimeInter+2
+	LAR	AR7,#_DayTimeInter+2
 	SACL	*
 
 	MAR	*,AR1
@@ -1283,7 +1346,7 @@ InitScheduler:
 	BCND	Init_On_Sheduler,NEQ
 	B	Init_End_Preset
 Init_NetIzmereni
-	SPLK	#1,ShedulerReady
+	SPLK	#1,_ShedulerReady
 	B	Init_End_Preset
 
 Init_On_Sheduler
@@ -1299,12 +1362,12 @@ CheckIntervals:
 	BCND	TimeOkey,EQ
 	mResetTime
 	mOff_Interval
-	SPLK	#0,ShedulerReady
-	SPLK	DispErrMeas,rMONITOR_NOT_PROGRAMM
+	SPLK	#0,_ShedulerReady
+	SPLK	#rMONITOR_NOT_PROGRAMM,_DispErrMeas
 TimeOkey
 *************************************
 * проверка интервалов измерения прибора
-	LAR	AR7,#DayTimeInter
+	LAR	AR7,#_DayTimeInter
 	MAR	*,AR7
 	LACC	*+
 	SUB	#3
@@ -1317,8 +1380,8 @@ TimeOkey
 	BCND	Interval_ok,GEQ
 Interval_error
 	mOff_Interval
-	SPLK	#0,ShedulerReady
-	SPLK	DispErrMeas,rMONITOR_NOT_PROGRAMM
+	SPLK	#0,_ShedulerReady
+	SPLK	#rMONITOR_NOT_PROGRAMM,_DispErrMeas
 Interval_ok
 *конец проверки интервалов
 ************************************
@@ -1339,8 +1402,8 @@ Interval_ok
 	SACL	TMP+2
 ;по данному адресу находится ChildMode
 * Детский/взрослый 5Ah - детский A5h - взрослый
-	SPLK	#0,FLADR+1
-	SPLK	#0200h+ChildMode,FLADR
+	SPLK	#0,_FLADR+1
+	SPLK	#0200h+ChildMode,_FLADR
 	CALL	FLREAD
 ;	AND	#0FFH
 	SACL	TMP
@@ -1350,8 +1413,8 @@ Interval_ok
 	BCND	Child_OK,EQ	;взрослый режим валиден
 Age_False:
 	mOff_Interval
-	SPLK	#0,ShedulerReady
-	SPLK	DispErrMeas,rMONITOR_NOT_PROGRAMM
+	SPLK	#0,_ShedulerReady
+	SPLK	#rMONITOR_NOT_PROGRAMM,_DispErrMeas
 	B	Child_Check_OK
 Child_OK:
 	LACC	TMP+2		;проверяем возраст пациента
@@ -1383,8 +1446,8 @@ Child_Check_OK:
 * проверяем бит разрешения звукового сигнала
 	mOffSound
 
-	SPLK	#0,FLADR+1
-	SPLK	#0200h+ParametrsSh,FLADR
+	SPLK	#0,_FLADR+1
+	SPLK	#0200h+ParametrsSh,_FLADR
 	CALL	FLREAD
         SACL	TMP
 	AND	#01h
@@ -1426,7 +1489,7 @@ ItIsBigMan:
 	RET
 
 SuperBeep:
-        BIT	Jobs,15-MayBeeping_Flag
+        BIT	_Jobs,15-MayBeeping_Flag
 	BCND 	NotSuperBeep,NTC
 	MAR	*,AR2
 	LAR	AR2,#AVRProg

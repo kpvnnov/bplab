@@ -1,6 +1,6 @@
 ****************************************************************************
 *       Мало U батареи(INT1)
-* $Id: BPINTU.ASM,v 1.6 2001-08-22 14:17:41 peter Exp $
+* $Id: BPINTU.ASM,v 1.7 2001-10-11 12:39:50 peter Exp $
 ****************************************************************************
 *
 
@@ -30,12 +30,12 @@ INTU    mPush_stack		;сохранение вычислительных
 
 	SPLK 	#CNSTPOWER,*
 
-	BIT     Jobs,15			;процесс измерения идет?
+	BIT     _Jobs,15			;процесс измерения идет?
 	BCND    IzmNeIdet,NTC
 	mEnd_error_meas	rPowerLow
 	B	OutFromErrorPower
 IzmNeIdet
-	SPLK	#rPowerLow,DispErrMeas
+	SPLK	#rPowerLow,_DispErrMeas
 OutFromErrorPower
 	LACC	Flags
 	OR	#8000H

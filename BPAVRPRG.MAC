@@ -1,4 +1,4 @@
-* $Id: BPAVRPRG.MAC,v 1.6 2000-12-13 13:43:25 peter Exp $
+* $Id: BPAVRPRG.MAC,v 1.7 2001-10-11 12:39:48 peter Exp $
 *
 * Установка сигнала CS у AVRSPI (#SS_AVR=0)
 *
@@ -7,10 +7,10 @@
  .elseif VersionFerrum=2        ;с дешифратором
 
 mOnAVRSPI .macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#08H  		;сбрасываем в ноль #RSAVD
 	OR	#04H		;дешифратор
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
 	mOutDIOSR		;записываем выборку устройств в регистр вывода
  .endm
  .else
@@ -25,10 +25,10 @@ mOnAVRSPI .macro
  .elseif VersionFerrum=2        ;с дешифратором
 
 ResetAVRSet .macro
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#08H  		;сбрасываем в ноль #RSAVD
 	OR	#05H		;дешифратор
-	SACL 	rDIOSR
+	SACL 	_rDIOSR
 	mOutDIOSR		;записываем выборку устройств в регистр вывода
  .endm
  .else
@@ -43,9 +43,9 @@ ResetAVRSet .macro
 *   .emsg _ERROR __ MISSING PARAMETER_
 * .elseif VersionFerrum=2        ;с дешифратором
 *ResetAVRClear .macro
-*	LACC 	rDIOSR
+*	LACC 	_rDIOSR
 *	OR	#07H		;дешифратор
-*	SACL 	rDIOSR
+*	SACL 	_rDIOSR
 *	mOutDIOSR		;записываем выборку устройств в регистр вывода
 * .endm
 *

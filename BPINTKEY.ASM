@@ -1,8 +1,11 @@
 *****************************************************************************
 *       Прерывание или запуск процессов по кнопке
-* $Id: BPINTKEY.ASM,v 1.17 2001-08-22 14:17:40 peter Exp $
+* $Id: BPINTKEY.ASM,v 1.18 2001-10-11 12:39:49 peter Exp $
 *****************************************************************************
 *
+
+	.global	_load_avr_state
+
 
 INTKEY
 	mPush_stack		;сохранение вычислительных
@@ -27,7 +30,7 @@ INTKEY
 
 	SPLK 	#02h,*     	;pending INT2
 
-	BIT     Jobs,15			;процесс измерения идет?
+	BIT     _Jobs,15			;процесс измерения идет?
 	BCND    int3_IzmNeIdet,NTC
 ;//записать состояние ошибочного прерывания
 	mEnd_error_meas	rNeispraven
@@ -102,20 +105,32 @@ MayPressed:
  .if WriteDebug=0
         ;если перемычка не будет снята, то AVR сбросится 
        	ResetAVRSet
+        MAR	* ,AR1
+	LALK	AVRProg
+	SACL	*+
+	CALL	_load_avr_state		;проверяем есть ли связь с AVR
+	MAR	*-
+ .if WARNINGLDP=1
+	LDP	#4
+ .endif
+	BCND	MayMeasurement,NEQ
+	SPLK	#rAVR_SPI_BAD,_DispErrMeas
+        RET
+MayMeasurement:
  .endif
 	BIT 	Flags,0
 	BCND    MognoIzmerat,NTC
-	SPLK	#rPowerLow,DispErrMeas
+	SPLK	#rPowerLow,_DispErrMeas
 	RET
 MognoIzmerat
 
-	LACC	ShedulerReady
+	LACC	_ShedulerReady
 	BCND	NotVistrelShed,EQ
 	mOn_Interval
 
 ;объеденить вызов проверки при инициализации
 	CALL	CheckScheduler
-	SPLK	#0,ShedulerReady
+	SPLK	#0,_ShedulerReady
 	B	KEY10_1
 
 NotVistrelShed
@@ -168,9 +183,9 @@ KEY13   SPLK  #0h,_MDSPL
         RET
 
 KEY14   SPLK 	#0h,_MDSPL
-	LACC 	Jobs
+	LACC 	_Jobs
 	AND   	#0FFFEh     ;кончаем баловаться
-	SACL 	Jobs
+	SACL 	_Jobs
 	EndADC
 	PowerAnalogOff
 	RET

@@ -1,5 +1,5 @@
 ;       .sect "asp"
-* $Id: BPSERIAL.ASM,v 1.27 2001-09-13 09:50:55 peter Exp $
+* $Id: BPSERIAL.ASM,v 1.28 2001-10-11 12:39:50 peter Exp $
 *****************************************************************************
 *       Асинхронный порт
 * Протоколы обмена между BP и PC
@@ -45,9 +45,9 @@
 *****************************************************************************
 
 AutoBaund
-	LACC 	Jobs,0
+	LACC 	_Jobs,0
 	OR  	#04h
-	SACL 	Jobs     	;порт заработал - взводим флаг
+	SACL 	_Jobs     	;порт заработал - взводим флаг
 	LAR  	AR2,#iCNTASP
 
 *	SPLK 	#CNSTASP,CNTASP	;и взводим счетчик
@@ -56,7 +56,7 @@ AutoBaund
 ********************************
 * 	Был принят символ "А"
 ********************************
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#ASPResA
 	SACL 	TMP
@@ -258,7 +258,7 @@ CountTrNotOver
 	OUT  	TMP,ASPCR  	;ASPSRA -> ASPCR(IS@0FFF5h)
 				;asynchronous serial-port
 				;control register(ASPCR)
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#CIOSR
 	SACL 	TMP
@@ -279,15 +279,15 @@ CountTrNotOver
 				;При 3,6864мГц. 57,6kdit/c BRD=0002h
  .endif
 	SPLK 	#0h,_MDSPL  	;выводим на экран время
-	LACC 	Jobs,0
+	LACC 	_Jobs,0
 	AND  	#0FFFBh
-	SACL 	Jobs     	;порт на "автопилоте" ;)
+	SACL 	_Jobs     	;порт на "автопилоте" ;)
 	B 	QuitFromASPInt
 ***********
 
 FromTrtoReceve
 **********
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#ASPResF
 	SACL 	TMP
@@ -327,7 +327,7 @@ ASPAutoBaundFalse
 ;бит автоподстройки стоит, а по логике работы прерывание передачи
 ;возникнуть не могло, поэтому это произошло прерывание приема
 ;автоподстройка не сработала и пришел фальш байт
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#ASPResF
 	SACL 	TMP
@@ -452,7 +452,7 @@ PAUSE   B    INIT ;???
 *
 * выслать "взад" эфефины (0xFFFF)
 OUTFFErr
-	LACC 	rDIOSR
+	LACC 	_rDIOSR
 	AND  	#0FFH
 	OR   	#ASPResF
 	SACL 	TMP
@@ -779,8 +779,8 @@ OutBuffer52
 	LAR  	AR0,#255        ;256 байт данных
 	LAR  	AR7,#DATART+4
 
-	SPLK 	#0,FLADR+1	;по адресу 000200h
-	SPLK 	#200h,FLADR     ;параметры программирования прибора
+	SPLK 	#0,_FLADR+1	;по адресу 000200h
+	SPLK 	#200h,_FLADR     ;параметры программирования прибора
 
 	MAR  	*,AR7
 NEXTWD  BLDD 	*+,#TMP
@@ -1022,9 +1022,9 @@ CommAndBlood
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
-	SACH FLADR+1,1
+	SACH _FLADR+1,1
 	AND   #7FFFh
-	SACL FLADR
+	SACL _FLADR
 	LAR	AR2,#DATART+4
 	CALL	Read2K
  .if Sertificarion=1	;в сертификационном режиме выключаем звук (лишний)
@@ -1120,8 +1120,8 @@ EndOkClear
 ;в теории надо стереть 0x000000- 0x0002FF
 	SPLK 	#02FFH,TMP+1
 	SPLK    #0FFh,TMP
-	SPLK	#0,FLADR
-	SPLK	#0,FLADR+1
+	SPLK	#0,_FLADR
+	SPLK	#0,_FLADR+1
 NextPage
 	CALL FLPROG
 	LACC TMP+1
@@ -1135,8 +1135,8 @@ EndOkClear
 ;в теории надо стереть 0x1F0000- 0x1FFFFF
 	SPLK 	#0FFFFH,TMP+1
 	SPLK    #0FFh,TMP
-	SPLK	#0,FLADR
-	SPLK	#1Fh,FLADR+1
+	SPLK	#0,_FLADR
+	SPLK	#1Fh,_FLADR+1
 NextPage1
 	CALL FLPROG
 	CLRC SXM
@@ -1531,10 +1531,10 @@ OutBuffer2k
  .else
   .emsg _ERROR __ MISSING PARAMETER_
  .endif
-	SACH 	FLADR+1,1  ;запоминаем старшую часть адреса
+	SACH 	_FLADR+1,1  ;запоминаем старшую часть адреса
 *        OR   #8000h
 	AND	#07FFFH
-	SACL 	FLADR    ;запоминаем младшую часть адреса
+	SACL 	_FLADR    ;запоминаем младшую часть адреса
 
 	MAR  	*,AR7
 NEXTWD1 BLDD 	*+,#TMP
@@ -2246,9 +2246,9 @@ CommAndAVR
 	CLRC SXM
 	LACC Flags+2,5  ;читаем младший байт
 	ADD  Flags+3,13
-	SACH FLADR+1,1
+	SACH _FLADR+1,1
 	AND   #7FFFh
-	SACL FLADR
+	SACL _FLADR
 	LAR	AR2,#DATART+4
 	CALL	ReadAVRMem
 	BCND	OUTFF,NEQ

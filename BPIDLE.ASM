@@ -1,4 +1,4 @@
-* $Id: BPIDLE.ASM,v 1.6 2001-08-22 14:17:39 peter Exp $
+* $Id: BPIDLE.ASM,v 1.7 2001-10-11 12:39:49 peter Exp $
         CLRC INTM               ;RS,NMI,INT1,INT2,TINT,TXRXINT.
 
 IDLEST  NOP
@@ -32,7 +32,7 @@ CLEARINT1
 NOTPRESSED
 *****
 
-	BIT  	Jobs,9
+	BIT  	_Jobs,9
 	BCND 	NootBeeping,NTC
 
 	LDP  	#0

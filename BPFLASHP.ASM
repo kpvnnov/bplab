@@ -1,4 +1,4 @@
-* $Id: BPFLASHP.ASM,v 1.6 2001-08-22 14:17:39 peter Exp $
+* $Id: BPFLASHP.ASM,v 1.7 2001-10-11 12:39:49 peter Exp $
 * Распределение Flash памяти данных давления.
 
 * Максимальное количество измерений  - 256.
@@ -181,24 +181,24 @@ ERRCheck
 FLPROG  LACC 	DPA0         ; 05555h,02AAAh,05555h, PA
 	AND  	#001Fh       ;   0AAh,  055h,  0A0h, PD  Program
 *	ADD  	AFLMSB,6
-	ADD  	FLADR+1,6
+	ADD  	_FLADR+1,6
 	SACL 	DPA0
 	OUT  	DPA0,PA0
 	OR   	#20h
 	SACL 	DPA0
 *	LACC 	AFLLSB
-	LACC 	FLADR
+	LACC 	_FLADR
 	OR   	#8000h
 	SACL 	TMP+1
 
-	LACC 	FLADR
+	LACC 	_FLADR
         AND	#07FFFh
 	ADD  	#1
-	SACL 	FLADR
+	SACL 	_FLADR
 	AND  	#07FFFh
 	BCND 	FL_NoOver,NEQ
-	SACL	FLADR
-	LACC 	FLADR+1
+	SACL	_FLADR
+	LACC 	_FLADR+1
 	ADD  	#1
 	SACL 	FLADR+1
 FL_NoOver

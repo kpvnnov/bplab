@@ -1,4 +1,4 @@
-* $Id: BP206BSS.ASM,v 1.35 2001-08-22 14:17:36 peter Exp $
+* $Id: BP206BSS.ASM,v 1.36 2001-10-11 12:39:48 peter Exp $
 ;распределение памяти данных процессора
 ;блок B2 0060h-007Fh используется под стек
 *************************************
@@ -41,12 +41,14 @@ DPA0		.usect "bss2",1		;Данные порта 0
 	       ;   !!!!!!!!!!!+     - VALV2
 	       ;   !!!!!!!!!!+      - CEF
 	       ;   ++++++++++       - A15-A24
-rDIOSR		.usect "bss2",1      ;данные для IOSR
+	.global	_rDIOSR
+_rDIOSR		.usect "bss2",1      ;данные для IOSR
 
 _MDSPL		.usect "bss2",1      ;режим дисплея
 	.global	_MDSPL
 
-Jobs		.usect "bss2",1       ;
+	.global	_Jobs
+_Jobs		.usect "bss2",1       ;
 
 	;   5432 1098 7654 3210
 	;   !!!! !!!! !!!! !!!+ - измерять давление?
@@ -174,7 +176,8 @@ Flags		.usect "bss2",4,1      ;различные флаги
 	;четвертый байт содержит данные второго байта принятой команды
 CRC		.usect "bss2",2,1      ;ячейки подсчета контрольной суммы
 	;ячейки данных адреса для записи во флэш
-FLADR		.usect "bss2",2,1
+	.global	_FLADR
+_FLADR		.usect "bss2",2,1
 ;+0 младшие биты адреса A0-A14
 ;+1 старшие биты адреса A15-A20
 IZFLLSB		.usect "bss2",1    ; младшие биты адреса A0-A15 для
@@ -188,10 +191,13 @@ IZNUMREC	.usect "bss2",1   ; текущий номер записи во флеш
 CountWrite	.usect "bss2",1 ; количество записанных байт во флеш
 CountResult	.usect "bss2",2,1
 ErrMeas		.usect "bss2",1 ; ошибка записываемого измерения
-DispErrMeas	.usect "bss2",1 ; код ошибки для показа на экране
+	.global	_DispErrMeas
+_DispErrMeas	.usect "bss2",1 ; код ошибки для показа на экране
 ;MayToWrite	.usect "bss2",1 ; пишем во флеш или как?
 Standartmeas	.usect "bss2",1  ; измерение плановое =0, внеплановое =1
-ShedulerReady	.usect "bss2",1  ; по кнопке запускаем sheduler
+
+	.global	_ShedulerReady
+_ShedulerReady	.usect "bss2",1  ; по кнопке запускаем sheduler
 TimeNakachka    .usect "bss2",1  ; время накачки до 40 mm
 ***отладка
 *DelayTransmit	.usect "bss2",1
@@ -243,7 +249,8 @@ TestTime .usect "watch",5
 *************************************
 *  интервал между измерениями
 *************************************
-DayTimeInter	.usect	"watch",3,1
+	.global	_DayTimeInter
+_DayTimeInter	.usect	"watch",3,1
 *дневной интервал между измерениями 	+0
 *ночной интервал между измерениями  	+1
 *специальный интервал между измерениями +2

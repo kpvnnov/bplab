@@ -1,7 +1,22 @@
-* $Id: BPAVRPRG.ASM,v 1.13 2001-08-27 13:02:32 peter Exp $
+* $Id: BPAVRPRG.ASM,v 1.14 2001-10-11 12:39:48 peter Exp $
  .copy bpavrprg.mac
 
-CLKXFAVR
+	.globl	_clk_xf_avr
+;        .globl	_three_imp_ssp_avr
+;        .globl	_on_avr_spi
+
+;_on_avr_spi:
+;        LDP  	#4
+;	mOnAVRSPI
+;        RET
+;_three_imp_ssp_avr:
+;	mImp_SSPAVR
+;	mImp_SSPAVR
+;	mImp_SSPAVR
+;	RET
+
+CLKXFAVR:
+;_clk_xf_avr:
 	LACC	#16
 NextCLKXFAVR:
 	mImp_SSPAVR   ;1
@@ -207,14 +222,14 @@ Program_AVR
 
 	;считываем данные с флеш в буфер #DATART+4
 	LACC    #1Fh,1		;#1F0000h адрес для зашивки
-	SACL	FLADR+1		;начальный адрес во флеш
-	SPLK	#0,FLADR
+	SACL	_FLADR+1		;начальный адрес во флеш
+	SPLK	#0,_FLADR
 
 	LAR	AR7,#DATART+4
 NextReadFlashAVR:
 	CALL	FLREAD
 	MAR	*,AR7
-	BIT     FLADR,15
+	BIT     _FLADR,15
 	BCND    NechetAdrAvr,NTC	;не стоит TC, значит адрес нечетный (так как предыдущий)
 	SFL
 	SACL	*,7,AR7		;четные адреса записываем в старшей части
@@ -224,7 +239,7 @@ NechetAdrAvr:
 	OR	*		;нечетные адреса в младшей части
 	SACL	*+
 CheckEndAdr:			;проверяем конечный адрес
-	LACC	FLADR
+	LACC	_FLADR
 	SUB	#4096
 	BCND	NextReadFlashAVR,LT
 	;все, флеш считали #DATART+4 4kбайт
@@ -443,7 +458,7 @@ ReadAVRMem
 EnterToSync1
 	MAR	*,AR7
 	LAR  	AR7,#AVRProg+1
-	LACC	FLADR
+	LACC	_FLADR
 	SACL	*            	;записываем начальный адрес
 				;чтения
 	LAR  	AR7,#AVRProg+3
@@ -505,7 +520,7 @@ ReadAVREEprom
 EnterToSync3
 	MAR	*,AR7
 	LAR  	AR7,#AVRProg+1
-	LACC	FLADR
+	LACC	_FLADR
 	SACL	*            	;записываем начальный адрес
 				;чтения
 	LAR  	AR7,#AVRProg+3
